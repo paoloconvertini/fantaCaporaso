@@ -1,0 +1,114 @@
+.summary-card {
+    composes: list-card;
+    background: linear-gradient(135deg, #1e1e3f, #2c2c54);
+    border-radius: 12px;
+    padding: 12px;
+    max-width: 900px;
+    margin: 0 auto;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.summary-title {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #f2f2f2;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.summary-row:last-child {
+    border-bottom: none;
+}
+
+.summary-left {
+    display: flex;
+    flex-direction: column;
+}
+
+.summary-name {
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.summary-credits {
+    font-size: 13px;
+    color: #ffcc00;
+}
+
+.summary-right {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap; /* 👈 per mobile */
+}
+
+.role-count {
+    font-size: 13px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 6px;
+    min-width: 32px;
+    text-align: center;
+}
+
+.role-count.p { background: #1976d2; color: #fff; }  /* Portieri */
+.role-count.d { background: #388e3c; color: #fff; }  /* Difensori */
+.role-count.c { background: #fbc02d; color: #000; }  /* Centrocampisti */
+.role-count.a { background: #d32f2f; color: #fff; }  /* Attaccanti */
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    .summary-card {
+        padding: 8px;
+    }
+
+    .summary-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .summary-right {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+/* --- Stile uniforme per liste (puntate, attivi, summary) --- */
+.list-card {
+    background: linear-gradient(135deg, #1e1e3f, #2c2c54);
+    border-radius: 12px;
+    padding: 12px;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.list-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #f2f2f2;
+    text-align: center;
+}
+
+.list-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.list-row:last-child {
+    border-bottom: none;
+}
+
+

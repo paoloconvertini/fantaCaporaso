@@ -1,0 +1,258 @@
+.admin-container {
+    display: grid;
+    gap: 20px;
+    padding: 20px;
+    color: #fff;
+}
+
+/* ========== HEADER ========== */
+.header-card {
+    background: #1e1e3f;
+    padding: 8px 16px;
+    text-align: center;
+    border-radius: 12px;
+}
+
+.header-card .title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #f2f2f2;
+}
+
+/* Ruoli + Timer */
+.role-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    margin-top: 6px;
+}
+
+.role-toggle {
+    display: flex;
+    gap: 8px;
+    border: none !important;
+}
+
+.role-toggle .mat-button-toggle {
+    border: none !important;
+    border-radius: 50% !important;
+    width: 42px;
+    height: 42px;
+    font-weight: bold;
+    font-size: 14px;
+    background: #2a2a40;
+    color: #bbb;
+    transition: all 0.2s ease;
+}
+
+.role-toggle .mat-button-toggle:hover {
+    background: #3d3d5c;
+    color: #fff;
+    transform: scale(1.08);
+}
+
+/* Colori per ruolo */
+.role-toggle .mat-button-toggle[value=""].mat-button-toggle-checked { background: #9e9e9e; color: #fff; }
+.role-toggle .mat-button-toggle[value="PORTIERE"].mat-button-toggle-checked { background: #1976d2; color: #fff; }
+.role-toggle .mat-button-toggle[value="DIFENSORE"].mat-button-toggle-checked { background: #388e3c; color: #fff; }
+.role-toggle .mat-button-toggle[value="CENTROCAMPISTA"].mat-button-toggle-checked { background: #fbc02d; color: #000; }
+.role-toggle .mat-button-toggle[value="ATTACCANTE"].mat-button-toggle-checked { background: #d32f2f; color: #fff; }
+
+/* Timer */
+.duration {
+    font-size: 12px;
+    color: #aaa;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.timer-input {
+    width: 50px;
+    padding: 2px;
+    border: none;
+    border-radius: 4px;
+    background: #2a2a40;
+    color: #fff;
+    text-align: center;
+}
+
+/* ========== MAIN LAYOUT ========== */
+.main-content {
+    display: flex;
+    gap: 20px;
+}
+
+.left-panel { flex: 2; display: flex; flex-direction: column; align-items: center; }
+.right-panel { flex: 1; }
+
+/* ========== PROGRESS + ACTIONS ========== */
+.progress-bar {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 10px;
+}
+.round-actions {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 16px;
+    justify-content: center;
+}
+.round-actions button { transform: scale(1.2); }
+
+/* ========== PLAYER SECTION ========== */
+.player-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 10px;
+}
+.player-view { display: flex; align-items: center; gap: 10px; }
+
+/* Card giocatore */
+.player-card {
+    width: 150px;
+    height: 220px;
+    background: #1e1e2f;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.player-card.filled img { max-width: 100%; max-height: 100%; }
+
+.player-card.empty {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+}
+.player-card.empty .big-icon { font-size: 26px; color: #fff; }
+.player-card.empty h2 { margin: 0; font-size: 16px; font-weight: 600; }
+.player-card.empty p { margin: 0; font-size: 12px; color: #bbb; }
+
+/* Info giocatore */
+.player-info {
+    text-align: left;
+}
+.player-info h2 { font-size: 18px; margin: 0; }
+.player-info h3 { font-size: 14px; margin: 4px 0; color: #aaa; }
+.role-tag {
+    display: inline-block;
+    padding: 6px;
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: bold;
+    background: #1976d2;
+    color: #fff;
+}
+
+/* Bottoni navigazione */
+.nav-btn.big { transform: scale(1.4); }
+
+/* ========== LISTE BIDS ========== */
+.bids-card {
+    background: linear-gradient(135deg, #3a1c71, #d76d77, #ffaf7b);
+    padding: 12px;
+    border-radius: 10px;
+    color: #fff;
+}
+.bids-card h4 {
+    margin: 0 0 8px;
+    font-size: 14px;
+}
+.bid-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+.bid-row:last-child { border-bottom: none; }
+.bid-user { font-weight: 500; }
+.bid-amount { font-weight: bold; color: #00ffc8; }
+.winner { margin-top: 10px; font-size: 14px; font-weight: bold; text-align: center; color: #ffd700; }
+
+/* ========== OVERLAY VINCITORE ========== */
+.winner-overlay {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(20,20,40,0.95);
+    color: #fff;
+    padding: 24px 40px;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 18px;
+    animation: fadeIn 0.5s ease-out;
+    box-shadow: 0 0 20px rgba(255,215,0,0.7);
+}
+.winner-overlay h1 { font-size: 2.5em; margin: 0; }
+.winner-overlay p { margin-top: 10px; font-size: 1.2em; }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translate(-50%, -40%); }
+    to { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+.duration {
+    font-size: 12px;
+    color: #aaa;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.duration .timer-input {
+    width: 50px;
+    padding: 4px;
+    border: none;
+    border-radius: 6px;
+    background: #2a2a40;
+    color: #fff;
+    text-align: center;
+    font-size: 14px;
+}
+
+.duration button.mat-mini-fab {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    background: #3d3d5c;
+}
+.duration button.mat-mini-fab:hover {
+    background: #5a5a80;
+}
+
+/* --- Stile uniforme per liste (puntate, attivi, summary) --- */
+.list-card {
+    background: linear-gradient(135deg, #1e1e3f, #2c2c54);
+    border-radius: 12px;
+    padding: 12px;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.list-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #f2f2f2;
+    text-align: center;
+}
+
+.list-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.list-row:last-child {
+    border-bottom: none;
+}

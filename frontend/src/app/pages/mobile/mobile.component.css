@@ -1,0 +1,64 @@
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.spacer {
+    flex: 2;
+}
+
+.bid-field {
+    flex: 1;
+}
+
+.center-btn {
+    margin-top: 16px;
+    display: flex;
+    justify-content: center;
+}
+
+.active-users {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 0 0;
+}
+
+.active-users li {
+    composes: list-row;
+    border-radius: 6px;
+    font-size: 14px;
+    padding: 6px 10px;
+}
+
+
+/* --- Stile uniforme per liste (puntate, attivi, summary) --- */
+.list-card {
+    background: linear-gradient(135deg, #1e1e3f, #2c2c54);
+    border-radius: 12px;
+    padding: 12px;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.list-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #f2f2f2;
+    text-align: center;
+}
+
+.list-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.list-row:last-child {
+    border-bottom: none;
+}
+
+

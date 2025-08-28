@@ -1,0 +1,17 @@
+version: "3.9"
+services:
+  mysql:
+    image: mysql:8.0.36
+    container_name: fantasta-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: fantasta
+      MYSQL_USER: mysql
+      MYSQL_PASSWORD: mysql
+      MYSQL_ROOT_PASSWORD: rootpwd
+    volumes:
+      - mysql_data:/var/lib/mysql
+volumes:
+  mysql_data:

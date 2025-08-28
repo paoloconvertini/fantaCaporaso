@@ -1,0 +1,33 @@
+<div class="home-container">
+    <!-- immagine -->
+    <div class="hero">
+        <img src="assets/home2.png" alt="Fantacalcio" class="hero-img">
+    </div>
+
+    <!-- contenuto -->
+    <div class="content">
+        <mat-card>
+            <h1>FantaCaporaso</h1>
+            <p>Gestisci la tua asta di Fantacalcio</p>
+
+            <div class="actions">
+                <button mat-raised-button color="primary" (click)="goAdmin()">Entra come Admin</button>
+            </div>
+
+            <div class="mobile-section">
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Seleziona partecipante</mat-label>
+                    <mat-select [(ngModel)]="pid">
+                        <mat-option *ngFor="let p of participants" [value]="p.id">
+                            {{ p.name }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <button mat-raised-button color="accent" (click)="goMobile()" [disabled]="!pid">
+                    Entra come Giocatore
+                </button>
+            </div>
+        </mat-card>
+    </div>
+</div>

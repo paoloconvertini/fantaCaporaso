@@ -1,0 +1,39 @@
+<div class="mobile-container">
+  <!-- Round corrente -->
+  <mat-card class="list-card" *ngIf="round && !round.closed">
+    <h3>Giocatore in asta</h3>
+    <div class="player-info">
+      <h2>{{round.player}}</h2>
+      <h3>{{round.playerTeam}}</h3>
+      <span class="role-tag">{{round.playerRole | slice:0:1}}</span>
+    </div>
+
+    <div class="bid-section">
+      <mat-form-field>
+        <input matInput type="number" placeholder="La tua offerta" [(ngModel)]="amount">
+      </mat-form-field>
+      <button mat-raised-button color="primary" (click)="send()">Offri</button>
+    </div>
+  </mat-card>
+
+  <!-- Attivi ora -->
+  <mat-card class="list-card" *ngIf="round && !round.closed">
+    <h3>Chi sta puntando</h3>
+    <div *ngFor="let user of activeUsers" class="list-row">
+      <span class="list-user">{{ user }}</span>
+    </div>
+    <div *ngIf="activeUsers.length===0" class="muted">Nessuno</div>
+  </mat-card>
+
+  <!-- Puntate finali -->
+  <mat-card class="list-card" *ngIf="round?.closed">
+    <h3>Puntate</h3>
+    <div class="list-row" *ngFor="let row of round.bids | keyvalue">
+      <span class="list-user">{{ row.key }}</span>
+      <span class="list-amount">{{ row.value }}</span>
+    </div>
+    <div class="winner" *ngIf="round.winner">
+      🏆 Vincitore: <b>{{round.winner.user}}</b> ({{round.winner.amount}})
+    </div>
+  </mat-card>
+</div>
