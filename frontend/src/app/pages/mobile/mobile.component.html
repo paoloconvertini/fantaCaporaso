@@ -1,4 +1,10 @@
 <div class="mobile-container">
+  <mat-card class="list-card">
+    <h4>{{participant.name}}</h4>
+    <span class="summary-credits">
+        Residuo: {{ participant.remainingCredits }}/{{ participant.totalCredits }}
+      </span>
+  </mat-card>
   <!-- Round corrente -->
   <mat-card class="list-card" *ngIf="round && !round.closed">
     <h3>Giocatore in asta</h3>
@@ -10,7 +16,7 @@
 
     <div class="bid-section">
       <mat-form-field>
-        <input matInput type="number" placeholder="La tua offerta" [(ngModel)]="amount">
+        <input matInput type="number" placeholder="La tua offerta" [(ngModel)]="amount" min="0" max="{{participant.remainingCredits}}">
       </mat-form-field>
       <button mat-raised-button color="primary" (click)="send()">Offri</button>
     </div>

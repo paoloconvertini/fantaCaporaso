@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { ApiService } from "../../services/api.service";
+import {Component, OnInit} from '@angular/core';
+import {ApiService} from "../../services/api.service";
 
 type SummaryRow = { name: string, remainingCredits: number, need: any };
 
@@ -15,6 +15,8 @@ export class AdminComponent implements OnInit {
     team = '';
     prole = '';
     duration = 60;
+    timeLeft: number | null = null;
+    private timerInterval: any;
     activeUsers: string[] = [];
     remaining: any = {};
     round: any = null;
@@ -22,12 +24,19 @@ export class AdminComponent implements OnInit {
     skippedCount = 0;
     remainingCount = 0;
 
-    constructor(private api: ApiService) {}
+    constructor(private api: ApiService) {
+    }
 
     ngOnInit() {
         this.connectWs();
         this.load();
         this.refreshRemaining();
+    }
+
+    ngOnDestroy() {
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval)
+        }
     }
 
     prev() {
@@ -87,8 +96,33 @@ export class AdminComponent implements OnInit {
         this.api.getRound().subscribe(res => {
             this.round = res;
             this.activeUsers = this.round && this.round.bids ? Object.keys(this.round.bids) : [];
+            if (res?.endEpochMillis) {
+                this.startCountdown(res.endEpochMillis);
+            } else {
+                this.timeLeft = null;
+                if (this.timerInterval) clearInterval(this.timerInterval);
+            }
         });
     }
+
+    private startCountdown(endEpochMillis: number) {
+        if (this.timerInterval) clearInterval(this.timerInterval);
+
+        this.updateCountdown(endEpochMillis); // subito il primo valore
+        this.timerInterval = setInterval(() => {
+            this.updateCountdown(endEpochMillis);
+        }, 1000);
+    }
+
+    private updateCountdown(endEpochMillis: number) {
+        const now = Date.now();
+        const diff = Math.floor((endEpochMillis - now) / 1000);
+        this.timeLeft = diff > 0 ? diff : 0;
+        if (this.timeLeft === 0 && this.timerInterval) {
+            clearInterval(this.timerInterval);
+        }
+    }
+
 
     refreshRemaining() {
         this.api.getRandomState().subscribe(res => {
@@ -97,7 +131,6 @@ export class AdminComponent implements OnInit {
             this.skippedCount = res.skipped?.[role] ?? 0;
         });
     }
-
 
 
     // ---- Azioni round ----
@@ -171,6 +204,7 @@ export class AdminComponent implements OnInit {
             this.refreshRemaining();
             this.showWinnerOverlay = true;
             this.activeUsers = [];
+            clearInterval(this.timerInterval);
         });
         setTimeout(() => {
             this.showWinnerOverlay = false;

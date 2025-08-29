@@ -2,65 +2,96 @@
     display: grid;
     gap: 20px;
     padding: 20px;
-    color: #fff;
+}
+.main-content {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+}
+.left-panel { flex: 2; }
+.main-panel {
+    flex:  1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.right-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
-/* ========== HEADER ========== */
+/* Header */
 .header-card {
     background: #1e1e3f;
     padding: 8px 16px;
+    margin-bottom: 8px;
     text-align: center;
-    border-radius: 12px;
 }
-
 .header-card .title {
     margin: 0;
-    font-size: 14px;
-    font-weight: 600;
-    color: #f2f2f2;
+    font-size: 16px;
+    color: #fff;
 }
 
-/* Ruoli + Timer */
 .role-controls {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
     margin-top: 6px;
 }
 
 .role-toggle {
-    display: flex;
-    gap: 8px;
-    border: none !important;
+   border: none!important;
 }
 
 .role-toggle .mat-button-toggle {
-    border: none !important;
+    border: none !important;   /* 🔹 elimina bordo */
     border-radius: 50% !important;
     width: 42px;
     height: 42px;
     font-weight: bold;
     font-size: 14px;
+    margin: 0 4px;
     background: #2a2a40;
-    color: #bbb;
+    color: #ddd;
     transition: all 0.2s ease;
+}
+.role-toggle .mat-button-toggle-checked {
+    background: #673ab7;
+    color: #fff !important;
 }
 
 .role-toggle .mat-button-toggle:hover {
     background: #3d3d5c;
     color: #fff;
-    transform: scale(1.08);
+    transform: scale(1.05);
 }
 
-/* Colori per ruolo */
-.role-toggle .mat-button-toggle[value=""].mat-button-toggle-checked { background: #9e9e9e; color: #fff; }
-.role-toggle .mat-button-toggle[value="PORTIERE"].mat-button-toggle-checked { background: #1976d2; color: #fff; }
-.role-toggle .mat-button-toggle[value="DIFENSORE"].mat-button-toggle-checked { background: #388e3c; color: #fff; }
-.role-toggle .mat-button-toggle[value="CENTROCAMPISTA"].mat-button-toggle-checked { background: #fbc02d; color: #000; }
-.role-toggle .mat-button-toggle[value="ATTACCANTE"].mat-button-toggle-checked { background: #d32f2f; color: #fff; }
+/* Colori specifici selezionati */
+.role-toggle .mat-button-toggle[value="PORTIERE"].mat-button-toggle-checked {
+    background: #1976d2; /* blu portieri */
+    color: #fff;
+}
+.role-toggle .mat-button-toggle[value="DIFENSORE"].mat-button-toggle-checked {
+    background: #388e3c; /* verde difensori */
+    color: #fff;
+}
+.role-toggle .mat-button-toggle[value="CENTROCAMPISTA"].mat-button-toggle-checked {
+    background: #fbc02d; /* giallo centrocampisti */
+    color: #000;
+}
+.role-toggle .mat-button-toggle[value="ATTACCANTE"].mat-button-toggle-checked {
+    background: #d32f2f; /* rosso attaccanti */
+    color: #fff;
+}
+.role-toggle .mat-button-toggle[value=""].mat-button-toggle-checked {
+    background: #9e9e9e; /* grigio tutti */
+    color: #fff;
+}
 
-/* Timer */
 .duration {
     font-size: 12px;
     color: #aaa;
@@ -69,39 +100,45 @@
     gap: 4px;
 }
 .timer-input {
-    width: 50px;
-    padding: 2px;
+    width: 40px;
+    background: transparent;
     border: none;
-    border-radius: 4px;
-    background: #2a2a40;
+    text-align: center;
     color: #fff;
-    text-align: center;
 }
 
-/* ========== MAIN LAYOUT ========== */
-.main-content {
-    display: flex;
-    gap: 20px;
+/* Round */
+.progress-info {
+    margin: 8px 0;
+    text-align: left;
+    font-size: 16px;
+    color: #fff;
 }
 
-.left-panel { flex: 2; display: flex; flex-direction: column; align-items: center; }
-.right-panel { flex: 1; }
-
-/* ========== PROGRESS + ACTIONS ========== */
-.progress-bar {
-    width: 100%;
-    text-align: center;
-    margin-bottom: 10px;
+.progress-info strong {
+    font-weight: 600;
 }
+
 .round-actions {
     display: flex;
-    gap: 14px;
-    margin-bottom: 16px;
+    align-items: center;
     justify-content: center;
+    gap: 16px;
+    margin: 10px 0 20px 0;   /* stacca dall’immagine */
+}
+
+.time-left {
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+}
+
+.round-actions button {
+    transform: scale(1.1);
 }
 .round-actions button { transform: scale(1.2); }
 
-/* ========== PLAYER SECTION ========== */
+/* Player section */
 .player-section {
     display: flex;
     align-items: center;
@@ -139,49 +176,61 @@
 
 /* Info giocatore */
 .player-info {
-    text-align: left;
+    text-align: center;
 }
 .player-info h2 { font-size: 18px; margin: 0; }
 .player-info h3 { font-size: 14px; margin: 4px 0; color: #aaa; }
 .role-tag {
     display: inline-block;
-    padding: 6px;
-    border-radius: 50%;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: bold;
-    background: #1976d2;
+    padding: 4px 8px;
+    border-radius: 6px;
+    margin-top: 8px;
     color: #fff;
 }
+.portiere { background: #1976d2; }   /* Portiere */
+.difensore { background: #388e3c; }   /* Difensore */
+.centrocampista{ background: #fbc02d; color: #000; }  /* Centrocampista */
+.attaccante { background: #d32f2f; }   /* Attaccante */
 
-/* Bottoni navigazione */
-.nav-btn.big { transform: scale(1.4); }
 
-/* ========== LISTE BIDS ========== */
-.bids-card {
-    background: linear-gradient(135deg, #3a1c71, #d76d77, #ffaf7b);
+/* Liste comuni */
+.list-card {
+    background: linear-gradient(135deg, #2e003e, #512da8);
+    color: #fff;
     padding: 12px;
     border-radius: 10px;
-    color: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    margin-bottom: 12px;
 }
-.bids-card h4 {
+.list-card h3 {
     margin: 0 0 8px;
     font-size: 14px;
+    text-align: center;
+    color: #ffeb3b;
 }
-.bid-row {
+.list-row {
     display: flex;
     justify-content: space-between;
     padding: 6px 0;
     border-bottom: 1px solid rgba(255,255,255,0.2);
 }
-.bid-row:last-child { border-bottom: none; }
-.bid-user { font-weight: 500; }
-.bid-amount { font-weight: bold; color: #00ffc8; }
-.winner { margin-top: 10px; font-size: 14px; font-weight: bold; text-align: center; color: #ffd700; }
+.list-row:last-child { border-bottom: none; }
+.list-user { font-weight: 500; }
+.list-amount { font-weight: bold; color: #00ffc8; }
 
-/* ========== OVERLAY VINCITORE ========== */
+.winner {
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    color: #ffd700;
+}
 .winner-overlay {
     position: fixed;
-    top: 50%; left: 50%;
+    top: 40%;
+    left: 50%;
     transform: translate(-50%, -50%);
     background: rgba(20,20,40,0.95);
     color: #fff;
@@ -199,60 +248,8 @@
     to { opacity: 1; transform: translate(-50%, -50%); }
 }
 
-.duration {
-    font-size: 12px;
-    color: #aaa;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.duration .timer-input {
-    width: 50px;
-    padding: 4px;
-    border: none;
-    border-radius: 6px;
-    background: #2a2a40;
-    color: #fff;
-    text-align: center;
-    font-size: 14px;
-}
-
-.duration button.mat-mini-fab {
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-    background: #3d3d5c;
-}
-.duration button.mat-mini-fab:hover {
-    background: #5a5a80;
-}
-
-/* --- Stile uniforme per liste (puntate, attivi, summary) --- */
-.list-card {
-    background: linear-gradient(135deg, #1e1e3f, #2c2c54);
-    border-radius: 12px;
-    padding: 12px;
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-}
-
-.list-title {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 10px;
-    color: #f2f2f2;
-    text-align: center;
-}
-
-.list-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-
-.list-row:last-child {
-    border-bottom: none;
+/* Responsive */
+@media (max-width: 768px) {
+    .player-section { flex-direction: column; }
+    .list-row { flex-direction: column; align-items: flex-start; gap: 4px; }
 }

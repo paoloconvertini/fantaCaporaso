@@ -4,11 +4,15 @@ import { ApiService } from '../../services/api.service';
 type ParticipantSummary = {
     id: number;
     name: string;
+    totalCredits: number;
+    spentCredits: number;
     remainingCredits: number;
-    takenPortieri: number;
-    takenDifensori: number;
-    takenCentrocampisti: number;
-    takenAttaccanti: number;
+    roleCounts: {
+        PORTIERE: number;
+        DIFENSORE: number;
+        CENTROCAMPISTA: number;
+        ATTACCANTE: number;
+    };
 };
 
 @Component({
@@ -30,15 +34,19 @@ export class SummaryComponent implements OnInit {
     load() {
         this.api.getSummary().subscribe({
             next: (res: any[]) => {
-                // 🔹 Mappiamo i dati del BE nel formato atteso
+                // 🔹 adatto il JSON del BE
                 this.participants = res.map(p => ({
                     id: p.id,
                     name: p.name,
+                    totalCredits: p.totalCredits,
+                    spentCredits: p.spentCredits,
                     remainingCredits: p.remainingCredits,
-                    takenPortieri: p.roleCounts?.PORTIERE || 0,
-                    takenDifensori: p.roleCounts?.DIFENSORE || 0,
-                    takenCentrocampisti: p.roleCounts?.CENTROCAMPISTA || 0,
-                    takenAttaccanti: p.roleCounts?.ATTACCANTE || 0
+                    roleCounts: {
+                        PORTIERE: p.roleCounts?.PORTIERE || 0,
+                        DIFENSORE: p.roleCounts?.DIFENSORE || 0,
+                        CENTROCAMPISTA: p.roleCounts?.CENTROCAMPISTA || 0,
+                        ATTACCANTE: p.roleCounts?.ATTACCANTE || 0
+                    }
                 }));
                 this.loading = false;
             },
