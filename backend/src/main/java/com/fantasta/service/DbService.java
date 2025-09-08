@@ -80,7 +80,7 @@ public class DbService {
      * Marca un giocatore come assegnato a un partecipante
      */
     @Transactional
-    public void markAssigned(String roundId, PlayerEntity player, Long participantId, int amount) {
+    public void markAssigned(String roundId, PlayerEntity player, Long participantId, Double amount) {
         ParticipantEntity participant = ParticipantEntity.findById(participantId);
         if (participant == null) {
             throw new IllegalArgumentException("Partecipante non trovato con id=" + participantId);

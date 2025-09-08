@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import { ApiService } from '../../services/api.service';
+import {Subscription} from "rxjs";
 
 type ParticipantSummary = {
     id: number;
@@ -20,21 +21,27 @@ type ParticipantSummary = {
     templateUrl: './summary.component.html',
     styleUrls: ['./summary.component.css']
 })
-export class SummaryComponent implements OnInit {
+export class SummaryComponent implements OnInit, OnDestroy {
     participants: ParticipantSummary[] = [];
     loading = true;
     error = '';
+    private sub?: Subscription;
 
     constructor(private api: ApiService) {}
 
     ngOnInit(): void {
         this.load();
+        this.sub = this.api.summaryUpdated$.subscribe(() => this.load());   // ⬅️
+    }
+
+    ngOnDestroy(): void {                                          // ⬅️
+        this.sub?.unsubscribe();
     }
 
     load() {
+        this.loading = true;
         this.api.getSummary().subscribe({
             next: (res: any[]) => {
-                // 🔹 adatto il JSON del BE
                 this.participants = res.map(p => ({
                     id: p.id,
                     name: p.name,

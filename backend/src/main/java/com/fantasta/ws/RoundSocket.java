@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @WebSocket(path = "/ws/round")
 @ApplicationScoped
 public class RoundSocket {
+
     private final Set<WebSocketConnection> conns = ConcurrentHashMap.newKeySet();
     private static final ObjectMapper M = new ObjectMapper();
 
@@ -18,11 +19,29 @@ public class RoundSocket {
         conns.add(c);
     }
 
+    @OnClose
+    public void onClose(WebSocketConnection c) {
+        conns.remove(c);
+    }
+
+    @OnError
+    public void onError(WebSocketConnection c, Throwable t) {
+        conns.remove(c);
+        t.printStackTrace();
+    }
+
     public void broadcast(String type, Object payload) {
         try {
-            String json = M.writeValueAsString(java.util.Map.of("type", type, "payload", payload));
-            for (var c : conns) if (c.isOpen()) c.sendTextAndAwait(json);
-        } catch (Exception ignored) {
+            String json = M.writeValueAsString(
+                    java.util.Map.of("type", type, "payload", payload)
+            );
+            for (var c : conns) {
+                if (c.isOpen()) {
+                    c.sendTextAndAwait(json);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

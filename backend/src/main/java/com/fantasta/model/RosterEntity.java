@@ -14,5 +14,5 @@ public class RosterEntity extends PanacheEntity {
     public PlayerEntity player;
 
     @Column(nullable = false)
-    public int amount; // prezzo pagato
+    public Double amount; // prezzo pagato
 }

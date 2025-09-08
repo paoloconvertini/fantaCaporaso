@@ -15,7 +15,7 @@ public class ParticipantService {
 
     /** Somma importi in Roster per quel partecipante. */
     public int spentCreditsById(Long participantId) {
-        Long sum = (Long) Panache.getEntityManager()
+        Double sum = (Double) Panache.getEntityManager()
                 .createQuery("select coalesce(sum(r.amount),0) from RosterEntity r where r.participant.id = ?1")
                 .setParameter(1, participantId)
                 .getSingleResult();

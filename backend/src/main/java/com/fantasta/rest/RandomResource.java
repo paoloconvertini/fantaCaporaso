@@ -64,7 +64,8 @@ public class RandomResource {
         return Response.ok(Map.of(
                 "name", p.name,
                 "team", p.team,
-                "role", p.role == null ? null : p.role.name()
+                "role", p.role == null ? null : p.role.name(),
+                "value", p.valore == null ? 0 : p.valore
         )).build();
     }
 

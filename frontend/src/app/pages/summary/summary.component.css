@@ -1,17 +1,18 @@
+/* Summary compatto */
 .summary-container {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 12px;
-    padding: 10px;
 }
 
 /* Card elenco */
 .list-card {
     background: linear-gradient(135deg, #2e003e, #512da8);
     color: #fff;
-    padding: 12px;
+    padding: 6px 10px;
     border-radius: 10px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    font-size: 13px;
 }
 .list-card h4 {
     margin: 0 0 6px;
@@ -24,9 +25,29 @@
     display: flex;
     justify-content: space-between;
     padding: 4px 0;
+    align-items: center;
+    gap: 8px;
 }
-.summary-credits { font-size: 12px; color: #ffeb3b; }
-.summary-right { display: flex; gap: 8px; font-size: 12px; }
+.summary-credits {
+    color: #ffeb3b;
+    font-weight: bold;
+    /*color: #00ffc8;*/
+    font-size: 13px;
+}
+
+.summary-right {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+}
+
+.role-count {
+    font-size: 12px;
+    font-weight: 500;
+}
+
 .role-count.p { color: #1976d2; }
 .role-count.d { color: #388e3c; }
 .role-count.c { color: #fbc02d; }
@@ -37,4 +58,10 @@
     .list-card { padding: 8px; }
     .list-row { flex-direction: column; gap: 4px; }
     .summary-right { justify-content: space-between; width: 100%; }
+}
+
+@media (min-width: 1024px) {
+    .summary-container {
+        grid-template-columns: 1fr 1fr; /* desktop: 2 colonne */
+    }
 }

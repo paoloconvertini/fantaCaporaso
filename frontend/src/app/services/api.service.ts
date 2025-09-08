@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 
 @Injectable({
     providedIn: 'root'
@@ -8,10 +8,15 @@ import { Observable } from 'rxjs';
 export class ApiService {
 
     private base: string;
+    public summaryUpdated$ = new Subject<void>();
 
     constructor(private http: HttpClient) {
-        // Legge l'API base da index.html oppure fallback
         this.base = (window as any).__API_BASE__ || '';
+        this.connectWebSocket();
+    }
+
+    notifySummaryUpdated() {
+        this.summaryUpdated$.next();
     }
 
     randomPrev() {
@@ -27,7 +32,7 @@ export class ApiService {
         return this.http.get(`${this.base}/api/round`);
     }
 
-    startRound(pin: string, round: { player: string; team?: string; role: string; duration: number; tieBreak?: string }) {
+    startRound(pin: string, round: { player: string; playerTeam?: string; playerRole: string; durationSeconds: number; tieBreak?: string }) {
         return this.http.post(`${this.base}/api/start`, round, {
             headers: { 'X-ADMIN-PIN': pin }
         });
@@ -83,7 +88,20 @@ export class ApiService {
 // 🔹 WEBSOCKET
     connectWebSocket(): WebSocket {
         const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-        return new WebSocket(`${protocol}://${location.host}/ws/round`);
+        const ws = new WebSocket(`${protocol}://${location.host}/ws/round`);
+
+        // ⬅️ NUOVO: non sovrascrive onmessage; usa addEventListener così coesiste col tuo handler
+        ws.addEventListener('message', (evt) => {
+            try {
+                const data = JSON.parse((evt as MessageEvent).data);
+                const t = data?.type;
+                if (t === 'SUMMARY_UPDATED' || t === 'ROUND_CLOSED' || t === 'ROUND_RESET') {
+                    this.summaryUpdated$.next();
+                }
+            } catch { /* ignore */ }
+        });
+
+        return ws;
     }
 
 // 🔹 Helper (pin admin) — opzionale
@@ -111,6 +129,12 @@ export class ApiService {
         return this.http.get<any[]>(`${this.base}/api/participant/summary`);
     }
 
+    manualAssign(payload: any) {
+        return this.http.post(`${this.base}/api/assign`, payload);
+    }
 
+    getParticipants() {
+        return this.http.get<any[]>(`${this.base}/api/participant/all`);
+    }
 
 }

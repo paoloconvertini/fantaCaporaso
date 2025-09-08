@@ -30,16 +30,5 @@
     </div>
     <div *ngIf="activeUsers.length===0" class="muted">Nessuno</div>
   </mat-card>
-
-  <!-- Puntate finali -->
-  <mat-card class="list-card" *ngIf="round?.closed">
-    <h3>Puntate</h3>
-    <div class="list-row" *ngFor="let row of round.bids | keyvalue">
-      <span class="list-user">{{ row.key }}</span>
-      <span class="list-amount">{{ row.value }}</span>
-    </div>
-    <div class="winner" *ngIf="round.winner">
-      🏆 Vincitore: <b>{{round.winner.user}}</b> ({{round.winner.amount}})
-    </div>
-  </mat-card>
+  <app-summary class="main-panel"></app-summary>
 </div>

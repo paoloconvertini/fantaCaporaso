@@ -1,0 +1,22 @@
+<h2 mat-dialog-title>Assegna manualmente</h2>
+<mat-dialog-content>
+    <p>Giocatore: <b>{{data.player}}</b> ({{data.role}} - {{data.team}})</p>
+    <p>Valore di mercato: {{data.value}}</p>
+
+    <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Partecipante</mat-label>
+        <mat-select [(value)]="selectedParticipantId">
+            <mat-option *ngFor="let p of participants" [value]="p.id">{{ p.name }}</mat-option>
+        </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Crediti</mat-label>
+        <input matInput type="number" [(ngModel)]="amount" min="1"/>
+    </mat-form-field>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button (click)="cancel()">Annulla</button>
+    <button mat-raised-button color="primary" (click)="save()">Salva</button>
+</mat-dialog-actions>

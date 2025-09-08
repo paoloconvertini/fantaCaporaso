@@ -1,226 +1,189 @@
 package com.fantasta.rest;
 
-import com.fantasta.dto.*;
-import com.fantasta.model.*;
-import com.fantasta.service.*;
+import com.fantasta.dto.BidDto;
+import com.fantasta.dto.ManualAssignDto;
+import com.fantasta.dto.RoundDto;
+import com.fantasta.model.RoundState;
+import com.fantasta.service.AuctionService;
 import com.fantasta.ws.RoundSocket;
+import io.vertx.core.Vertx;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.*;
+import jakarta.ws.rs.core.MediaType;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.stream.Collectors;
+import java.io.File;
+import java.util.Objects;
 
 @Path("/api")
-@Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+@ApplicationScoped
 public class AuctionResource {
-    @Inject
-    AuctionService service;
-    @Inject
-    RoundSocket socket;
-    @Inject
-    DbService db;
-    @Inject
-    ParticipantService participantService;
 
     @Inject
-    RosterService roster;
+    Vertx vertx;
 
-    private final ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor();
-    private ScheduledFuture<?> autoCloseTask;
+    // stato per il timer
+    private Long autoCloseTimerId = null;
+    private volatile String scheduledRoundId = null;
 
-    private void ensureAdmin(String pin) {
-        String expected = System.getProperty("admin.pin", System.getenv().getOrDefault("ADMIN_PIN", "1234"));
-        if (expected == null) expected = "1234";
-        if (pin == null || !expected.equals(pin)) throw new WebApplicationException("PIN errato", 403);
-    }
+    @Inject AuctionService service;
+    @Inject RoundSocket socket;
 
-    private int defaultCredits() {
-        try {
-            return Integer.parseInt(System.getProperty("app.credits.total",
-                    System.getenv().getOrDefault("APP_CREDITS_TOTAL", "500")));
-        } catch (Exception e) {
-            return 500;
-        }
-    }
-
-    // -------- GET round --------
     @GET
     @Path("/round")
-    public RoundDto get() {
-        RoundState s = service.get();
-        if (s != null && !s.closed) {
-            // oscuriamo le puntate durante round aperto
-            s.bids = new LinkedHashMap<>(s.bids);
-            s.bids.replaceAll((k, v) -> 0);
-        }
-        return toDto(s);
+    public RoundState getRound() {
+        return service.get();
     }
 
-    // -------- START --------
     @POST
     @Path("/start")
-    public RoundDto start(@HeaderParam("X-ADMIN-PIN") String pin, StartRoundDto dto) {
-        ensureAdmin(pin);
+    public RoundState startRound(@HeaderParam("X-ADMIN-PIN") String pin, RoundState payload) {
+        RoundState s = service.start(
+                payload.player,
+                payload.playerTeam,
+                payload.playerRole,
+                payload.durationSeconds,
+                payload.tieBreak,
+                payload.value
+        );
+        socket.broadcast("ROUND_STARTED", s);
 
-        final String team = (dto.team != null) ? dto.team : dto.playerTeam;
-        final String role = (dto.role != null) ? dto.role : dto.playerRole;
-        final Integer duration = (dto.duration != null) ? dto.duration : dto.durationSeconds;
-        final String tie = (dto.tieBreak == null || dto.tieBreak.isBlank()) ? "NONE" : dto.tieBreak;
-
-        RoundState s = service.start(dto.player, team, role, duration, tie);
-        scheduleAutoClose(s);
-
-        // broadcast evento
-        socket.broadcast("ROUND_STARTED", toDto(s));
-        return toDto(s);
-    }
-
-    // -------- CLOSE --------
-    @POST
-    @Path("/round/close")
-    public RoundDto close(@HeaderParam("X-ADMIN-PIN") String pin) {
-        ensureAdmin(pin);
-        if (autoCloseTask != null && !autoCloseTask.isDone()) {
-            autoCloseTask.cancel(false);
+        // --- AUTO-CLOSE TIMER ---
+        if (autoCloseTimerId != null) {
+            vertx.cancelTimer(autoCloseTimerId);
+            autoCloseTimerId = null;
         }
 
-        RoundState s = service.close();
-        RoundDto dto = toDto(s);
+        if (s.endEpochMillis != null) {
+            scheduledRoundId = s.roundId;
+            long delay = Math.max(0L, s.endEpochMillis - System.currentTimeMillis());
 
-        socket.broadcast("ROUND_CLOSED", dto);
+            autoCloseTimerId = vertx.setTimer(delay, id -> {
+                // ✅ Verifica che il round non sia cambiato/già chiuso
+                RoundState current = service.get();
+                if (current == null || current.closed || !Objects.equals(current.roundId, scheduledRoundId)) {
+                    autoCloseTimerId = null;
+                    scheduledRoundId = null;
+                    return;
+                }
 
-        if (s != null && s.winner != null && s.player != null) {
-            var p = db.findByNameTeam(s.player, s.playerTeam);
-            if (p != null) {
-                db.markAssigned(s.roundId, p, s.winner.participantId, s.winner.amount);
-            }
+                // ✅ Esegui la chiusura su worker thread (DB-safe)
+                vertx.executeBlocking(promise -> {
+                    try {
+                        RoundState closed = service.close();
+                        socket.broadcast("ROUND_CLOSED", closed);
+                        promise.complete();
+                    } catch (Throwable t) {
+                        promise.fail(t);
+                    }
+                });
+
+                autoCloseTimerId = null;
+                scheduledRoundId = null;
+            });
         }
-
-        return dto;
+        return s;
     }
-
     @POST
     @Path("/bids")
+    @Transactional
     public RoundDto bid(BidDto dto) {
-        RoundState s = service.get();
-        if (s == null || s.closed)
-            throw new WebApplicationException("Round non attivo", 400);
-
-        if (dto == null || dto.participantId == null)
-            throw new WebApplicationException("Partecipante mancante", 400);
-
-        if (dto.amount < 1)
-            throw new WebApplicationException("Offerta minima 1", 400);
-
-        ParticipantEntity p = ParticipantEntity.findById(dto.participantId);
-        if (p == null)
-            throw new WebApplicationException("Partecipante non trovato", 404);
-
-        Role role = Role.fromString(s.playerRole);
-
-
-// ✅ residuo calcolato dalla Roster (no campo duplicato)
-        int residuo = participantService.remainingCreditsById(p.id, p.totalCredits);
-        if (dto.amount > residuo)
-            throw new WebApplicationException("Offerta supera il credito residuo", 400);
-
-// ✅ conteggio per ruolo dalla Roster
-        int current = participantService.roleCounts(p.id).getOrDefault(role, 0);
-        int max = roster.max(role);
-        if (current >= max)
-            throw new WebApplicationException("Quota piena per ruolo " + role, 400);
-
-        RoundState after = service.bid(p.id, dto.amount);
-
-        socket.broadcast("BID_ADDED", java.util.Map.of("user", p.name));
-
-        // 🔹 ritorna il DTO “pulito” (se già hai il tuo mapper toDto)
-        return toDto(after);
+        try {
+            RoundState after = service.bid(dto.participantId, dto.amount);
+            RoundDto roundDto = RoundDto.toDto(after);
+            return roundDto;
+        } catch (IllegalArgumentException e) {
+            throw new WebApplicationException(e.getMessage(), 400);
+        } catch (IllegalStateException e) {
+            throw new WebApplicationException(e.getMessage(), 409);
+        }
     }
 
 
-    // -------- RESET --------
+    @POST
+    @Path("/round/close")
+    public RoundState closeRound() {
+        if (autoCloseTimerId != null) {
+            vertx.cancelTimer(autoCloseTimerId);
+            autoCloseTimerId = null;
+        }
+        scheduledRoundId = null;   // ⬅️ AGGIUNGI
+        RoundState s = service.close();
+        socket.broadcast("ROUND_CLOSED", s);
+        return s;
+    }
+
     @POST
     @Path("/round/reset")
-    public Response reset(@HeaderParam("X-ADMIN-PIN") String pin) {
-        ensureAdmin(pin);
-        if (autoCloseTask != null && !autoCloseTask.isDone()) autoCloseTask.cancel(false);
+    public void resetRound() {
+        // ⬇️ AGGIUNGI
+        if (autoCloseTimerId != null) {
+            vertx.cancelTimer(autoCloseTimerId);
+            autoCloseTimerId = null;
+        }
+        scheduledRoundId = null;   // ⬅️ AGGIUNGI
+
         service.reset();
         socket.broadcast("ROUND_RESET", null);
-        return Response.noContent().build();
     }
 
-    // -------- AUTO-CLOSE --------
-    private void scheduleAutoClose(RoundState s) {
-        if (s.endEpochMillis != null) {
-            if (autoCloseTask != null && !autoCloseTask.isDone()) {
-                autoCloseTask.cancel(false);
-            }
-            long delay = Math.max(0L, s.endEpochMillis - System.currentTimeMillis());
-            autoCloseTask = exec.schedule(() -> {
-                try {
-                    RoundState closed = service.close();
-                    RoundDto dto = toDto(closed);
-                    socket.broadcast("ROUND_CLOSED", dto);
-
-                    if (closed != null && closed.winner != null && closed.player != null) {
-                        var p = db.findByNameTeam(closed.player, closed.playerTeam);
-                        if (p != null) {
-                            db.markAssigned(closed.roundId, p, closed.winner.participantId, closed.winner.amount);
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }, delay, TimeUnit.MILLISECONDS);
-        }
+    @POST
+    @Path("/assign")
+    @Transactional
+    public RoundDto manualAssign(ManualAssignDto dto) {
+        RoundState s = service.manualAssign(dto.participantId, dto.player, dto.team, dto.amount);
+        RoundDto roundDto = RoundDto.toDto(s);
+        socket.broadcast("ROUND_CLOSED", roundDto);
+        return roundDto;
     }
 
-    // -------- CONVERTER --------
-    private RoundDto toDto(RoundState s) {
-        if (s == null) return null;
+    /**
+     * 🔹 Chiude l’asta e consolida le rose in history
+     */
+    @POST
+    @Path("/close")
+    @Transactional
+    public void closeAuction(@QueryParam("sessionId") Long sessionId) {
+        if (sessionId == null) {
+            throw new BadRequestException("SessionId mancante");
+        }
+        service.closeAuction(sessionId);
+    }
 
-        RoundDto dto = new RoundDto();
-        dto.roundId = s.roundId;
-        dto.player = s.player;
-        dto.playerTeam = s.playerTeam;
-        dto.playerRole = s.playerRole;
-        dto.closed = s.closed;
-        dto.durationSeconds = s.durationSeconds;
-        dto.endEpochMillis = s.endEpochMillis;
+    /**
+     * 🔹 Svincola un calciatore da roster
+     */
+    @POST
+    @Path("/release/{rosterId}")
+    @Transactional
+    public void release(@PathParam("rosterId") Long rosterId) {
+        if (rosterId == null) {
+            throw new BadRequestException("RosterId mancante");
+        }
+        service.releasePlayer(rosterId);
+    }
 
-        // bids: id → nome
-        dto.bids = s.bids.entrySet().stream().collect(
-                Collectors.toMap(
-                        e -> {
-                            try {
-                                Long id = Long.valueOf(e.getKey());
-                                ParticipantEntity p = ParticipantEntity.findById(id);
-                                return p != null ? p.name : ("??-" + id);
-                            } catch (Exception ex) {
-                                return e.getKey();
-                            }
-                        },
-                        Map.Entry::getValue,
-                        (a, b) -> a,
-                        LinkedHashMap::new
-                )
-        );
-
-        dto.winner = s.winner;
-
-        if (s.tieUsers != null) {
-            dto.tieUsers = s.tieUsers.stream()
-                    .map(id -> {
-                        ParticipantEntity p = ParticipantEntity.findById(id);
-                        return p != null ? p.name : ("??-" + id);
-                    })
-                    .toList();
+    /**
+     * 🔹 Nuova sessione caricando rose da file
+     */
+    @POST
+    @Path("/new")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Transactional
+    public void startNewAuction(@QueryParam("sessionId") Long sessionId,
+                                @FormParam("file") FileUpload fileUpload) {
+        if (sessionId == null) {
+            throw new BadRequestException("SessionId mancante");
+        }
+        if (fileUpload == null) {
+            throw new BadRequestException("File mancante");
         }
 
-        return dto;
+        File file = fileUpload.uploadedFile().toFile();
+        service.startNewAuctionFromFile(file, sessionId);
     }
 }

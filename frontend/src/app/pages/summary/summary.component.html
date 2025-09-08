@@ -1,12 +1,8 @@
 <div class="summary-container">
     <mat-card class="list-card" *ngFor="let p of participants">
-        <h4>{{ p.name }}</h4>
         <div class="list-row">
-      <span class="summary-credits">
-        Residuo: {{ p.remainingCredits }}/{{ p.totalCredits }}
-      </span>
-        </div>
-        <div class="summary-right">
+            <span class="list-user">{{ p.name }}</span>
+            <span class="summary-credits">{{ p.remainingCredits }}</span>
             <span class="role-count p">P: {{ p.roleCounts.PORTIERE }}</span>
             <span class="role-count d">D: {{ p.roleCounts.DIFENSORE }}</span>
             <span class="role-count c">C: {{ p.roleCounts.CENTROCAMPISTA }}</span>

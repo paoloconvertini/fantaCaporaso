@@ -54,6 +54,7 @@ public class ExcelPlayersLoader {
                 String roleStr = get(row.getCell(1));
                 String name    = get(row.getCell(2));
                 String team    = get(row.getCell(3));
+                Double valore    = row.getCell(4).getNumericCellValue();
                 Role role = Role.fromString(roleStr);
                 if (role == null || name == null || name.isBlank()) continue;
 
@@ -65,6 +66,7 @@ public class ExcelPlayersLoader {
                     p.name = name.trim();
                     p.team = team == null ? "" : team.trim();
                     p.role = role;
+                    p.valore = valore;
                     p.persist();
                     imported++;
                 }

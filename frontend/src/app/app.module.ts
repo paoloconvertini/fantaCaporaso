@@ -9,7 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
-
+import { ManualAssignDialogComponent } from './dialogs/manual-assign-dialog.component';
 import { AppComponent } from './app.component';
 import { AdminComponent } from './pages/admin/admin.component';
 import { MobileComponent } from './pages/mobile/mobile.component';
@@ -19,7 +19,9 @@ import {HttpClientModule} from "@angular/common/http";
 import {SummaryComponent} from "./pages/summary/summary.component";
 import {MatProgressBarModule} from "@angular/material/progress-bar";
 import {MatIconModule} from "@angular/material/icon";
-import {MatTooltipModule} from "@angular/material/tooltip";   // 👈 routing centralizzato
+import {MatTooltipModule} from "@angular/material/tooltip";
+import {MatDialogModule} from "@angular/material/dialog";
+import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";   // 👈 routing centralizzato
 
 @NgModule({
   declarations: [
@@ -27,7 +29,8 @@ import {MatTooltipModule} from "@angular/material/tooltip";   // 👈 routing ce
     AdminComponent,
     MobileComponent,
     HomeComponent,
-    SummaryComponent
+    SummaryComponent,
+      ManualAssignDialogComponent
   ],
     imports: [
         BrowserModule,
@@ -44,7 +47,9 @@ import {MatTooltipModule} from "@angular/material/tooltip";   // 👈 routing ce
         HttpClientModule,
         MatProgressBarModule,
         MatIconModule,
-        MatTooltipModule
+        MatTooltipModule,
+        MatDialogModule,
+        MatProgressSpinnerModule
     ],
   bootstrap: [AppComponent]
 })

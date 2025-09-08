@@ -1,5 +1,8 @@
 import {Component, OnInit} from '@angular/core';
 import {ApiService} from "../../services/api.service";
+import { MatDialog } from '@angular/material/dialog';
+import { ManualAssignDialogComponent } from '../../dialogs/manual-assign-dialog.component'; // 🔹 nuovo file
+
 
 type SummaryRow = { name: string, remainingCredits: number, need: any };
 
@@ -14,7 +17,7 @@ export class AdminComponent implements OnInit {
     player = '';
     team = '';
     prole = '';
-    duration = 60;
+    duration = 30;
     timeLeft: number | null = null;
     private timerInterval: any;
     activeUsers: string[] = [];
@@ -23,8 +26,12 @@ export class AdminComponent implements OnInit {
     showWinnerOverlay = false;
     skippedCount = 0;
     remainingCount = 0;
+    value = 0;
+    loadingAssign = false;
+    private lastHandledClosedRoundId: string | null = null;
 
-    constructor(private api: ApiService) {
+
+    constructor(private api: ApiService, private dialog: MatDialog) {
     }
 
     ngOnInit() {
@@ -45,10 +52,12 @@ export class AdminComponent implements OnInit {
                 this.player = '(inizio giro)';
                 this.team = '';
                 this.prole = '';
+                this.value = 0;
             } else {
                 this.player = d.name || '';
                 this.team = d.team || '';
                 this.prole = d.role || '';
+                this.value = d.value || 0;
             }
             this.refreshRemaining();
         });
@@ -71,10 +80,53 @@ export class AdminComponent implements OnInit {
             }
 
             if (data.type === 'ROUND_CLOSED') {
+                const payload = data.payload || null;
+
+                // stop timer locale
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+                this.timeLeft = null;
+
+                // aggiorna stato e contatori
                 this.load();
                 this.refreshRemaining();
-                this.activeUsers = []; // reset lista attivi
+                this.activeUsers = [];
+
+                // overlay vincitore per coerenza UX
+                this.showWinnerOverlay = true;
+                setTimeout(() => (this.showWinnerOverlay = false), 5000);
+
+                // evita doppio "next" se già gestito per lo stesso round
+                const closedId = payload?.roundId || this.round?.roundId || null;
+                if (closedId && this.lastHandledClosedRoundId === closedId) {
+                    return;
+                }
+
+                // se c'è un winner, avanza SUBITO al prossimo giocatore (senza startRound)
+                const hasWinner = !!(payload?.winner || this.round?.winner);
+                if (hasWinner) {
+                    this.lastHandledClosedRoundId = closedId;
+                    this.api.randomNext().subscribe(d => {
+                        if (d) {
+                            this.player = d.name || '';
+                            this.team = d.team || '';
+                            this.prole = d.role || '';
+                            this.value = d.value || 0;
+                        } else {
+                            // fine giro
+                            this.player = '(fine giro)';
+                            this.team = '';
+                            this.prole = '';
+                            this.value = 0;
+                        }
+                        this.refreshRemaining();
+                    });
+                }
             }
+
+
 
             if (data.type === 'ROUND_RESET') {
                 this.round = null;
@@ -82,6 +134,25 @@ export class AdminComponent implements OnInit {
             }
         };
     }
+
+    close() {
+        this.api.closeRound().subscribe((res) => {
+            this.round = res;
+            this.refreshRemaining();
+            this.activeUsers = [];
+
+            // stop timer locale
+            if (this.timerInterval) {
+                clearInterval(this.timerInterval);
+                this.timerInterval = null;
+            }
+            this.timeLeft = null;
+
+            // Non chiamiamo next() qui: lo farà il ramo ROUND_CLOSED del WebSocket.
+            // L'overlay lo gestiamo anche via WS per avere un solo flusso uniforme.
+        });
+    }
+
 
     get sortedBids() {
         if (!this.round || !this.round.bids) return [];
@@ -96,33 +167,35 @@ export class AdminComponent implements OnInit {
         this.api.getRound().subscribe(res => {
             this.round = res;
             this.activeUsers = this.round && this.round.bids ? Object.keys(this.round.bids) : [];
-            if (res?.endEpochMillis) {
-                this.startCountdown(res.endEpochMillis);
-            } else {
-                this.timeLeft = null;
+
+            const end = this.round?.endEpochMillis as number | null;
+            const isActive = !!this.round && this.round.closed === false && !!end && end > Date.now();
+
+            if (isActive) {
                 if (this.timerInterval) clearInterval(this.timerInterval);
+                this.updateTimeLeft();
+                this.timerInterval = setInterval(() => this.updateTimeLeft(), 1000);
+            } else {
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+                this.timeLeft = null;
             }
         });
     }
 
-    private startCountdown(endEpochMillis: number) {
-        if (this.timerInterval) clearInterval(this.timerInterval);
 
-        this.updateCountdown(endEpochMillis); // subito il primo valore
-        this.timerInterval = setInterval(() => {
-            this.updateCountdown(endEpochMillis);
-        }, 1000);
-    }
-
-    private updateCountdown(endEpochMillis: number) {
-        const now = Date.now();
-        const diff = Math.floor((endEpochMillis - now) / 1000);
-        this.timeLeft = diff > 0 ? diff : 0;
-        if (this.timeLeft === 0 && this.timerInterval) {
+    private updateTimeLeft() {
+        if (!this.round?.endEpochMillis) return;
+        const diff = Math.max(0, Math.floor((this.round.endEpochMillis - Date.now()) / 1000));
+        this.timeLeft = diff;
+        if (diff <= 0) {
             clearInterval(this.timerInterval);
+            this.timerInterval = null;
+            this.timeLeft = 0;
         }
     }
-
 
     refreshRemaining() {
         this.api.getRandomState().subscribe(res => {
@@ -132,7 +205,6 @@ export class AdminComponent implements OnInit {
         });
     }
 
-
     // ---- Azioni round ----
     next() {
         this.api.randomNext().subscribe(d => {
@@ -140,10 +212,13 @@ export class AdminComponent implements OnInit {
                 this.player = '(fine giro)';
                 this.team = '';
                 this.prole = '';
+                this.value = 0;
+                return;
             } else {
                 this.player = d.name || '';
                 this.team = d.team || '';
                 this.prole = d.role || '';
+                this.value = d.value || 0;
             }
             this.refreshRemaining();
         });
@@ -182,9 +257,10 @@ export class AdminComponent implements OnInit {
 
         const payload = {
             player: this.player,
-            team: this.team || '',
-            role: this.prole,
-            duration: Number(this.duration),
+            playerTeam: this.team || '',
+            playerRole: this.prole,
+            value: this.value,
+            durationSeconds: Number(this.duration),
             tieBreak: 'NONE'
         };
 
@@ -198,17 +274,22 @@ export class AdminComponent implements OnInit {
         });
     }
 
-    close() {
-        this.api.closeRound().subscribe(() => {
-            this.load();
+    startAuction() {
+        this.api.randomNext().subscribe(d => {
+            if (d) {
+                this.player = d.name || '';
+                this.team = d.team || '';
+                this.prole = d.role || '';
+                this.value = d.value || 0;
+            }
             this.refreshRemaining();
-            this.showWinnerOverlay = true;
-            this.activeUsers = [];
-            clearInterval(this.timerInterval);
         });
-        setTimeout(() => {
-            this.showWinnerOverlay = false;
-        }, 5000);
+    }
+
+    closeAuction() {
+        // TODO: chiamata API che chiude l’intera sessione/mercato
+        // es: this.api.closeAuction().subscribe(...)
+        console.log("Chiusura asta (da implementare lato BE con salvataggio roster_history)");
     }
 
     reset() {
@@ -244,5 +325,31 @@ export class AdminComponent implements OnInit {
     increaseDuration() {
         this.duration = this.duration + 5;
     }
+
+    openManualAssign() {
+        const dialogRef = this.dialog.open(ManualAssignDialogComponent, {
+            width: '400px',
+            data: { player: this.player, team: this.team, role: this.prole, value: this.value }
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+                this.loadingAssign = true;
+                this.api.manualAssign({
+                    participantId: result.participantId,
+                    player: this.player,
+                    team: this.team,
+                    role: this.prole,
+                    value: this.value,
+                    amount: result.amount
+                }).subscribe(() => {
+                    this.load();
+                    this.refreshRemaining();
+                    this.loadingAssign = false;
+                });
+            }
+        });
+    }
+
 
 }

@@ -12,4 +12,8 @@ public class PlayerEntity extends PanacheEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     public Role role;
+    public Double valore;
+
+    @Column(nullable = false)
+    public boolean assigned = false;  // nuovo campo
 }

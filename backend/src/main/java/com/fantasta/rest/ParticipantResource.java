@@ -7,6 +7,7 @@ import com.fantasta.service.ParticipantService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import org.jboss.resteasy.reactive.NoCache;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,6 +47,7 @@ public class ParticipantResource {
                 .collect(Collectors.toList());
     }
 
+    @NoCache
     @GET
     @Path("/summary")
     public List<ParticipantSummaryDto> summary() {
