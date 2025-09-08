@@ -33,7 +33,8 @@ public class AuctionService {
     }
 
     public synchronized RoundState start(String player, String team, String role,
-                                         Integer duration, String tieBreak, Integer value) {
+                                         Integer duration, String tieBreak, Integer value,
+                                         Set<Long> allowedUsers) {
         RoundState s = new RoundState();
         s.roundId = UUID.randomUUID().toString();
         s.player = player;
@@ -46,7 +47,9 @@ public class AuctionService {
                 ? (System.currentTimeMillis() + duration * 1000L)
                 : null;
         s.tieBreak = (tieBreak == null || tieBreak.isBlank()) ? "NONE" : tieBreak;
-        s.allowedUsers = null;
+        s.allowedUsers = (allowedUsers != null && !allowedUsers.isEmpty())
+                ? new HashSet<>(allowedUsers)
+                : null;
         s.tieUsers = null;
 
         this.state = s;
@@ -69,6 +72,11 @@ public class AuctionService {
         if (p == null)
             throw new IllegalArgumentException("Partecipante non trovato: " + participantId);
 
+        if (state.allowedUsers != null && !state.allowedUsers.isEmpty()) {
+            if (!state.allowedUsers.contains(participantId)) {
+                throw new IllegalArgumentException("Spareggio in corso: solo i partecipanti in parità possono offrire");
+            }
+        }
         Role role = Role.fromString(state.playerRole);
 
         // ✅ residuo calcolato da RosterService

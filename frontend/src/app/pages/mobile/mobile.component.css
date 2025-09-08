@@ -82,6 +82,7 @@ list-card {
 }
 .summary-credits { font-size: 12px; color: #ffeb3b; }
 .summary-right { display: flex; gap: 8px; font-size: 12px; }
+.last-bid { margin-top: 8px; font-size: 14px; color: #9be27b; text-align: right; }
 
 /* Responsive */
 @media (max-width: 768px) {

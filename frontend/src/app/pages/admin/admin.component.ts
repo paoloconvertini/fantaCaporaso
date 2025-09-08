@@ -29,6 +29,12 @@ export class AdminComponent implements OnInit {
     value = 0;
     loadingAssign = false;
     private lastHandledClosedRoundId: string | null = null;
+// --- Sidenav Summary (destra) ---
+    summaryOpen = true;  // di default aperta
+
+    toggleSummary(open?: boolean) {
+        this.summaryOpen = (open !== undefined) ? open : !this.summaryOpen;
+    }
 
 
     constructor(private api: ApiService, private dialog: MatDialog) {
@@ -255,7 +261,7 @@ export class AdminComponent implements OnInit {
             return;
         }
 
-        const payload = {
+        const payload: any = {
             player: this.player,
             playerTeam: this.team || '',
             playerRole: this.prole,
@@ -263,7 +269,9 @@ export class AdminComponent implements OnInit {
             durationSeconds: Number(this.duration),
             tieBreak: 'NONE'
         };
-
+        if (this.round?.closed && Array.isArray(this.round.tieUserIds) && this.round.tieUserIds.length) {
+            payload.allowedUsers = this.round.tieUserIds;   // ⬅️ passa gli id al BE
+        }
         this.api.startRound(this.pin, payload).subscribe({
             next: () => {
                 this.load();

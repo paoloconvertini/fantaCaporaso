@@ -35,20 +35,20 @@ public class AuctionResource {
 
     @GET
     @Path("/round")
-    public RoundState getRound() {
-        return service.get();
+    public RoundDto getRound() {                    // ⬅️ cambiato tipo
+        return RoundDto.toDto(service.get());
     }
-
     @POST
     @Path("/start")
-    public RoundState startRound(@HeaderParam("X-ADMIN-PIN") String pin, RoundState payload) {
+    public RoundDto startRound(@HeaderParam("X-ADMIN-PIN") String pin, RoundState payload) {
         RoundState s = service.start(
                 payload.player,
                 payload.playerTeam,
                 payload.playerRole,
                 payload.durationSeconds,
                 payload.tieBreak,
-                payload.value
+                payload.value,
+                payload.allowedUsers
         );
         socket.broadcast("ROUND_STARTED", s);
 
@@ -86,7 +86,7 @@ public class AuctionResource {
                 scheduledRoundId = null;
             });
         }
-        return s;
+        return RoundDto.toDto(s);
     }
     @POST
     @Path("/bids")
@@ -94,8 +94,7 @@ public class AuctionResource {
     public RoundDto bid(BidDto dto) {
         try {
             RoundState after = service.bid(dto.participantId, dto.amount);
-            RoundDto roundDto = RoundDto.toDto(after);
-            return roundDto;
+            return RoundDto.toDto(after);
         } catch (IllegalArgumentException e) {
             throw new WebApplicationException(e.getMessage(), 400);
         } catch (IllegalStateException e) {
@@ -106,15 +105,15 @@ public class AuctionResource {
 
     @POST
     @Path("/round/close")
-    public RoundState closeRound() {
+    public RoundDto closeRound() {
         if (autoCloseTimerId != null) {
             vertx.cancelTimer(autoCloseTimerId);
             autoCloseTimerId = null;
         }
         scheduledRoundId = null;   // ⬅️ AGGIUNGI
         RoundState s = service.close();
-        socket.broadcast("ROUND_CLOSED", s);
-        return s;
+        socket.broadcast("ROUND_CLOSED", RoundDto.toDto(s));
+        return RoundDto.toDto(s);
     }
 
     @POST

@@ -16,10 +16,17 @@
 
     <div class="bid-section">
       <mat-form-field>
-        <input matInput type="number" placeholder="La tua offerta" [(ngModel)]="amount" min="0" max="{{participant.remainingCredits}}">
+        <input matInput [disabled]="round?.allowedUsers?.length && !round.allowedUsers.includes(pid)"
+               type="number" placeholder="La tua offerta" [(ngModel)]="amount" min="0"
+               max="{{participant.remainingCredits}}">
       </mat-form-field>
-      <button mat-raised-button color="primary" (click)="send()">Offri</button>
+      <button [disabled]="round?.allowedUsers?.length && !round.allowedUsers.includes(pid)"
+              mat-raised-button color="primary" (click)="send()">Offri</button>
     </div>
+    <div class="last-bid" *ngIf="lastBidAmount !== null">
+      La tua ultima offerta: <b>{{ lastBidAmount }}</b>
+    </div>
+
   </mat-card>
 
   <!-- Attivi ora -->
@@ -30,5 +37,7 @@
     </div>
     <div *ngIf="activeUsers.length===0" class="muted">Nessuno</div>
   </mat-card>
-  <app-summary class="main-panel"></app-summary>
+  <app-summary class="main-panel" [selfId]="pid"
+               [roleFilter]="(round && !round.closed ? round.playerRole : currentRole) || null">
+  </app-summary>
 </div>

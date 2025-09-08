@@ -21,7 +21,8 @@ import {MatProgressBarModule} from "@angular/material/progress-bar";
 import {MatIconModule} from "@angular/material/icon";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {MatDialogModule} from "@angular/material/dialog";
-import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";   // 👈 routing centralizzato
+import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
+import {MatSidenavModule} from "@angular/material/sidenav";   // 👈 routing centralizzato
 
 @NgModule({
   declarations: [
@@ -49,7 +50,8 @@ import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";   /
         MatIconModule,
         MatTooltipModule,
         MatDialogModule,
-        MatProgressSpinnerModule
+        MatProgressSpinnerModule,
+        MatSidenavModule
     ],
   bootstrap: [AppComponent]
 })

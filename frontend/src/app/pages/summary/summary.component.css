@@ -1,67 +1,119 @@
-/* Summary compatto */
+/* Griglia compatta e allineata */
 .summary-container {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-}
-
-/* Card elenco */
-.list-card {
-    background: linear-gradient(135deg, #2e003e, #512da8);
-    color: #fff;
-    padding: 6px 10px;
-    border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    font-size: 13px;
-}
-.list-card h4 {
-    margin: 0 0 6px;
-    font-size: 14px;
-    text-align: center;
-    color: #ffeb3b;
-}
-
-.list-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 4px 0;
-    align-items: center;
+    grid-template-columns: 1fr;
     gap: 8px;
+}
+
+/* Riga */
+.row-card {
+    display: grid;
+    grid-template-columns: 1fr auto auto; /* Nome | Ruoli | Crediti */
+    align-items: center;
+    padding: 8px 10px;
+    gap: 10px;
+}
+
+/* Celle */
+.cell-name { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.cell-roles { display: flex; gap: 10px; justify-content: center; }
+.cell-credits { display: flex; justify-content: flex-end; min-width: 64px; }
+
+/* Testi */
+.list-user {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .summary-credits {
+    font-weight: 800;
+    font-size: 16px;
     color: #ffeb3b;
-    font-weight: bold;
-    /*color: #00ffc8;*/
-    font-size: 13px;
+    font-variant-numeric: tabular-nums; /* cifre allineate */
 }
 
-.summary-right {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
+/* Badge “TU” */
+.badge-self {
+    background: #00bcd4;
+    color: #001b22;
+    font-weight: 800;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    letter-spacing: .3px;
 }
 
-.role-count {
-    font-size: 12px;
-    font-weight: 500;
+/* Evidenzia la riga dell’utente */
+.row-card.is-self {
+    outline: 2px solid rgba(0,188,212,.8);
+    box-shadow: 0 0 0 3px rgba(0,188,212,.18);
 }
 
+/* Ruoli */
+.role-count { font-size: 12px; font-weight: 600; }
 .role-count.p { color: #1976d2; }
 .role-count.d { color: #388e3c; }
 .role-count.c { color: #fbc02d; }
 .role-count.a { color: #d32f2f; }
 
-/* Responsive */
-@media (max-width: 768px) {
-    .list-card { padding: 8px; }
-    .list-row { flex-direction: column; gap: 4px; }
-    .summary-right { justify-content: space-between; width: 100%; }
+/* Stati */
+.summary-loading, .summary-error {
+    font-size: 13px;
+    opacity: .85;
+    padding: 6px 2px;
 }
 
-@media (min-width: 1024px) {
-    .summary-container {
-        grid-template-columns: 1fr 1fr; /* desktop: 2 colonne */
+/* Responsive */
+@media (max-width: 768px) {
+    .row-card {
+        grid-template-columns: 1fr auto; /* Nome | Crediti */
+        grid-template-areas:
+      "name credits"
+      "roles roles";
     }
+    .cell-name { grid-area: name; }
+    .cell-roles { grid-area: roles; justify-content: flex-start; }
+    .cell-credits { grid-area: credits; }
+}
+
+/* === Dark theme per i mat-card della Summary === */
+.row-card,
+.row-card.mat-mdc-card,
+.row-card .mdc-card {
+    background: linear-gradient(135deg, #2e003e, #512da8) !important;
+    color: #fff !important;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+/* Testi interni sempre chiari */
+.row-card .list-user,
+.row-card .role-count,
+.row-card .summary-credits,
+.row-card .badge-self {
+    color: #fff;
+}
+
+/* Mantieni i colori dei contatori ruolo */
+.row-card .role-count.p { color: #1976d2; }
+.row-card .role-count.d { color: #388e3c; }
+.row-card .role-count.c { color: #fbc02d; }
+.row-card .role-count.a { color: #d32f2f; }
+
+/* Crediti in giallo acceso */
+.row-card .summary-credits {
+    color: #ffeb3b !important;
+    font-weight: 800;
+}
+
+/* Badge “TU” con buon contrasto sul dark */
+.row-card .badge-self {
+    background: #00bcd4;
+    color: #001b22 !important;
+}
+
+/* Hover leggero (facoltativo) */
+.row-card:hover .mdc-card {
+    filter: brightness(1.05);
 }

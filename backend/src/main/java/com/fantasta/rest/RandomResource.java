@@ -2,6 +2,7 @@ package com.fantasta.rest;
 
 import com.fantasta.model.*;
 import com.fantasta.service.*;
+import com.fantasta.ws.RoundSocket;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
@@ -17,6 +18,9 @@ public class RandomResource {
     @Inject
     DbService db;
 
+    @Inject
+    RoundSocket socket;
+
     @POST
     @Path("/set-role")
     public Response setRole(Map<String, String> body) {
@@ -26,6 +30,7 @@ public class RandomResource {
         }
         Role role = Role.fromString(roleStr);
         selector.setRole(role);
+        socket.broadcast("ROLE_CHANGED", Map.of("role", role.name()));
         return Response.noContent().build();
     }
 

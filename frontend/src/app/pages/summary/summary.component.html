@@ -1,12 +1,41 @@
-<div class="summary-container">
-    <mat-card class="list-card" *ngFor="let p of participants">
-        <div class="list-row">
+<div class="summary-container" *ngIf="!loading && !error">
+    <mat-card class="list-card row-card"
+              *ngFor="let p of participants"
+              [class.is-self]="isSelf(p)">
+        <!-- NOME + badge -->
+        <div class="cell cell-name">
             <span class="list-user">{{ p.name }}</span>
+            <span class="badge-self" *ngIf="isSelf(p)">TU</span>
+        </div>
+
+        <!-- RUOLI: singola colonna se filtrato, altrimenti tutte -->
+        <div class="cell cell-roles" *ngIf="roleFilter; else allRoles">
+           <span class="role-count"
+                 [ngClass]="{
+                   p: roleFilter==='PORTIERE',
+                   d: roleFilter==='DIFENSORE',
+                   c: roleFilter==='CENTROCAMPISTA',
+                   a: roleFilter==='ATTACCANTE'
+                 }">
+             {{ roleAbbrev }}: {{ countForFilter(p) }}
+           </span>
+        </div>
+
+        <ng-template #allRoles>
+            <div class="cell cell-roles">
+                <span class="role-count p">P: {{ p.roleCounts.PORTIERE }}</span>
+                <span class="role-count d">D: {{ p.roleCounts.DIFENSORE }}</span>
+                <span class="role-count c">C: {{ p.roleCounts.CENTROCAMPISTA }}</span>
+                <span class="role-count a">A: {{ p.roleCounts.ATTACCANTE }}</span>
+            </div>
+        </ng-template>
+
+        <!-- CREDITI residui (ordinati desc) -->
+        <div class="cell cell-credits">
             <span class="summary-credits">{{ p.remainingCredits }}</span>
-            <span class="role-count p">P: {{ p.roleCounts.PORTIERE }}</span>
-            <span class="role-count d">D: {{ p.roleCounts.DIFENSORE }}</span>
-            <span class="role-count c">C: {{ p.roleCounts.CENTROCAMPISTA }}</span>
-            <span class="role-count a">A: {{ p.roleCounts.ATTACCANTE }}</span>
         </div>
     </mat-card>
 </div>
+
+<div *ngIf="loading" class="summary-loading">Caricamento…</div>
+<div *ngIf="error && !loading" class="summary-error">{{ error }}</div>

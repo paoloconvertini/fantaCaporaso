@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, BehaviorSubject } from 'rxjs';
+
+type RoleKey = 'PORTIERE' | 'DIFENSORE' | 'CENTROCAMPISTA' | 'ATTACCANTE';
 
 @Injectable({
     providedIn: 'root'
@@ -9,6 +11,8 @@ export class ApiService {
 
     private base: string;
     public summaryUpdated$ = new Subject<void>();
+
+    public roleFilter$ = new BehaviorSubject<RoleKey | ''>('');
 
     constructor(private http: HttpClient) {
         this.base = (window as any).__API_BASE__ || '';
@@ -32,7 +36,8 @@ export class ApiService {
         return this.http.get(`${this.base}/api/round`);
     }
 
-    startRound(pin: string, round: { player: string; playerTeam?: string; playerRole: string; durationSeconds: number; tieBreak?: string }) {
+    startRound(pin: string, round: { player: string; playerTeam?: string; playerRole: string;
+        durationSeconds: number; tieBreak?: string, allowedUsers?: number[]; }) {
         return this.http.post(`${this.base}/api/start`, round, {
             headers: { 'X-ADMIN-PIN': pin }
         });
@@ -90,15 +95,28 @@ export class ApiService {
         const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
         const ws = new WebSocket(`${protocol}://${location.host}/ws/round`);
 
-        // ⬅️ NUOVO: non sovrascrive onmessage; usa addEventListener così coesiste col tuo handler
+        // Non sovrascrive altri handler: aggiunge e basta
         ws.addEventListener('message', (evt) => {
             try {
                 const data = JSON.parse((evt as MessageEvent).data);
                 const t = data?.type;
+                const payload = data?.payload || data || {};
+
+                // 🔔 Summary da ricaricare
                 if (t === 'SUMMARY_UPDATED' || t === 'ROUND_CLOSED' || t === 'ROUND_RESET') {
                     this.summaryUpdated$.next();
                 }
-            } catch { /* ignore */ }
+
+                // 🔔 Ruolo aggiornato:
+                // - quando l'Admin cambia selezione (ROLE_CHANGED)
+                // - quando parte un round (ROUND_STARTED) con playerRole
+                if (t === 'ROLE_CHANGED' && payload?.role) {
+                    this.roleFilter$.next(payload.role as RoleKey);
+                }
+                if (t === 'ROUND_STARTED' && payload?.playerRole) {
+                    this.roleFilter$.next(payload.playerRole as RoleKey);
+                }
+            } catch { /* ignore JSON errors */ }
         });
 
         return ws;

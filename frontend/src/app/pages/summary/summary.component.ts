@@ -1,6 +1,7 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { ApiService } from '../../services/api.service';
-import {Subscription} from "rxjs";
+
+type RoleKey = 'PORTIERE' | 'DIFENSORE' | 'CENTROCAMPISTA' | 'ATTACCANTE';
 
 type ParticipantSummary = {
     id: number;
@@ -21,28 +22,37 @@ type ParticipantSummary = {
     templateUrl: './summary.component.html',
     styleUrls: ['./summary.component.css']
 })
-export class SummaryComponent implements OnInit, OnDestroy {
+export class SummaryComponent implements OnInit {
+    /** Ruolo su cui filtrare la colonna (se null/'' mostra tutte) */
+    @Input() roleFilter: RoleKey | '' | null = null;
+    /** Evidenzia questa riga (id del “mio” participant, es. Mobile) */
+    @Input() selfId: number | null = null;
+
     participants: ParticipantSummary[] = [];
     loading = true;
     error = '';
-    private sub?: Subscription;
 
     constructor(private api: ApiService) {}
 
     ngOnInit(): void {
         this.load();
-        this.sub = this.api.summaryUpdated$.subscribe(() => this.load());   // ⬅️
+
+        // ricarica quando il BE segnala aggiornamenti
+        this.api.summaryUpdated$.subscribe(() => this.load());
     }
 
-    ngOnDestroy(): void {                                          // ⬅️
-        this.sub?.unsubscribe();
+    private sortParticipants(list: ParticipantSummary[]): ParticipantSummary[] {
+        return [...list].sort((a, b) => {
+            const d = b.remainingCredits - a.remainingCredits;
+            return d !== 0 ? d : a.name.localeCompare(b.name);
+        });
     }
 
     load() {
         this.loading = true;
         this.api.getSummary().subscribe({
             next: (res: any[]) => {
-                this.participants = res.map(p => ({
+                const mapped = res.map(p => ({
                     id: p.id,
                     name: p.name,
                     totalCredits: p.totalCredits,
@@ -54,7 +64,9 @@ export class SummaryComponent implements OnInit, OnDestroy {
                         CENTROCAMPISTA: p.roleCounts?.CENTROCAMPISTA || 0,
                         ATTACCANTE: p.roleCounts?.ATTACCANTE || 0
                     }
-                }));
+                })) as ParticipantSummary[];
+
+                this.participants = this.sortParticipants(mapped);
                 this.loading = false;
             },
             error: () => {
@@ -63,4 +75,32 @@ export class SummaryComponent implements OnInit, OnDestroy {
             }
         });
     }
+
+    isSelf(p: ParticipantSummary): boolean {
+        return this.selfId != null && p.id === this.selfId;
+    }
+
+    abbrev(role: RoleKey): 'P' | 'D' | 'C' | 'A' {
+        return (role === 'PORTIERE' ? 'P' :
+            role === 'DIFENSORE' ? 'D' :
+                role === 'CENTROCAMPISTA' ? 'C' : 'A') as any;
+    }
+
+    // Abbreviazione del ruolo filtrato (per la label "P/D/C/A")
+    get roleAbbrev(): string {
+        switch (this.roleFilter) {
+            case 'PORTIERE': return 'P';
+            case 'DIFENSORE': return 'D';
+            case 'CENTROCAMPISTA': return 'C';
+            case 'ATTACCANTE': return 'A';
+            default: return '';
+        }
+    }
+
+// Conteggio per il ruolo filtrato, senza usare cast in template
+    countForFilter(p: ParticipantSummary): number {
+        if (!this.roleFilter) return 0;
+        return p.roleCounts[this.roleFilter];
+    }
+
 }

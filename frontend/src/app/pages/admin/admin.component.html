@@ -1,132 +1,187 @@
-<div class="admin-container">
-  <mat-card class="header-card">
-    <h3 class="title">FantaCaporaso - Gestione Asta</h3>
-    <div class="role-controls">
-      <mat-button-toggle-group [(ngModel)]="role" (change)="changeRole()" class="role-toggle">
-        <mat-button-toggle value="">T</mat-button-toggle>
-        <mat-button-toggle value="PORTIERE">P</mat-button-toggle>
-        <mat-button-toggle value="DIFENSORE">D</mat-button-toggle>
-        <mat-button-toggle value="CENTROCAMPISTA">C</mat-button-toggle>
-        <mat-button-toggle value="ATTACCANTE">A</mat-button-toggle>
-        <button mat-icon-button color="primary" (click)="startAuction()" matTooltip="Inizia asta" [disabled]="!role">
-          <mat-icon>play_arrow</mat-icon>
-        </button>
-        <button mat-icon-button color="warn" (click)="closeAuction()" matTooltip="Chiudi asta">
-          <mat-icon>stop</mat-icon>
-        </button>
-      </mat-button-toggle-group>
-
-      <div class="duration">
-        <mat-icon>timer</mat-icon>
-        <button mat-mini-fab color="primary" (click)="decreaseDuration()">
-          <mat-icon>remove</mat-icon>
-        </button>
-        <input type="number" [(ngModel)]="duration" min="5" class="timer-input"/> s
-        <button mat-mini-fab color="primary" (click)="increaseDuration()">
-          <mat-icon>add</mat-icon>
-        </button>
-      </div>
+<!-- admin.component.html -->
+<mat-sidenav-container class="admin-shell">
+  <!-- SIDENAV DESTRA: SUMMARY -->
+  <mat-sidenav
+          class="summary-sidenav"
+          position="end"
+          mode="side"
+          [opened]="summaryOpen"
+          (openedChange)="summaryOpen = $event"
+  >
+    <div class="sidenav-header">
+      <span class="sidenav-title">Summary</span>
+      <button mat-icon-button (click)="toggleSummary(false)" aria-label="Chiudi summary">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
     </div>
-  </mat-card>
 
-  <div class="main-content">
-    <div class="left-panel">
-      <div class="progress-info">
-        <span>alla fine <b>{{ remainingCount }}</b></span>&nbsp;&nbsp;
-        <span>scartati <b>{{ skippedCount }}</b></span>
-      </div>
-      <div class="round-actions">
-        <button mat-icon-button color="primary" (click)="start()" matTooltip="Avvia Round">
-          <mat-icon>play_arrow</mat-icon>
-        </button>
-        <button mat-icon-button color="warn" (click)="close()" matTooltip="Chiudi Round">
-          <mat-icon>stop</mat-icon>
-        </button>
-        <button mat-icon-button (click)="reset()" matTooltip="Reset Round">
-          <mat-icon>restart_alt</mat-icon>
-        </button>
+    <!-- Filtro: ruolo corrente dell'Admin -->
+    <app-summary [roleFilter]="role || null"></app-summary>
+  </mat-sidenav>
+  <button
+          *ngIf="!summaryOpen"
+          class="sidenav-toggle-open"
+          mat-fab
+          color="primary"
+          (click)="toggleSummary(true)"
+          aria-label="Apri summary"
+  >
+    <mat-icon>chevron_left</mat-icon>
+  </button>
+  <!-- CONTENUTO PRINCIPALE -->
+  <mat-sidenav-content class="admin-content">
+    <mat-card class="header-card">
+      <h3 class="title">FantaCaporaso - Gestione Asta</h3>
 
-        <span class="time-left" *ngIf="timeLeft !== null">
-    ⏱     {{ timeLeft }}s
-        </span>
-      </div>
-      <div class="player-section">
-        <div class="player-view">
-          <button mat-icon-button (click)="resetSkip()" class="nav-btn" matTooltip="ricomincia giro">
-            <mat-icon>change_circle</mat-icon>
-          </button>
-          <button mat-icon-button (click)="prev()" class="nav-btn big" matTooltip="indietro">
-            <mat-icon>chevron_left</mat-icon>
-          </button>
-<!--          <div class="player-card filled" *ngIf="player">-->
-            <div class="player-info" *ngIf="player">
-              <h2>{{player}}</h2>
-              <h3>{{team}}</h3>
-              <p class="player-value">{{value}} FVMp |
-                <span class="role-tag" [ngClass]="{'difensore':role==='DIFENSORE',
-                'portiere':role==='PORTIERE', 'centrocampista':role==='CENTROCAMPISTA',
-                'attaccante':role==='ATTACCANTE'}">{{prole | slice:0:1}}
-                </span>
-              </p>
+      <div class="role-controls">
+        <mat-button-toggle-group [(ngModel)]="role" (change)="changeRole()" class="role-toggle">
+          <mat-button-toggle value="">T</mat-button-toggle>
+          <mat-button-toggle value="PORTIERE">P</mat-button-toggle>
+          <mat-button-toggle value="DIFENSORE">D</mat-button-toggle>
+          <mat-button-toggle value="CENTROCAMPISTA">C</mat-button-toggle>
+          <mat-button-toggle value="ATTACCANTE">A</mat-button-toggle>
 
-            </div>
-<!--          </div>-->
-          <div class="player-card empty" *ngIf="!player">
-            <div class="card-content">
-              <mat-icon class="big-icon">access_time</mat-icon>
-              <h2>In attesa...</h2>
-              <p>Nessun giocatore selezionato</p>
-            </div>
-          </div>
-          <button mat-icon-button (click)="skip()" class="nav-btn" matTooltip="salta">
-            <mat-icon>skip_next</mat-icon>
+          <button mat-icon-button color="primary" (click)="startAuction()" matTooltip="Inizia asta" [disabled]="!role">
+            <mat-icon>play_arrow</mat-icon>
           </button>
-          <button mat-icon-button color="accent" (click)="openManualAssign()" matTooltip="Assegna manualmente">
-            <mat-icon>person_add</mat-icon>
+          <button mat-icon-button color="warn" (click)="closeAuction()" matTooltip="Chiudi asta">
+            <mat-icon>stop</mat-icon>
+          </button>
+        </mat-button-toggle-group>
+
+        <div class="duration">
+          <mat-icon>timer</mat-icon>
+          <button mat-mini-fab color="primary" (click)="decreaseDuration()">
+            <mat-icon>remove</mat-icon>
+          </button>
+          <input type="number" [(ngModel)]="duration" min="5" class="timer-input" /> s
+          <button mat-mini-fab color="primary" (click)="increaseDuration()">
+            <mat-icon>add</mat-icon>
           </button>
         </div>
       </div>
+    </mat-card>
+
+    <div class="main-layout">
+      <!-- COLONNA SINISTRA -->
+      <section class="left-col">
+        <div class="progress-info">
+          <span>alla fine <b>{{ remainingCount }}</b></span>&nbsp;&nbsp;
+          <span>scartati <b>{{ skippedCount }}</b></span>
+          <button mat-icon-button color="primary" (click)="start()" matTooltip="Avvia Round">
+            <mat-icon>play_arrow</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="close()" matTooltip="Chiudi Round">
+            <mat-icon>stop</mat-icon>
+          </button>
+          <button mat-icon-button (click)="reset()" matTooltip="Reset Round">
+            <mat-icon>restart_alt</mat-icon>
+          </button>
+        </div>
+
+        <!-- HERO GIOCATORE -->
+        <div class="player-hero" *ngIf="player; else waitingCard">
+          <div class="player-name">{{ player }}</div>
+          <div class="player-team">{{ team }}</div>
+          <div class="player-meta">
+            <span class="player-value">{{ value }} crediti</span>
+            <span class="role-tag"
+                  [ngClass]="{
+                    'difensore': prole==='DIFENSORE',
+                    'portiere': prole==='PORTIERE',
+                    'centrocampista': prole==='CENTROCAMPISTA',
+                    'attaccante': prole==='ATTACCANTE'
+                  }">{{ prole | slice:0:1 }}</span>
+          </div>
+          <div class="hero-actions">
+            <button mat-mini-fab (click)="resetSkip()" matTooltip="ricomincia giro">
+              <mat-icon>change_circle</mat-icon>
+            </button>
+            <button mat-fab (click)="prev()" matTooltip="indietro">
+              <mat-icon>chevron_left</mat-icon>
+            </button>
+            <button mat-fab (click)="skip()" matTooltip="salta">
+              <mat-icon>skip_next</mat-icon>
+            </button>
+            <button mat-fab color="accent" (click)="openManualAssign()" matTooltip="Assegna manualmente">
+              <mat-icon>person_add</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <ng-template #waitingCard>
+          <div class="player-waiting">
+            <mat-icon class="big-icon">access_time</mat-icon>
+            <h2>In attesa...</h2>
+            <p>Nessun giocatore selezionato</p>
+          </div>
+        </ng-template>
+      </section>
+
+      <!-- COLONNA DESTRA -->
+      <section class="right-col">
+        <!-- Timer + Attivi se round aperto -->
+        <div *ngIf="round && !round.closed; else bidsBlock" class="timer-and-actives">
+          <div class="timer-card">
+            <div class="timer-label">Tempo</div>
+            <div class="timer-big">{{ timeLeft !== null ? (timeLeft + 's') : '—' }}</div>
+          </div>
+
+          <mat-card class="list-card actives-card">
+            <h3>Chi sta puntando</h3>
+            <div *ngFor="let user of activeUsers" class="list-row">
+              <span class="list-user">{{ user }}</span>
+            </div>
+            <div *ngIf="activeUsers.length===0" class="muted">Nessuno</div>
+          </mat-card>
+        </div>
+
+        <!-- Puntate se round chiuso -->
+        <ng-template #bidsBlock>
+          <mat-card class="list-card bids-card">
+            <h3>Puntate</h3>
+            <div class="list-row" *ngFor="let row of sortedBids">
+              <span class="list-user">{{ row.user }}</span>
+              <span class="list-amount">{{ row.amount }}</span>
+            </div>
+            <div class="winner" *ngIf="round?.winner">
+              🏆 Vincitore: <b>{{ round.winner.user }}</b> ({{ round.winner.amount }})
+            </div>
+            <div *ngIf="!round?.winner" class="muted">Nessun vincitore (parità)</div>
+            <div *ngIf="!round?.winner && round?.tieUsers?.length" class="tie-info">
+              ⚖️ Spareggio tra:
+              <ul><li *ngFor="let u of round.tieUsers">{{ u }}</li></ul>
+            </div>
+          </mat-card>
+        </ng-template>
+
+        <div *ngIf="showWinnerOverlay && round?.winner" class="winner-overlay" (click)="showWinnerOverlay=false">
+          <div class="winner-card" (click)="$event.stopPropagation()">
+            <h1>🏆 {{ round.winner.user }}</h1>
+            <p>Si aggiudica <strong>{{ round.player }}</strong> per
+              <strong>{{ round.winner.amount }}</strong> crediti!</p>
+          </div>
+        </div>
+
+      </section>
     </div>
+
+    <!-- Loader assegnazione -->
     <div *ngIf="loadingAssign" class="assign-loader-overlay">
       <mat-spinner diameter="48"></mat-spinner>
       <p>Assegnazione in corso...</p>
     </div>
-    <div class="right-panel">
-      <!-- Lista attivi -->
-      <mat-card class="list-card" *ngIf="round && !round.closed">
-        <h3>Chi sta puntando</h3>
-        <div *ngFor="let user of activeUsers" class="list-row">
-          <span class="list-user">{{ user }}</span>
-        </div>
-        <div *ngIf="activeUsers.length===0" class="muted">Nessuno</div>
-      </mat-card>
 
-      <!-- Lista puntate -->
-      <mat-card class="list-card" *ngIf="round?.closed">
-        <h3>Puntate</h3>
-        <div class="list-row" *ngFor="let row of sortedBids">
-          <span class="list-user">{{ row.user }}</span>
-          <span class="list-amount">{{ row.amount }}</span>
-        </div>
-        <div class="winner" *ngIf="round.winner">
-          🏆 Vincitore: <b>{{round.winner.user}}</b> ({{round.winner.amount}})
-        </div>
-        <div *ngIf="!round.winner" class="muted">Nessun vincitore (parità)</div>
-        <div *ngIf="!round.winner && round.tieUsers?.length" class="tie-info">
-          ⚖️ Spareggio tra:
-          <ul>
-            <li *ngFor="let u of round.tieUsers">{{ u }}</li>
-          </ul>
-        </div>
-
-      </mat-card>
-
-      <div *ngIf="showWinnerOverlay && round?.winner" class="winner-overlay">
-        <h1>🏆 {{round.winner.user}}</h1>
-        <p>Si aggiudica <strong>{{ round.player }}</strong> per
-          <strong>{{ round.winner.amount }}</strong> crediti!</p>
-      </div>
-    </div>
-    <app-summary class="main-panel"></app-summary>
-  </div>
-</div>
+    <!-- Bottone flottante "minore" per aprire la sidenav quando è chiusa -->
+    <button
+            *ngIf="!summaryOpen"
+            class="sidenav-toggle-open"
+            mat-fab
+            color="primary"
+            (click)="toggleSummary(true)"
+            aria-label="Apri summary"
+    >
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+  </mat-sidenav-content>
+</mat-sidenav-container>
