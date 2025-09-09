@@ -66,6 +66,12 @@
       <!-- COLONNA SINISTRA -->
       <section class="left-col">
         <div class="progress-info">
+          <button mat-mini-fab color="accent"
+                  class="fab-reset-giro"
+                  (click)="resetSkip()"
+                  matTooltip="Ricomincia giro">
+            <mat-icon>change_circle</mat-icon>
+          </button>&nbsp;&nbsp;&nbsp;
           <span>alla fine <b>{{ remainingCount }}</b></span>&nbsp;&nbsp;
           <span>scartati <b>{{ skippedCount }}</b></span>
           <button mat-icon-button color="primary" (click)="start()" matTooltip="Avvia Round">
@@ -80,34 +86,57 @@
         </div>
 
         <!-- HERO GIOCATORE -->
-        <div class="player-hero" *ngIf="player; else waitingCard">
-          <div class="player-name">{{ player }}</div>
-          <div class="player-team">{{ team }}</div>
-          <div class="player-meta">
-            <span class="player-value">{{ value }} crediti</span>
-            <span class="role-tag"
-                  [ngClass]="{
-                    'difensore': prole==='DIFENSORE',
-                    'portiere': prole==='PORTIERE',
-                    'centrocampista': prole==='CENTROCAMPISTA',
-                    'attaccante': prole==='ATTACCANTE'
-                  }">{{ prole | slice:0:1 }}</span>
-          </div>
-          <div class="hero-actions">
-            <button mat-mini-fab (click)="resetSkip()" matTooltip="ricomincia giro">
-              <mat-icon>change_circle</mat-icon>
-            </button>
-            <button mat-fab (click)="prev()" matTooltip="indietro">
-              <mat-icon>chevron_left</mat-icon>
-            </button>
-            <button mat-fab (click)="skip()" matTooltip="salta">
-              <mat-icon>skip_next</mat-icon>
-            </button>
-            <button mat-fab color="accent" (click)="openManualAssign()" matTooltip="Assegna manualmente">
-              <mat-icon>person_add</mat-icon>
-            </button>
-          </div>
+        <!-- BLOCCO GIOCATORE CON NAV AI LATI -->
+        <div class="hero-wrap">
+          <!-- Prev a SINISTRA -->
+          <button mat-icon-button class="nav-btn prev-btn"
+                  (click)="prev()" matTooltip="Indietro">
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+
+          <!-- Contenuti giocatore -->
+          <ng-container *ngIf="player; else waitingTpl">
+            <div class="player-hero">
+              <div class="player-name">{{ player }}</div>
+              <div class="player-team">{{ team }}</div>
+              <div class="player-meta">
+                <span class="player-value">{{ value }} FVM</span>
+                <span class="role-tag"
+                      [ngClass]="{
+                difensore: prole==='DIFENSORE',
+                portiere: prole==='PORTIERE',
+                centrocampista: prole==='CENTROCAMPISTA',
+                attaccante: prole==='ATTACCANTE'
+              }">
+          {{ prole | slice:0:1 }}
+        </span>
+              </div>
+            </div>
+          </ng-container>
+
+          <ng-template #waitingTpl>
+            <div class="player-waiting">
+              <mat-icon class="big-icon">access_time</mat-icon>
+              <h2>In attesa...</h2>
+              <p>Nessun giocatore selezionato</p>
+            </div>
+          </ng-template>
+
+          <!-- Skip a DESTRA -->
+          <button mat-icon-button class="nav-btn skip-btn"
+                  (click)="skip()" matTooltip="Salta">
+            <mat-icon>skip_next</mat-icon>
+          </button>
+
+          <!-- Assegna in BASSO-DESTRA -->
+          <button mat-fab color="primary"
+                  class="fab-assign"
+                  (click)="openManualAssign()"
+                  matTooltip="Assegna manualmente">
+            <mat-icon>person_add</mat-icon>
+          </button>
         </div>
+
 
         <ng-template #waitingCard>
           <div class="player-waiting">
@@ -155,13 +184,19 @@
           </mat-card>
         </ng-template>
 
-        <div *ngIf="showWinnerOverlay && round?.winner" class="winner-overlay" (click)="showWinnerOverlay=false">
-          <div class="winner-card" (click)="$event.stopPropagation()">
-            <h1>🏆 {{ round.winner.user }}</h1>
-            <p>Si aggiudica <strong>{{ round.player }}</strong> per
-              <strong>{{ round.winner.amount }}</strong> crediti!</p>
+        <!-- Overlay vincitore centrato e sopra tutto -->
+        <div *ngIf="showWinnerOverlay && winnerPayload"
+             class="winner-overlay">
+          <div class="winner-card">
+            <h1>🏆 {{ winnerPayload.user }}</h1>
+            <p>
+              Si aggiudica
+              <strong>{{ winnerPayload.player }}</strong>
+              per <strong>{{ winnerPayload.amount }}</strong> crediti!
+            </p>
           </div>
         </div>
+
 
       </section>
     </div>

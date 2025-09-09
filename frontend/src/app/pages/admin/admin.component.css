@@ -358,3 +358,141 @@ button[mat-icon-button][color="accent"]:hover { background: rgba(0, 188, 212, 0.
     from { transform: scale(0.96); opacity: 0; }
     to   { transform: scale(1);     opacity: 1; }
 }
+
+/* Attesa round: contenitore capiente e centrato */
+.player-waiting {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    min-height: 240px;           /* spazio verticale sufficiente */
+    padding: 24px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 16px;
+    overflow: visible;            /* evita clipping dell'icona */
+}
+
+/* Icona grande senza clipping */
+.player-waiting .big-icon,
+.player-card.empty .big-icon,
+mat-icon.big-icon {
+    font-size: clamp(64px, 10vw, 140px);
+    line-height: 1;               /* niente baseline clipping */
+    width: 1em;                   /* quadrata rispetto al font-size */
+    height: 1em;
+    display: inline-flex;         /* centra il glifo nel box */
+    align-items: center;
+    justify-content: center;
+}
+
+/* Centra tutto il blocco hero */
+.player-hero {
+    text-align: center;
+}
+
+/* Centra la riga meta (valore + role tag) */
+.player-meta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+}
+
+/* Se usi ancora .player-info in qualche template, centrala */
+.player-info {
+    text-align: center;
+}
+
+/* Il role-tag non “spinga” a sinistra */
+.player-hero .role-tag,
+.player-info .role-tag {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* Top-left: reset giro (sticky) */
+.top-actions {
+    position: sticky;
+    top: 8px;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+}
+.fab-reset-giro {
+    /* opzionale: piccolo margine dal bordo */
+    margin-left: 4px;
+}
+
+/* Wrapper hero con bottoni ai lati */
+.hero-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;     /* centra il blocco hero */
+    gap: 12px;
+    padding: 12px 48px;          /* spazio per i bottoni laterali */
+    background: transparent;
+}
+
+/* Bottoni laterali */
+.nav-btn.prev-btn,
+.nav-btn.skip-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+}
+.nav-btn.prev-btn { left: 8px; }
+.nav-btn.skip-btn { right: 8px; }
+
+/* FAB Assegna in basso-destra del blocco hero */
+.fab-assign {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    z-index: 2;
+}
+
+/* Hero centrale: già centrata, ma rinforziamo */
+.player-hero { text-align: center; }
+.player-name {
+    font-size: clamp(48px, 6vw, 96px);
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+.player-team {
+    font-size: clamp(24px, 3vw, 48px);
+    color: #7ad2ff;
+    margin-top: 6px;
+}
+.player-meta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 12px;
+    font-size: clamp(18px, 2vw, 28px);
+}
+
+/* Attesa: evita clipping icona */
+.player-waiting {
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+    min-height: 240px; padding: 24px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 16px;
+    overflow: visible;
+}
+.player-waiting .big-icon, mat-icon.big-icon {
+    font-size: clamp(64px, 10vw, 140px);
+    line-height: 1;
+    width: 1em; height: 1em;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+
+/* Responsivo: su schermi stretti i tasti stanno fuori dal contenuto */
+@media (max-width: 768px) {
+    .hero-wrap { padding: 12px 40px; }
+    .nav-btn.prev-btn { left: 4px; }
+    .nav-btn.skip-btn { right: 4px; }
+}

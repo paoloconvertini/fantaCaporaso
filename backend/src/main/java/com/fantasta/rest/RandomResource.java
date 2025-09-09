@@ -93,7 +93,37 @@ public class RandomResource {
     @Path("/reset-skip")
     public Response resetSkip() {
         db.resetGiro();
+        // Notifica FE per aggiornare contatori/summary
+        socket.broadcast("ROUND_UPDATED", Map.of("reason", "reset_giro"));
         return Response.noContent().build();
     }
+
+
+    @POST
+    @Path("/prev")
+    public Response prev(Map<String, String> body) {
+        var giro = db.ensureCurrentGiro();
+
+        // corrente (facoltativo) da escludere
+        String name = body != null ? body.get("name") : null;
+        String team = body != null ? body.get("team") : null;
+
+        PlayerEntity current = null;
+        if (name != null && !name.isBlank()) {
+            current = db.findByNameTeam(name, team);
+        }
+
+        PlayerEntity p = db.previousUnassignedPick(giro.id, current);
+        if (p == null) return Response.status(204).build();
+
+        return Response.ok(Map.of(
+                "name", p.name,
+                "team", p.team,
+                "role", p.role == null ? null : p.role.name(),
+                "value", p.valore == null ? 0 : p.valore
+        )).build();
+    }
+
+
 }
 

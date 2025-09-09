@@ -31,6 +31,8 @@ export class AdminComponent implements OnInit {
     private lastHandledClosedRoundId: string | null = null;
 // --- Sidenav Summary (destra) ---
     summaryOpen = true;  // di default aperta
+    winnerPayload: { user: string; amount: number; player: string } | null = null;
+
 
     toggleSummary(open?: boolean) {
         this.summaryOpen = (open !== undefined) ? open : !this.summaryOpen;
@@ -52,22 +54,40 @@ export class AdminComponent implements OnInit {
         }
     }
 
+    // admin.component.ts
     prev() {
-        this.api.randomPrev().subscribe(d => {
-            if (!d) {
+        const current = (this.player && this.team !== undefined)
+            ? { name: this.player, team: this.team }
+            : {};
+
+        this.api.randomPrev(current).subscribe({
+            next: (res) => {
+                if (res.status === 204 || !res.body) {
+                    // nessuna “precedente” trovata
+                    this.player = '(inizio giro)';
+                    this.team = '';
+                    this.prole = '';
+                    this.value = 0;
+                } else {
+                    const d = res.body;
+                    this.player = d.name || '';
+                    this.team = d.team || '';
+                    this.prole = d.role || '';
+                    this.value = d.value || 0;
+                }
+                this.refreshRemaining();
+            },
+            error: (err) => {
+                console.error('prev() error', err);
                 this.player = '(inizio giro)';
                 this.team = '';
                 this.prole = '';
                 this.value = 0;
-            } else {
-                this.player = d.name || '';
-                this.team = d.team || '';
-                this.prole = d.role || '';
-                this.value = d.value || 0;
+                this.refreshRemaining();
             }
-            this.refreshRemaining();
         });
     }
+
 
     connectWs() {
         const sock = this.api.connectWebSocket();
@@ -86,51 +106,59 @@ export class AdminComponent implements OnInit {
             }
 
             if (data.type === 'ROUND_CLOSED') {
+                // payload coerente: RoundDto
                 const payload = data.payload || null;
 
-                // stop timer locale
-                if (this.timerInterval) {
-                    clearInterval(this.timerInterval);
-                    this.timerInterval = null;
-                }
+                // Stoppa timer e pulisci lista attivi
+                if (this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; }
                 this.timeLeft = null;
-
-                // aggiorna stato e contatori
-                this.load();
-                this.refreshRemaining();
                 this.activeUsers = [];
 
-                // overlay vincitore per coerenza UX
-                this.showWinnerOverlay = true;
-                setTimeout(() => (this.showWinnerOverlay = false), 5000);
-
-                // evita doppio "next" se già gestito per lo stesso round
-                const closedId = payload?.roundId || this.round?.roundId || null;
-                if (closedId && this.lastHandledClosedRoundId === closedId) {
-                    return;
+                // Mostra overlay SOLO se il payload ha un winner
+                if (payload?.winner) {
+                    // Salva un payload minimale per l'overlay (così non dipende da this.round)
+                    this.winnerPayload = {
+                        user: payload.winner.user,
+                        amount: payload.winner.amount,
+                        player: payload.player
+                    };
+                    this.showWinnerOverlay = true;
+                    setTimeout(() => { this.showWinnerOverlay = false; this.winnerPayload = null; }, 5000);
+                } else {
+                    // niente winner → nessun overlay (parità)
+                    this.showWinnerOverlay = false;
+                    this.winnerPayload = null;
                 }
 
-                // se c'è un winner, avanza SUBITO al prossimo giocatore (senza startRound)
-                const hasWinner = !!(payload?.winner || this.round?.winner);
-                if (hasWinner) {
-                    this.lastHandledClosedRoundId = closedId;
-                    this.api.randomNext().subscribe(d => {
-                        if (d) {
-                            this.player = d.name || '';
-                            this.team = d.team || '';
-                            this.prole = d.role || '';
-                            this.value = d.value || 0;
-                        } else {
-                            // fine giro
-                            this.player = '(fine giro)';
-                            this.team = '';
-                            this.prole = '';
-                            this.value = 0;
-                        }
-                        this.refreshRemaining();
-                    });
+                // Allinea stato round dall’API (asincrono, non influenza overlay)
+                this.load();
+                this.refreshRemaining();
+
+                // Se c’è un winner → avanza SUBITO al prossimo giocatore (senza avviare round)
+                if (payload?.winner) {
+                    // evita doppi next sullo stesso round
+                    const closedId = payload.roundId || null;
+                    if (!closedId || this.lastHandledClosedRoundId !== closedId) {
+                        this.lastHandledClosedRoundId = closedId;
+                        this.api.randomNext().subscribe(d => {
+                            if (d) {
+                                this.player = d.name || '';
+                                this.team = d.team || '';
+                                this.prole = d.role || '';
+                                this.value = d.value || 0;
+                            } else {
+                                // fine giro
+                                this.player = '(fine giro)';
+                                this.team = '';
+                                this.prole = '';
+                                this.value = 0;
+                            }
+                            this.refreshRemaining();
+                        });
+                    }
                 }
             }
+
 
 
 

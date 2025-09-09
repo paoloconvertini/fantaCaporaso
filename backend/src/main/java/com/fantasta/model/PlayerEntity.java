@@ -16,4 +16,9 @@ public class PlayerEntity extends PanacheEntity {
 
     @Column(nullable = false)
     public boolean assigned = false;  // nuovo campo
+
+    @Column(nullable = false)
+    public boolean active = true;
+
+    public java.time.Instant deletedAt;
 }

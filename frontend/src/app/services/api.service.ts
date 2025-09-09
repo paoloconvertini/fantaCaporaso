@@ -23,9 +23,16 @@ export class ApiService {
         this.summaryUpdated$.next();
     }
 
-    randomPrev() {
-        return this.http.post<any>(`${this.base}/api/random/prev`, {});
+    // api.service.ts
+    randomPrev(current?: { name?: string; team?: string }) {
+        return this.http.post<any>(
+            `${this.base}/api/random/prev`,
+            current || {},
+            { observe: 'response' }
+        );
     }
+
+
 
     setRole(role: string): Observable<any> {
         return this.http.post(`${this.base}/api/random/set-role`, { role });
