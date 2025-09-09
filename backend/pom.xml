@@ -54,6 +54,10 @@
       <artifactId>poi-ooxml</artifactId>
       <version>5.2.5</version>
     </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-resteasy-reactive-multipart</artifactId>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
