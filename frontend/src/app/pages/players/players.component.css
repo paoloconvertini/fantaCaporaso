@@ -1,0 +1,38 @@
+.players-page {
+    padding: 1rem;
+}
+
+.upload-section {
+    margin: 1rem 0;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.upload-result {
+    margin-top: 0.5rem;
+    background: #f4f4f4;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+}
+
+.loading {
+    margin-top: 1rem;
+    font-weight: bold;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 0.5rem;
+    text-align: left;
+}
+
+th {
+    background-color: #f0f0f0;
+}

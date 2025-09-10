@@ -496,3 +496,38 @@ mat-icon.big-icon {
     .nav-btn.prev-btn { left: 4px; }
     .nav-btn.skip-btn { right: 4px; }
 }
+
+/* Sidenav sinistro (menu admin) */
+.menu-sidenav {
+    width: 240px;
+    background: #2e003e;
+    color: #fff;
+}
+
+.menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: #512da8;
+    color: #fff;
+}
+
+.menu-header h3 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.mat-nav-list a {
+    color: #fff;
+}
+
+.mat-nav-list a:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}

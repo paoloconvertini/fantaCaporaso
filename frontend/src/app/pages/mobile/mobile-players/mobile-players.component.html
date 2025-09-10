@@ -1,0 +1,18 @@
+<div class="mobile-container">
+    <mat-card class="list-card">
+        <h3>Calciatori liberi</h3>
+        <label for="role">Ruolo:</label>
+        <select id="role" [(ngModel)]="selectedRole" (change)="loadPlayers()">
+            <option [ngValue]="null">Tutti</option>
+            <option *ngFor="let r of roles" [ngValue]="r">{{ r }}</option>
+        </select>
+    </mat-card>
+
+    <mat-card class="list-card" *ngFor="let p of players">
+        <h4>{{p.name}}</h4>
+        <div class="list-row">
+            <span>{{p.team}}</span>
+            <span class="summary-right">{{p.role}} - {{p.valore}}</span>
+        </div>
+    </mat-card>
+</div>

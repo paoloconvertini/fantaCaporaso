@@ -1,0 +1,12 @@
+.mobile-shell {
+    height: 100vh;
+}
+
+.mobile-content {
+    padding: 8px;
+}
+
+.toolbar-title {
+    margin-left: 8px;
+    font-weight: bold;
+}

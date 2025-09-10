@@ -1,0 +1,18 @@
+<div class="mobile-container">
+    <mat-card class="list-card">
+        <h3>Rose</h3>
+        <label for="participant">Partecipante:</label>
+        <select id="participant" [(ngModel)]="selectedParticipant" (change)="loadRosters()">
+            <option [ngValue]="null">Tutti</option>
+            <option *ngFor="let p of participants" [ngValue]="p">{{ p }}</option>
+        </select>
+    </mat-card>
+
+    <mat-card class="list-card" *ngFor="let row of rosters">
+        <h4>{{row.participant}}</h4>
+        <div class="list-row">
+            <span>{{row.playerName}}</span>
+            <span class="summary-right">{{row.role}} - {{row.amount}}</span>
+        </div>
+    </mat-card>
+</div>

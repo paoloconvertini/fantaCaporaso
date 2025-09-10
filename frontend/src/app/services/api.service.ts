@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import {HttpClient, HttpParams} from '@angular/common/http';
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
 
 type RoleKey = 'PORTIERE' | 'DIFENSORE' | 'CENTROCAMPISTA' | 'ATTACCANTE';
@@ -23,6 +23,14 @@ export class ApiService {
         this.summaryUpdated$.next();
     }
 
+    getRosters(participant?: string): Observable<any> {
+        let params = new HttpParams();
+        if (participant) {
+            params = params.set('participant', participant);
+        }
+        return this.http.get<any>(`${this.base}/api/rosters`, { params });
+    }
+
     // api.service.ts
     randomPrev(current?: { name?: string; team?: string }) {
         return this.http.post<any>(
@@ -32,6 +40,16 @@ export class ApiService {
         );
     }
 
+    uploadRosterExcel(file: File, pin: string): Observable<any> {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        return this.http.post<any>(
+            `${this.base}/api/rosters/upload`,
+            formData,
+            { params: { pin } }
+        );
+    }
 
 
     setRole(role: string): Observable<any> {
@@ -90,6 +108,23 @@ export class ApiService {
         return this.http.post(`${this.base}/api/random/reset-skip`, {}, {
             headers: { 'X-ADMIN-PIN': this.adminPin() }
         });
+    }
+
+    uploadPlayersExcel(file: File, pin: string) {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        return this.http.post<any>(
+            `${this.base}/api/admin/players/upload`,
+            formData,
+            { params: { pin } }
+        );
+    }
+
+    getPlayers(params?: { role?: string }) {
+        let httpParams = new HttpParams();
+        if (params?.role) httpParams = httpParams.set('role', params.role);
+        return this.http.get<any[]>(`${this.base}/api/players/free`, { params: httpParams });
     }
 
 // 🔹 PARTECIPANTI

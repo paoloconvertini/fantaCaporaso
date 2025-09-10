@@ -1,6 +1,25 @@
 <!-- admin.component.html -->
 <mat-sidenav-container class="admin-shell">
-  <!-- SIDENAV DESTRA: SUMMARY -->
+
+  <!-- 🔹 SIDENAV SINISTRA: MENU ADMIN -->
+  <mat-sidenav #menu mode="over" class="menu-sidenav">
+    <div class="menu-header">
+      <h3>Menu</h3>
+      <button mat-icon-button (click)="toggleMenu()" aria-label="Chiudi menu">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <mat-nav-list>
+      <a mat-list-item routerLink="/admin">🏠 Dashboard</a>
+      <a mat-list-item routerLink="/rosters">📋 Rose</a>
+      <a mat-list-item routerLink="/players">⚽ Giocatori liberi</a>
+      <a mat-list-item routerLink="/upload-rosters">⬆️ Upload Rose</a>
+      <a mat-list-item routerLink="/upload-players">⬆️ Upload Giocatori</a>
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <!-- 🔹 SIDENAV DESTRA: SUMMARY -->
   <mat-sidenav
           class="summary-sidenav"
           position="end"
@@ -14,24 +33,19 @@
         <mat-icon>chevron_right</mat-icon>
       </button>
     </div>
-
-    <!-- Filtro: ruolo corrente dell'Admin -->
     <app-summary [roleFilter]="role || null"></app-summary>
   </mat-sidenav>
-  <button
-          *ngIf="!summaryOpen"
-          class="sidenav-toggle-open"
-          mat-fab
-          color="primary"
-          (click)="toggleSummary(true)"
-          aria-label="Apri summary"
-  >
-    <mat-icon>chevron_left</mat-icon>
-  </button>
-  <!-- CONTENUTO PRINCIPALE -->
+
+  <!-- 🔹 CONTENUTO PRINCIPALE -->
   <mat-sidenav-content class="admin-content">
     <mat-card class="header-card">
-      <h3 class="title">FantaCaporaso - Gestione Asta</h3>
+      <div class="header-left">
+        <!-- Hamburger -->
+        <button mat-icon-button (click)="toggleMenu()" aria-label="Apri menu">
+          <mat-icon>menu</mat-icon>
+        </button>
+        <h3 class="title">FantaCaporaso - Gestione Asta</h3>
+      </div>
 
       <div class="role-controls">
         <mat-button-toggle-group [(ngModel)]="role" (change)="changeRole()" class="role-toggle">
@@ -86,7 +100,6 @@
         </div>
 
         <!-- HERO GIOCATORE -->
-        <!-- BLOCCO GIOCATORE CON NAV AI LATI -->
         <div class="hero-wrap">
           <!-- Prev a SINISTRA -->
           <button mat-icon-button class="nav-btn prev-btn"
@@ -103,13 +116,13 @@
                 <span class="player-value">{{ value }} FVM</span>
                 <span class="role-tag"
                       [ngClass]="{
-                difensore: prole==='DIFENSORE',
-                portiere: prole==='PORTIERE',
-                centrocampista: prole==='CENTROCAMPISTA',
-                attaccante: prole==='ATTACCANTE'
-              }">
-          {{ prole | slice:0:1 }}
-        </span>
+                        difensore: prole==='DIFENSORE',
+                        portiere: prole==='PORTIERE',
+                        centrocampista: prole==='CENTROCAMPISTA',
+                        attaccante: prole==='ATTACCANTE'
+                      }">
+                  {{ prole | slice:0:1 }}
+                </span>
               </div>
             </div>
           </ng-container>
@@ -136,15 +149,6 @@
             <mat-icon>person_add</mat-icon>
           </button>
         </div>
-
-
-        <ng-template #waitingCard>
-          <div class="player-waiting">
-            <mat-icon class="big-icon">access_time</mat-icon>
-            <h2>In attesa...</h2>
-            <p>Nessun giocatore selezionato</p>
-          </div>
-        </ng-template>
       </section>
 
       <!-- COLONNA DESTRA -->
@@ -184,9 +188,8 @@
           </mat-card>
         </ng-template>
 
-        <!-- Overlay vincitore centrato e sopra tutto -->
-        <div *ngIf="showWinnerOverlay && winnerPayload"
-             class="winner-overlay">
+        <!-- Overlay vincitore -->
+        <div *ngIf="showWinnerOverlay && winnerPayload" class="winner-overlay">
           <div class="winner-card">
             <h1>🏆 {{ winnerPayload.user }}</h1>
             <p>
@@ -196,8 +199,6 @@
             </p>
           </div>
         </div>
-
-
       </section>
     </div>
 
@@ -207,7 +208,7 @@
       <p>Assegnazione in corso...</p>
     </div>
 
-    <!-- Bottone flottante "minore" per aprire la sidenav quando è chiusa -->
+    <!-- Bottone flottante per aprire la sidenav destra quando chiusa -->
     <button
             *ngIf="!summaryOpen"
             class="sidenav-toggle-open"

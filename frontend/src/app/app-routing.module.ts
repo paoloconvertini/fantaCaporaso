@@ -4,14 +4,40 @@ import { AdminComponent } from './pages/admin/admin.component';
 import { MobileComponent } from './pages/mobile/mobile.component';
 import { HomeComponent } from './home/home.component';
 import {SummaryComponent} from "./pages/summary/summary.component";
+import {RostersComponent} from "./pages/rose/rosters.component";
+import {PlayersComponent} from "./pages/players/players.component";
+import {MobileRostersComponent} from "./pages/mobile/mobile-rosters/mobile-rosters.component";
+import {MobilePlayersComponent} from "./pages/mobile/mobile-players/mobile-players.component";
+import {MobileShellComponent} from "./pages/mobile/mobile-shell/mobile-shell.component";
 
 const routes: Routes = [
     { path: '', component: HomeComponent },
+
+    // === AREA ADMIN ===
     { path: 'admin', component: AdminComponent },
-    { path: 'mobile', component: MobileComponent },
+    { path: 'rosters', component: RostersComponent },
+    { path: 'players', component: PlayersComponent },
+    { path: 'upload-rosters', component: RostersComponent }, // admin only
+    { path: 'upload-players', component: PlayersComponent }, // admin only
+
+    // === AREA MOBILE con shell (hamburger + sidenav) ===
+    {
+        path: 'mobile',
+        component: MobileShellComponent,
+        children: [
+            { path: '', component: MobileComponent },               // asta corrente
+            { path: 'rosters', component: MobileRostersComponent }, // rose
+            { path: 'players', component: MobilePlayersComponent }  // calciatori
+        ]
+    },
+
     { path: 'summary', component: SummaryComponent },
+
+    // fallback
     { path: '**', redirectTo: '' },
 ];
+
+
 
 @NgModule({
     imports: [RouterModule.forRoot(routes)],

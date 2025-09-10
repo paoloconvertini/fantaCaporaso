@@ -1,0 +1,43 @@
+<div class="rosters-page">
+    <h2>Rose</h2>
+
+    <!-- Filtro partecipante -->
+    <label for="participant">Partecipante:</label>
+    <select id="participant" [(ngModel)]="selectedParticipant" (change)="onParticipantChange()">
+        <option [ngValue]="null">Tutti</option>
+        <option *ngFor="let p of participants" [ngValue]="p">{{ p }}</option>
+    </select>
+
+    <!-- Upload Excel -->
+    <div class="upload-section">
+        <input type="file" (change)="onFileSelected($event)" />
+        <button (click)="uploadFile()" [disabled]="!selectedFile">Carica Excel</button>
+    </div>
+
+    <div *ngIf="uploadResult" class="upload-result">
+        <pre>{{ uploadResult | json }}</pre>
+    </div>
+
+    <!-- Tabella rose -->
+    <div *ngIf="loading" class="loading">Caricamento...</div>
+    <table *ngIf="!loading">
+        <thead>
+        <tr>
+            <th>Partecipante</th>
+            <th>Giocatore</th>
+            <th>Squadra</th>
+            <th>Ruolo</th>
+            <th>Prezzo</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let row of rosters">
+            <td>{{ row.participant }}</td>
+            <td>{{ row.playerName }}</td>
+            <td>{{ row.team }}</td>
+            <td>{{ row.role }}</td>
+            <td>{{ row.amount }}</td>
+        </tr>
+        </tbody>
+    </table>
+</div>

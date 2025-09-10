@@ -22,7 +22,14 @@ import {MatIconModule} from "@angular/material/icon";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {MatDialogModule} from "@angular/material/dialog";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
-import {MatSidenavModule} from "@angular/material/sidenav";   // 👈 routing centralizzato
+import {MatSidenavModule} from "@angular/material/sidenav";
+import {RostersComponent} from "./pages/rose/rosters.component";
+import {PlayersComponent} from "./pages/players/players.component";
+import {MobilePlayersComponent} from "./pages/mobile/mobile-players/mobile-players.component";
+import {MobileRostersComponent} from "./pages/mobile/mobile-rosters/mobile-rosters.component";
+import {MobileShellComponent} from "./pages/mobile/mobile-shell/mobile-shell.component";
+import {MatToolbarModule} from "@angular/material/toolbar";
+import {MatListModule} from "@angular/material/list";   // 👈 routing centralizzato
 
 @NgModule({
   declarations: [
@@ -31,7 +38,8 @@ import {MatSidenavModule} from "@angular/material/sidenav";   // 👈 routing ce
     MobileComponent,
     HomeComponent,
     SummaryComponent,
-      ManualAssignDialogComponent
+      ManualAssignDialogComponent, RostersComponent, PlayersComponent
+      , MobilePlayersComponent, MobileRostersComponent, MobileShellComponent
   ],
     imports: [
         BrowserModule,
@@ -51,7 +59,9 @@ import {MatSidenavModule} from "@angular/material/sidenav";   // 👈 routing ce
         MatTooltipModule,
         MatDialogModule,
         MatProgressSpinnerModule,
-        MatSidenavModule
+        MatSidenavModule,
+        MatToolbarModule,
+        MatListModule
     ],
   bootstrap: [AppComponent]
 })

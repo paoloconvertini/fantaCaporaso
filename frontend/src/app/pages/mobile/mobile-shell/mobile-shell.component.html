@@ -1,0 +1,23 @@
+<mat-sidenav-container class="mobile-shell">
+    <mat-sidenav #drawer mode="over">
+        <mat-nav-list>
+            <a mat-list-item routerLink="/mobile" (click)="drawer.close()">🏠 Asta corrente</a>
+            <a mat-list-item routerLink="/mobile/rosters" (click)="drawer.close()">📋 Rose</a>
+            <a mat-list-item routerLink="/mobile/players" (click)="drawer.close()">👤 Calciatori</a>
+        </mat-nav-list>
+    </mat-sidenav>
+
+    <mat-sidenav-content>
+        <!-- header con hamburger -->
+        <mat-toolbar color="primary">
+            <button mat-icon-button (click)="drawer.toggle()" aria-label="Menu">
+                <mat-icon>menu</mat-icon>
+            </button>
+            <span class="toolbar-title">FantAsta</span>
+        </mat-toolbar>
+
+        <div class="mobile-content">
+            <router-outlet></router-outlet>
+        </div>
+    </mat-sidenav-content>
+</mat-sidenav-container>
