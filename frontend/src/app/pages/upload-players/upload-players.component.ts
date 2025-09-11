@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { ApiService } from '../../services/api.service';
 
 @Component({
   selector: 'app-upload-players',
@@ -9,9 +9,10 @@ import { HttpClient } from '@angular/common/http';
 export class UploadPlayersComponent {
   selectedFile: File | null = null;
   uploadResult: any = null;
-  readonly API_BASE = (window as any)['API_BASE'] || 'http://localhost:8080/api';
+  loading = false;
+  adminPin = '1234';
 
-  constructor(private http: HttpClient) {}
+  constructor(private api: ApiService) {}
 
   onFileSelected(event: any) {
     this.selectedFile = event.target.files[0];
@@ -20,14 +21,18 @@ export class UploadPlayersComponent {
   uploadFile() {
     if (!this.selectedFile) return;
 
-    const formData = new FormData();
-    formData.append('file', this.selectedFile);
-
-    // 🔹 PIN admin hardcoded (puoi migliorare con login/sessione)
-    this.http.post(`${this.API_BASE}/admin/players/upload?pin=1234`, formData)
-        .subscribe({
-          next: res => this.uploadResult = res,
-          error: err => this.uploadResult = { error: err.message }
-        });
+    this.loading = true;
+    this.api.uploadPlayersExcel(this.selectedFile, this.adminPin).subscribe({
+      next: res => {
+        this.uploadResult = res;
+        this.loading = false;
+      },
+      error: err => {
+        console.error(err);
+        this.uploadResult = { error: err.message || 'Errore upload' };
+        this.loading = false;
+      }
+    });
   }
+
 }

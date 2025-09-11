@@ -38,8 +38,14 @@
 
   <!-- 🔹 CONTENUTO PRINCIPALE -->
   <mat-sidenav-content class="admin-content">
+    <!-- Hamburger per aprire menu sinistro -->
+
+
     <mat-card class="header-card">
       <div class="header-left">
+        <button mat-icon-button class="menu-toggle-btn" (click)="leftMenu.open()" aria-label="Apri menu">
+          <mat-icon>menu</mat-icon>
+        </button>
         <h3 class="title">FantaCaporaso - Gestione Asta</h3>
       </div>
 

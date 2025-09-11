@@ -531,3 +531,17 @@ mat-icon.big-icon {
     align-items: center;
     gap: 12px;
 }
+/* Bottone hamburger inline nell’header */
+.menu-toggle-btn {
+    position: static;              /* niente fixed */
+    margin-right: 8px;             /* piccolo spazio dal titolo */
+    background: transparent !important;
+    color: #fff;                   /* bianco come il testo header */
+    border-radius: 0;              /* niente cerchio */
+    box-shadow: none !important;   /* nessuna ombra */
+}
+
+.menu-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.1); /* solo leggero highlight al hover */
+}
+

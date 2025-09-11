@@ -14,9 +14,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @ApplicationScoped
 public class RosterService {
@@ -58,6 +56,10 @@ public class RosterService {
         try (Workbook workbook = WorkbookFactory.create(in)) {
             Sheet sheet = workbook.getSheetAt(0);
 
+            // Giocatori assegnati in questo import
+            Set<Long> assignedNow = new HashSet<>();
+
+            // Per tenere traccia ultimo participant
             String currentParticipant = null;
 
             for (int i = 1; i <= sheet.getLastRowNum(); i++) {
@@ -68,48 +70,53 @@ public class RosterService {
                 String playerName = row.getCell(1).getStringCellValue().trim();
                 Double amount = row.getCell(2).getNumericCellValue();
 
+                // 🔹 Participant
                 ParticipantEntity participant = ParticipantEntity.find("name", participantName).firstResult();
                 if (participant == null) {
                     errors.add("Participant non trovato: " + participantName);
                     continue;
                 }
 
-                String[] parts = playerName.split(" ");
-                PlayerEntity player = null;
-                if (parts.length >= 2) {
-                    String lastName = parts[0].toLowerCase();
-                    String firstInitial = parts[1].substring(0, 1).toLowerCase();
-
-                    player = (PlayerEntity) PlayerEntity.find("LOWER(name) LIKE ?1", lastName + " %")
-                            .stream()
-                            .filter(p -> {
-                                String[] dbParts = ((PlayerEntity)p).name.split(" ");
-                                return dbParts.length >= 2
-                                        && dbParts[0].equalsIgnoreCase(lastName)
-                                        && dbParts[1].substring(0, 1).equalsIgnoreCase(firstInitial);
-                            })
-                            .findFirst()
-                            .orElse(null);
-                }
+                // 🔹 Player (match diretto, nomi già allineati)
+                PlayerEntity player = PlayerEntity.find("LOWER(name) = ?1", playerName.toLowerCase()).firstResult();
                 if (player == null) {
                     errors.add("Giocatore non trovato: " + playerName);
                     continue;
                 }
 
+                // 🔹 Cambio participant → reset roster
                 if (!participantName.equals(currentParticipant)) {
                     copyRosterToHistory(participant);
                     RosterEntity.delete("participant", participant);
                     currentParticipant = participantName;
                 }
 
-                var roster = new RosterEntity();
+                // 🔹 Inserisci riga di roster
+                RosterEntity roster = new RosterEntity();
                 roster.participant = participant;
                 roster.player = player;
                 roster.amount = amount;
                 roster.persist();
 
+                // 🔹 Marca come assegnato
+                player.assigned = true;
+                player.persist();
+
+                assignedNow.add(player.id);
+
                 inserted++;
             }
+
+            if (assignedNow.isEmpty()) {
+                // Caso limite: nessun giocatore importato → svincola tutti
+                PlayerEntity.update("assigned = false WHERE assigned = true");
+            } else {
+                // Svincola chi era assegnato ma non è più nell’import
+                PlayerEntity.update("assigned = false WHERE assigned = true AND id NOT IN ?1", assignedNow);
+            }
+
+
+
         } catch (Exception e) {
             throw new RuntimeException("Errore durante l'import da Excel: " + e.getMessage(), e);
         }

@@ -1,5 +1,7 @@
 .mobile-shell {
     height: 100vh;
+    background: linear-gradient(135deg, #2e003e, #512da8);
+    color: #fff;
 }
 
 .mobile-content {
