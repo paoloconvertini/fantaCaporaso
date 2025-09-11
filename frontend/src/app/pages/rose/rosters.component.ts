@@ -70,7 +70,7 @@ export class RostersComponent implements OnInit {
 
 }
 export interface RosterDto {
-    participant: string;
+    participantName: string;
     playerName: string;
     team: string;
     role: string;

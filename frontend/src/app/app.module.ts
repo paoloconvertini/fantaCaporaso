@@ -29,7 +29,10 @@ import {MobilePlayersComponent} from "./pages/mobile/mobile-players/mobile-playe
 import {MobileRostersComponent} from "./pages/mobile/mobile-rosters/mobile-rosters.component";
 import {MobileShellComponent} from "./pages/mobile/mobile-shell/mobile-shell.component";
 import {MatToolbarModule} from "@angular/material/toolbar";
-import {MatListModule} from "@angular/material/list";   // 👈 routing centralizzato
+import {MatListModule} from "@angular/material/list";
+import { UploadPlayersComponent } from './pages/upload-players/upload-players.component';
+import { UploadRostersComponent } from './pages/upload-rosters/upload-rosters.component';
+import { AdminMenuComponent } from './shared/admin-menu/admin-menu.component';
 
 @NgModule({
   declarations: [
@@ -39,7 +42,10 @@ import {MatListModule} from "@angular/material/list";   // 👈 routing centrali
     HomeComponent,
     SummaryComponent,
       ManualAssignDialogComponent, RostersComponent, PlayersComponent
-      , MobilePlayersComponent, MobileRostersComponent, MobileShellComponent
+      , MobilePlayersComponent, MobileRostersComponent,
+      MobileShellComponent, UploadPlayersComponent,
+      UploadRostersComponent,
+      AdminMenuComponent,
   ],
     imports: [
         BrowserModule,

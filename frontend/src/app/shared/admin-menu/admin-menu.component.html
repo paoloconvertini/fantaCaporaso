@@ -1,0 +1,29 @@
+<mat-sidenav-container class="page-shell">
+    <!-- 🔹 Menu sinistro -->
+    <mat-sidenav #menu mode="side" opened class="menu-sidenav">
+        <div class="menu-header">
+            <h3>Menu</h3>
+            <button mat-icon-button (click)="toggleMenu()" aria-label="Chiudi menu">
+                <mat-icon>close</mat-icon>
+            </button>
+        </div>
+
+        <mat-nav-list>
+            <a mat-list-item routerLink="/admin"><mat-icon>home</mat-icon> Dashboard</a>
+            <a mat-list-item routerLink="/rosters"><mat-icon>groups_2</mat-icon> Rose</a>
+            <a mat-list-item routerLink="/players"><mat-icon>sports_soccer</mat-icon> Svincolati</a>
+            <a mat-list-item routerLink="/upload-rosters"><mat-icon>file_upload</mat-icon> Upload Rose</a>
+            <a mat-list-item routerLink="/upload-players"><mat-icon>file_upload</mat-icon> Upload Giocatori</a>
+        </mat-nav-list>
+    </mat-sidenav>
+
+    <!-- 🔹 Contenuto -->
+    <mat-sidenav-content>
+        <!-- Pulsante hamburger (su mobile può servire) -->
+        <button mat-icon-button (click)="toggleMenu()" aria-label="Apri menu" class="hamburger-btn">
+            <mat-icon>menu</mat-icon>
+        </button>
+
+        <ng-content></ng-content>
+    </mat-sidenav-content>
+</mat-sidenav-container>

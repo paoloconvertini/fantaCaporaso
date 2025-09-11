@@ -1,0 +1,19 @@
+<app-admin-menu>
+    <mat-card class="list-card">
+        <h3>Upload Giocatori</h3>
+
+        <div class="upload-section">
+            <input type="file" (change)="onFileSelected($event)" />
+            <button mat-raised-button color="primary"
+                    (click)="uploadFile()"
+                    [disabled]="!selectedFile">
+                Carica Excel
+            </button>
+        </div>
+
+        <div *ngIf="uploadResult" class="upload-result">
+            <h4>Risultato import:</h4>
+            <pre>{{ uploadResult | json }}</pre>
+        </div>
+    </mat-card>
+</app-admin-menu>

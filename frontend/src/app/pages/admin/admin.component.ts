@@ -1,9 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {ApiService} from "../../services/api.service";
-import { MatDialog } from '@angular/material/dialog';
-import { ManualAssignDialogComponent } from '../../dialogs/manual-assign-dialog.component'; // 🔹 nuovo file
-import { ViewChild } from '@angular/core';
-import { MatSidenav } from '@angular/material/sidenav';
+import {MatDialog} from '@angular/material/dialog';
+import {ManualAssignDialogComponent} from '../../dialogs/manual-assign-dialog.component'; // 🔹 nuovo file
 
 
 type SummaryRow = { name: string, remainingCredits: number, need: any };
@@ -34,13 +32,6 @@ export class AdminComponent implements OnInit {
 // --- Sidenav Summary (destra) ---
     summaryOpen = true;  // di default aperta
     winnerPayload: { user: string; amount: number; player: string } | null = null;
-    @ViewChild('menu') menu!: MatSidenav;
-
-    toggleMenu() {
-        if (this.menu) {
-            this.menu.toggle();
-        }
-    }
 
     toggleSummary(open?: boolean) {
         this.summaryOpen = (open !== undefined) ? open : !this.summaryOpen;

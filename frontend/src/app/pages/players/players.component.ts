@@ -46,26 +46,4 @@ export class PlayersComponent implements OnInit {
     onRoleChange(): void {
         this.loadPlayers();
     }
-
-    // === upload ===
-    onFileSelected(event: any): void {
-        const file = event.target.files[0];
-        if (file) {
-            this.selectedFile = file;
-        }
-    }
-
-    uploadFile(): void {
-        if (!this.selectedFile) return;
-        this.api.uploadPlayersExcel(this.selectedFile, this.adminPin).subscribe({
-            next: res => {
-                this.uploadResult = res;
-                this.loadPlayers(); // aggiorna lista
-            },
-            error: err => {
-                console.error('Errore upload Excel giocatori', err);
-                this.uploadResult = { error: err.message };
-            }
-        });
-    }
 }

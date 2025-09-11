@@ -1,41 +1,39 @@
-<div class="players-page">
-    <h2>Calciatori liberi</h2>
+<app-admin-menu>
+    <div class="page-content">
+        <mat-card class="list-card">
+            <h3>Svincolati: <b>{{players.length}}</b></h3>
+        </mat-card>
 
-    <!-- Filtro ruolo -->
-    <label for="role">Ruolo:</label>
-    <select id="role" [(ngModel)]="selectedRole" (change)="onRoleChange()">
-        <option [ngValue]="null">Tutti</option>
-        <option *ngFor="let r of roles" [ngValue]="r">{{ r }}</option>
-    </select>
+        <!-- Filtro ruolo -->
+        <label for="role">Ruolo:</label>
+        <select id="role" [(ngModel)]="selectedRole" (change)="onRoleChange()">
+            <option [ngValue]="null">Tutti</option>
+            <option *ngFor="let r of roles" [ngValue]="r">{{ r }}</option>
+        </select>
 
-    <!-- Upload Excel (solo admin) -->
-    <div class="upload-section" *ngIf="isAdmin">
-        <input type="file" (change)="onFileSelected($event)" />
-        <button (click)="uploadFile()" [disabled]="!selectedFile">Carica Excel</button>
+        <mat-card class="list-card">
+            <div *ngIf="loading" class="loading">Caricamento...</div>
+            <table *ngIf="!loading && players.length">
+                <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Squadra</th>
+                    <th>Ruolo</th>
+                    <th>Valore</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr *ngFor="let row of players">
+                    <td>{{ row.name }}</td>
+                    <td>{{ row.team }}</td>
+                    <td>{{ row.role }}</td>
+                    <td>{{ row.valore }}</td>
+                </tr>
+                </tbody>
+            </table>
+            <div *ngIf="!loading && !players.length" class="muted text-center">
+                Nessun giocatore libero
+            </div>
+        </mat-card>
     </div>
-
-    <div *ngIf="uploadResult" class="upload-result">
-        <pre>{{ uploadResult | json }}</pre>
-    </div>
-
-    <!-- Tabella giocatori -->
-    <div *ngIf="loading" class="loading">Caricamento...</div>
-    <table *ngIf="!loading">
-        <thead>
-        <tr>
-            <th>Nome</th>
-            <th>Squadra</th>
-            <th>Ruolo</th>
-            <th>Valore</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr *ngFor="let row of players">
-            <td>{{ row.name }}</td>
-            <td>{{ row.team }}</td>
-            <td>{{ row.role }}</td>
-            <td>{{ row.valore }}</td>
-        </tr>
-        </tbody>
-    </table>
-</div>
+</app-admin-menu>

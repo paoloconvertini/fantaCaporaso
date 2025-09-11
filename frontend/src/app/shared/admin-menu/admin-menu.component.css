@@ -1,0 +1,51 @@
+/* 🔹 Contenitore principale con gradiente */
+.page-shell, .menu-container {
+    height: 100vh;
+    background: linear-gradient(135deg, #2e003e, #512da8);
+    color: #fff;
+    display: flex;
+}
+
+/* 🔹 Sidenav sinistro */
+.menu-sidenav {
+    width: 240px;
+    background-color: #2e003e;
+    color: #fff;
+    padding-top: 1rem;
+}
+
+/* 🔹 Header del menu */
+.menu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    margin-bottom: 1rem;
+    color: #ffeb3b;
+    font-weight: bold;
+}
+
+/* 🔹 Link menu */
+mat-nav-list a {
+    color: #fff !important;
+    font-weight: 500;
+}
+
+mat-nav-list a:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* 🔹 Contenuto a destra del menu */
+mat-sidenav-content {
+    flex: 1;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+/* 🔹 Pulsante hamburger */
+.hamburger-btn,
+button[mat-icon-button] {
+    color: #fff;
+}

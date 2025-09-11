@@ -1,4 +1,4 @@
-package com.fantasta.api;
+package com.fantasta.rest;
 
 import com.fantasta.dto.PlayerDto;
 import com.fantasta.service.PlayerQueryService;

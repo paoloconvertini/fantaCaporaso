@@ -1,9 +1,9 @@
 /* Layout con sidenav */
 .admin-shell {
     height: 100vh;
-    background: #0a0a0a;
     color: #fff;
 }
+
 
 .summary-sidenav {
     width: 360px;

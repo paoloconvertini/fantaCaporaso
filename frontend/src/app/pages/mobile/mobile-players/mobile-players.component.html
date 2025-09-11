@@ -1,6 +1,6 @@
 <div class="mobile-container">
     <mat-card class="list-card">
-        <h3>Calciatori liberi</h3>
+        <h3>Svincolati: <b>{{players.length}}</b></h3>
         <label for="role">Ruolo:</label>
         <select id="role" [(ngModel)]="selectedRole" (change)="loadPlayers()">
             <option [ngValue]="null">Tutti</option>

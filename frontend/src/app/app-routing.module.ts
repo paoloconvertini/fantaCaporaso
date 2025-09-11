@@ -9,6 +9,8 @@ import {PlayersComponent} from "./pages/players/players.component";
 import {MobileRostersComponent} from "./pages/mobile/mobile-rosters/mobile-rosters.component";
 import {MobilePlayersComponent} from "./pages/mobile/mobile-players/mobile-players.component";
 import {MobileShellComponent} from "./pages/mobile/mobile-shell/mobile-shell.component";
+import {UploadPlayersComponent} from "./pages/upload-players/upload-players.component";
+import {UploadRostersComponent} from "./pages/upload-rosters/upload-rosters.component";
 
 const routes: Routes = [
     { path: '', component: HomeComponent },
@@ -17,8 +19,9 @@ const routes: Routes = [
     { path: 'admin', component: AdminComponent },
     { path: 'rosters', component: RostersComponent },
     { path: 'players', component: PlayersComponent },
-    { path: 'upload-rosters', component: RostersComponent }, // admin only
-    { path: 'upload-players', component: PlayersComponent }, // admin only
+    { path: 'upload-rosters', component: UploadRostersComponent },
+    { path: 'upload-players', component: UploadPlayersComponent },
+
 
     // === AREA MOBILE con shell (hamburger + sidenav) ===
     {

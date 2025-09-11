@@ -74,7 +74,23 @@ public class RosterService {
                     continue;
                 }
 
-                PlayerEntity player = PlayerEntity.find("LOWER(name) = ?1", playerName.toLowerCase()).firstResult();
+                String[] parts = playerName.split(" ");
+                PlayerEntity player = null;
+                if (parts.length >= 2) {
+                    String lastName = parts[0].toLowerCase();
+                    String firstInitial = parts[1].substring(0, 1).toLowerCase();
+
+                    player = (PlayerEntity) PlayerEntity.find("LOWER(name) LIKE ?1", lastName + " %")
+                            .stream()
+                            .filter(p -> {
+                                String[] dbParts = ((PlayerEntity)p).name.split(" ");
+                                return dbParts.length >= 2
+                                        && dbParts[0].equalsIgnoreCase(lastName)
+                                        && dbParts[1].substring(0, 1).equalsIgnoreCase(firstInitial);
+                            })
+                            .findFirst()
+                            .orElse(null);
+                }
                 if (player == null) {
                     errors.add("Giocatore non trovato: " + playerName);
                     continue;

@@ -1,43 +1,39 @@
-<div class="rosters-page">
-    <h2>Rose</h2>
+<app-admin-menu>
+    <mat-card class="list-card">
+        <h3>Rose</h3>
+        <mat-form-field appearance="fill">
+            <mat-label>Filtra per partecipante</mat-label>
+            <mat-select [(ngModel)]="selectedParticipant" (selectionChange)="onParticipantChange()">
+                <mat-option value="">Tutti</mat-option>
+                <mat-option *ngFor="let p of participants" [value]="p">{{ p }}</mat-option>
+            </mat-select>
+        </mat-form-field>
+    </mat-card>
 
-    <!-- Filtro partecipante -->
-    <label for="participant">Partecipante:</label>
-    <select id="participant" [(ngModel)]="selectedParticipant" (change)="onParticipantChange()">
-        <option [ngValue]="null">Tutti</option>
-        <option *ngFor="let p of participants" [ngValue]="p">{{ p }}</option>
-    </select>
-
-    <!-- Upload Excel -->
-    <div class="upload-section">
-        <input type="file" (change)="onFileSelected($event)" />
-        <button (click)="uploadFile()" [disabled]="!selectedFile">Carica Excel</button>
-    </div>
-
-    <div *ngIf="uploadResult" class="upload-result">
-        <pre>{{ uploadResult | json }}</pre>
-    </div>
-
-    <!-- Tabella rose -->
-    <div *ngIf="loading" class="loading">Caricamento...</div>
-    <table *ngIf="!loading">
-        <thead>
-        <tr>
-            <th>Partecipante</th>
-            <th>Giocatore</th>
-            <th>Squadra</th>
-            <th>Ruolo</th>
-            <th>Prezzo</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr *ngFor="let row of rosters">
-            <td>{{ row.participant }}</td>
-            <td>{{ row.playerName }}</td>
-            <td>{{ row.team }}</td>
-            <td>{{ row.role }}</td>
-            <td>{{ row.amount }}</td>
-        </tr>
-        </tbody>
-    </table>
-</div>
+    <mat-card class="list-card">
+        <div *ngIf="loading" class="loading">Caricamento...</div>
+        <table *ngIf="!loading && rosters.length">
+            <thead>
+            <tr>
+                <th>Partecipante</th>
+                <th>Giocatore</th>
+                <th>Squadra</th>
+                <th>Ruolo</th>
+                <th>Prezzo</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let row of rosters">
+                <td>{{ row.participantName }}</td>
+                <td>{{ row.playerName }}</td>
+                <td>{{ row.team }}</td>
+                <td>{{ row.role }}</td>
+                <td>{{ row.amount }}</td>
+            </tr>
+            </tbody>
+        </table>
+        <div *ngIf="!loading && !rosters.length" class="muted text-center">
+            Nessuna rosa trovata
+        </div>
+    </mat-card>
+</app-admin-menu>

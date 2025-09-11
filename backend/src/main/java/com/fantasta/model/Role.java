@@ -9,15 +9,19 @@ public enum Role {
         switch (t) {
             case "portiere":
             case "portieri":
+            case "p":
                 return PORTIERE;
             case "difensore":
             case "difensori":
+            case "d":
                 return DIFENSORE;
             case "centrocampista":
             case "centrocampisti":
+            case "c":
                 return CENTROCAMPISTA;
             case "attaccante":
             case "attaccanti":
+            case "a":
                 return ATTACCANTE;
             default:
                 return null;
