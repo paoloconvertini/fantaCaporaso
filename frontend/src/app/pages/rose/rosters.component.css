@@ -1,50 +1,86 @@
-.page-content {
-    display: flex;
-    flex-direction: column;
+/* contenitore generale */
+.rosters-container {
     padding: 16px;
-    flex: 1;
-}
-
-.list-card {
-    background: rgba(0, 0, 0, 0.3);
     color: #fff;
-    padding: 12px;
-    border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    margin-bottom: 16px;
-    border: 1px solid rgba(255,255,255,0.08);
 }
 
-.list-card h3 {
-    color: #ffeb3b;
-    margin: 0 0 8px;
-    font-size: 16px;
-}
-
-mat-form-field {
-    width: 100%;
-}
-
-table {
+/* tabella */
+.rosters-table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 12px;
+    background: #1c1c2b;
+    border-radius: 12px;
+    overflow: hidden;
 }
 
-th, td {
-    padding: 8px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-
-th {
-    text-align: left;
-    color: #ffeb3b;
-}
-
-.muted {
-    color: #94a3b8;
-}
-
-.text-center {
+/* header */
+.rosters-table th {
+    background: #2a2a3d;
+    padding: 10px;
+    font-weight: 600;
     text-align: center;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+/* celle */
+.rosters-table td {
+    padding: 6px 8px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    font-size: 13px;
+}
+
+/* indice riga (numero ruolo o Tot) */
+.role-index {
+    font-weight: bold;
+    text-align: left !important;
+    background: rgba(255,255,255,0.05);
+    padding-left: 10px;
+    width: 100px;
+}
+
+/* celle giocatore */
+.player-cell {
+    min-width: 140px;
+    white-space: nowrap;
+}
+
+/* nome + valore */
+.player-cell span {
+    display: inline-block;
+}
+
+.player-cell small {
+    color: #ffd700;
+    font-weight: 600;
+}
+
+/* riga totale */
+.rosters-table tr.totals-row {
+    background: rgba(255,255,255,0.08);
+    font-weight: bold;
+}
+
+/* divisore tra ruoli */
+.rosters-table tr.role-separator td {
+    background: transparent;
+    border: none;
+    height: 12px;
+}
+
+/* colori ruoli */
+.role-portiere td.player-cell { background: #f28b82; color: #000; }
+.role-difensore td.player-cell { background: #81c995; color: #000; }
+.role-centrocampista td.player-cell { background: #aecbfa; color: #000; }
+.role-attaccante td.player-cell { background: #fbbc04; color: #000; }
+
+/* loading overlay */
+.loading-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    color: #fff;
 }

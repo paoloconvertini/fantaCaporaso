@@ -1,39 +1,50 @@
-<app-admin-menu>
-    <mat-card class="list-card">
-        <h3>Rose</h3>
-        <mat-form-field appearance="fill">
-            <mat-label>Filtra per partecipante</mat-label>
-            <mat-select [(ngModel)]="selectedParticipant" (selectionChange)="onParticipantChange()">
-                <mat-option value="">Tutti</mat-option>
-                <mat-option *ngFor="let p of participants" [value]="p">{{ p }}</mat-option>
-            </mat-select>
-        </mat-form-field>
-    </mat-card>
+<div class="rosters-container" *ngIf="!loading; else loadingTpl">
 
-    <mat-card class="list-card">
-        <div *ngIf="loading" class="loading">Caricamento...</div>
-        <table *ngIf="!loading && rosters.length">
-            <thead>
-            <tr>
-                <th>Partecipante</th>
-                <th>Giocatore</th>
-                <th>Squadra</th>
-                <th>Ruolo</th>
-                <th>Prezzo</th>
+    <table class="rosters-table">
+        <thead>
+        <tr>
+            <th>#</th>
+            <th *ngFor="let p of participants">{{ p.name }}</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <ng-container *ngFor="let role of rolesOrder">
+
+            <!-- filtro fatto con ng-container + ngFor -->
+            <ng-container *ngFor="let row of tableByRole(role)">
+                <tr [class.totals-row]="row.index === 'TOT'" [class]="'role-' + role.toLowerCase()">
+                    <td class="role-index">
+                        <span *ngIf="row.index !== 'TOT'">{{ row.index }}</span>
+                        <strong *ngIf="row.index === 'TOT'">Tot {{ role }}</strong>
+                    </td>
+                    <td *ngFor="let p of participants" class="player-cell">
+                        <ng-container *ngIf="row.players[p.id] as player">
+            <span *ngIf="row.index !== 'TOT'">
+              {{ player.playerName }} <small>({{ player.amount }})</small>
+            </span>
+
+                            <strong *ngIf="row.index === 'TOT'">{{ player.amount }}</strong>
+                        </ng-container>
+                    </td>
+                </tr>
+            </ng-container>
+
+            <!-- separatore visivo -->
+            <tr class="role-separator">
+                <td [attr.colspan]="participants.length + 1"></td>
             </tr>
-            </thead>
-            <tbody>
-            <tr *ngFor="let row of rosters">
-                <td>{{ row.participantName }}</td>
-                <td>{{ row.playerName }}</td>
-                <td>{{ row.team }}</td>
-                <td>{{ row.role }}</td>
-                <td>{{ row.amount }}</td>
-            </tr>
-            </tbody>
-        </table>
-        <div *ngIf="!loading && !rosters.length" class="muted text-center">
-            Nessuna rosa trovata
-        </div>
-    </mat-card>
-</app-admin-menu>
+
+        </ng-container>
+        </tbody>
+
+    </table>
+
+</div>
+
+<ng-template #loadingTpl>
+    <div class="loading-overlay">
+        <mat-spinner diameter="48"></mat-spinner>
+        <p>Caricamento rose...</p>
+    </div>
+</ng-template>
