@@ -1,0 +1,113 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: "Roboto", Arial, sans-serif;
+}
+
+/* sfondo immagine a tutta pagina */
+body {
+    background-image: url("../img/home2.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* contenitore overlay */
+.home-container {
+    display: flex;
+    justify-content: flex-end; /* porta a destra */
+    align-items: center;
+    height: 100vh;
+    padding: 40px;
+    background: rgba(0,0,0,0.4); /* leggero overlay per leggibilità */
+}
+
+/* card di login */
+.kc-card {
+    background: rgba(28, 33, 40, 0.9);
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+    text-align: center;
+    width: 350px;
+}
+
+.kc-card h1 {
+    margin: 0;
+    font-size: 2rem;
+    color: #58a6ff;
+}
+
+.subtitle {
+    margin: 0.5rem 0 2rem;
+    color: #c9d1d9;
+}
+
+.kc-input {
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+.kc-input label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.9rem;
+    color: #8b949e;
+}
+
+.kc-input input {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    background: #0d1117;
+    color: #f0f6fc;
+    font-size: 1rem;
+}
+
+.kc-actions {
+    margin-top: 1.5rem;
+}
+
+.kc-button {
+    width: 100%;
+    padding: 0.9rem;
+    background: linear-gradient(90deg, #238636, #2ea043);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.kc-button:hover {
+    background: linear-gradient(90deg, #2ea043, #3fb950);
+}
+
+/* mobile */
+@media (max-width: 768px) {
+    .home-container {
+        justify-content: center;
+        padding: 20px;
+    }
+    .kc-card {
+        width: 100%;
+        max-width: 350px;
+    }
+}
+
+/* Tutti gli elementi di form nella kc-card */
+.kc-card .pf-c-form-control,
+.kc-card input[type="text"],
+.kc-card input[type="password"],
+.kc-card input[type="email"],
+.kc-card input[type="submit"],
+.kc-card .btn {
+    display: block;
+    width: 100%;
+    margin: 0 0 15px 0;
+    box-sizing: border-box;
+}

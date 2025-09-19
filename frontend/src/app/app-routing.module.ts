@@ -2,7 +2,6 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AdminComponent } from './pages/admin/admin.component';
 import { MobileComponent } from './pages/mobile/mobile.component';
-import { HomeComponent } from './home/home.component';
 import {SummaryComponent} from "./pages/summary/summary.component";
 import {RostersComponent} from "./pages/rose/rosters.component";
 import {PlayersComponent} from "./pages/players/players.component";
@@ -13,7 +12,6 @@ import {UploadPlayersComponent} from "./pages/upload-players/upload-players.comp
 import {UploadRostersComponent} from "./pages/upload-rosters/upload-rosters.component";
 
 const routes: Routes = [
-    { path: '', component: HomeComponent },
 
     // === AREA ADMIN ===
     { path: 'admin', component: AdminComponent },
