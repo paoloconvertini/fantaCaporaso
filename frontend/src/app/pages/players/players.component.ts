@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ApiService } from '../../services/api.service';
+import {UserApiService} from "../../services/user-api.service";
 
 @Component({
     selector: 'app-players',
@@ -20,7 +20,7 @@ export class PlayersComponent implements OnInit {
     uploadResult: any = null;
     adminPin: string = '1234';
 
-    constructor(private api: ApiService) {}
+    constructor(private api: UserApiService) {}
 
     ngOnInit(): void {
         this.loadPlayers();

@@ -7,6 +7,7 @@ import com.fantasta.model.RoundState;
 import com.fantasta.service.AuctionService;
 import com.fantasta.ws.RoundSocket;
 import io.vertx.core.Vertx;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -30,17 +31,42 @@ public class AuctionResource {
     private Long autoCloseTimerId = null;
     private volatile String scheduledRoundId = null;
 
-    @Inject AuctionService service;
-    @Inject RoundSocket socket;
+    @Inject
+    AuctionService service;
+
+    @Inject
+    RoundSocket socket;
+
+    // --- USER/ADMIN ENDPOINTS ---
 
     @GET
     @Path("/round")
-    public RoundDto getRound() {                    // ⬅️ cambiato tipo
+    @RolesAllowed({"admin", "user"})
+    public RoundDto getRound() {
         return RoundDto.toDto(service.get());
     }
+
+    @POST
+    @Path("/bids")
+    @Transactional
+    @RolesAllowed({"admin", "user"})
+    public RoundDto bid(BidDto dto) {
+        try {
+            RoundState after = service.bid(dto.participantId, dto.amount);
+            return RoundDto.toDto(after);
+        } catch (IllegalArgumentException e) {
+            throw new WebApplicationException(e.getMessage(), 400);
+        } catch (IllegalStateException e) {
+            throw new WebApplicationException(e.getMessage(), 409);
+        }
+    }
+
+    // --- ADMIN ONLY ENDPOINTS ---
+
     @POST
     @Path("/start")
-    public RoundDto startRound(@HeaderParam("X-ADMIN-PIN") String pin, RoundState payload) {
+    @RolesAllowed("admin")
+    public RoundDto startRound(RoundState payload) {
         RoundState s = service.start(
                 payload.player,
                 payload.playerTeam,
@@ -88,29 +114,16 @@ public class AuctionResource {
         }
         return RoundDto.toDto(s);
     }
-    @POST
-    @Path("/bids")
-    @Transactional
-    public RoundDto bid(BidDto dto) {
-        try {
-            RoundState after = service.bid(dto.participantId, dto.amount);
-            return RoundDto.toDto(after);
-        } catch (IllegalArgumentException e) {
-            throw new WebApplicationException(e.getMessage(), 400);
-        } catch (IllegalStateException e) {
-            throw new WebApplicationException(e.getMessage(), 409);
-        }
-    }
-
 
     @POST
     @Path("/round/close")
+    @RolesAllowed("admin")
     public RoundDto closeRound() {
         if (autoCloseTimerId != null) {
             vertx.cancelTimer(autoCloseTimerId);
             autoCloseTimerId = null;
         }
-        scheduledRoundId = null;   // ⬅️ AGGIUNGI
+        scheduledRoundId = null;
         RoundState s = service.close();
         socket.broadcast("ROUND_CLOSED", RoundDto.toDto(s));
         return RoundDto.toDto(s);
@@ -118,13 +131,13 @@ public class AuctionResource {
 
     @POST
     @Path("/round/reset")
+    @RolesAllowed("admin")
     public void resetRound() {
-        // ⬇️ AGGIUNGI
         if (autoCloseTimerId != null) {
             vertx.cancelTimer(autoCloseTimerId);
             autoCloseTimerId = null;
         }
-        scheduledRoundId = null;   // ⬅️ AGGIUNGI
+        scheduledRoundId = null;
 
         service.reset();
         socket.broadcast("ROUND_RESET", null);
@@ -133,6 +146,7 @@ public class AuctionResource {
     @POST
     @Path("/assign")
     @Transactional
+    @RolesAllowed("admin")
     public RoundDto manualAssign(ManualAssignDto dto) {
         RoundState s = service.manualAssign(dto.participantId, dto.player, dto.team, dto.amount);
         RoundDto roundDto = RoundDto.toDto(s);
@@ -146,6 +160,7 @@ public class AuctionResource {
     @POST
     @Path("/close")
     @Transactional
+    @RolesAllowed("admin")
     public void closeAuction(@QueryParam("sessionId") Long sessionId) {
         if (sessionId == null) {
             throw new BadRequestException("SessionId mancante");
@@ -159,6 +174,7 @@ public class AuctionResource {
     @POST
     @Path("/release/{rosterId}")
     @Transactional
+    @RolesAllowed("admin")
     public void release(@PathParam("rosterId") Long rosterId) {
         if (rosterId == null) {
             throw new BadRequestException("RosterId mancante");
@@ -173,6 +189,7 @@ public class AuctionResource {
     @Path("/new")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Transactional
+    @RolesAllowed("admin")
     public void startNewAuction(@QueryParam("sessionId") Long sessionId,
                                 @FormParam("file") FileUpload fileUpload) {
         if (sessionId == null) {

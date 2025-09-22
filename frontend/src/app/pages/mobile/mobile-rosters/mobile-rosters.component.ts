@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ApiService } from '../../../services/api.service';
+import {UserApiService} from "../../../services/user-api.service";
 
 @Component({
     selector: 'app-mobile-rosters',
@@ -11,7 +11,7 @@ export class MobileRostersComponent implements OnInit {
     participants: string[] = [];
     selectedParticipant: string | null = null;
 
-    constructor(private api: ApiService) {}
+    constructor(private api: UserApiService) {}
 
     ngOnInit(): void {
         this.loadRosters();

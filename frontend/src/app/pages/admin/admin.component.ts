@@ -1,8 +1,8 @@
-import {Component, OnInit} from '@angular/core';
-import {ApiService} from "../../services/api.service";
-import {MatDialog} from '@angular/material/dialog';
-import {ManualAssignDialogComponent} from '../../dialogs/manual-assign-dialog.component'; // 🔹 nuovo file
-
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
+import { AdminApiService } from '../../services/admin-api.service';
+import { ManualAssignDialogComponent } from '../../dialogs/manual-assign-dialog.component';
+import {Round} from "../../models/round.model";
 
 type SummaryRow = { name: string, remainingCredits: number, need: any };
 
@@ -11,8 +11,7 @@ type SummaryRow = { name: string, remainingCredits: number, need: any };
     templateUrl: './admin.component.html',
     styleUrls: ['./admin.component.css']
 })
-export class AdminComponent implements OnInit {
-    pin = '1234';
+export class AdminComponent implements OnInit, OnDestroy {
     role = '';
     player = '';
     team = '';
@@ -29,16 +28,16 @@ export class AdminComponent implements OnInit {
     value = 0;
     loadingAssign = false;
     private lastHandledClosedRoundId: string | null = null;
-// --- Sidenav Summary (destra) ---
-    summaryOpen = true;  // di default aperta
+    summaryOpen = true;
     winnerPayload: { user: string; amount: number; player: string } | null = null;
+
+    constructor(
+        private adminApi: AdminApiService,
+        private dialog: MatDialog
+    ) {}
 
     toggleSummary(open?: boolean) {
         this.summaryOpen = (open !== undefined) ? open : !this.summaryOpen;
-    }
-
-
-    constructor(private api: ApiService, private dialog: MatDialog) {
     }
 
     ngOnInit() {
@@ -49,20 +48,19 @@ export class AdminComponent implements OnInit {
 
     ngOnDestroy() {
         if (this.timerInterval) {
-            clearInterval(this.timerInterval)
+            clearInterval(this.timerInterval);
         }
     }
 
-    // admin.component.ts
+    // --- ROUND NAVIGATION ---
     prev() {
         const current = (this.player && this.team !== undefined)
             ? { name: this.player, team: this.team }
             : {};
 
-        this.api.randomPrev(current).subscribe({
+        this.adminApi.randomPrev(current).subscribe({
             next: (res) => {
                 if (res.status === 204 || !res.body) {
-                    // nessuna “precedente” trovata
                     this.player = '(inizio giro)';
                     this.team = '';
                     this.prole = '';
@@ -87,9 +85,8 @@ export class AdminComponent implements OnInit {
         });
     }
 
-
     connectWs() {
-        const sock = this.api.connectWebSocket();
+        const sock = this.adminApi.connectWebSocket();
         sock.onmessage = (msg) => {
             const data = JSON.parse(msg.data);
 
@@ -105,17 +102,13 @@ export class AdminComponent implements OnInit {
             }
 
             if (data.type === 'ROUND_CLOSED') {
-                // payload coerente: RoundDto
                 const payload = data.payload || null;
 
-                // Stoppa timer e pulisci lista attivi
                 if (this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; }
                 this.timeLeft = null;
                 this.activeUsers = [];
 
-                // Mostra overlay SOLO se il payload ha un winner
                 if (payload?.winner) {
-                    // Salva un payload minimale per l'overlay (così non dipende da this.round)
                     this.winnerPayload = {
                         user: payload.winner.user,
                         amount: payload.winner.amount,
@@ -124,29 +117,24 @@ export class AdminComponent implements OnInit {
                     this.showWinnerOverlay = true;
                     setTimeout(() => { this.showWinnerOverlay = false; this.winnerPayload = null; }, 5000);
                 } else {
-                    // niente winner → nessun overlay (parità)
                     this.showWinnerOverlay = false;
                     this.winnerPayload = null;
                 }
 
-                // Allinea stato round dall’API (asincrono, non influenza overlay)
                 this.load();
                 this.refreshRemaining();
 
-                // Se c’è un winner → avanza SUBITO al prossimo giocatore (senza avviare round)
                 if (payload?.winner) {
-                    // evita doppi next sullo stesso round
                     const closedId = payload.roundId || null;
                     if (!closedId || this.lastHandledClosedRoundId !== closedId) {
                         this.lastHandledClosedRoundId = closedId;
-                        this.api.randomNext().subscribe(d => {
+                        this.adminApi.randomNext().subscribe(d => {
                             if (d) {
                                 this.player = d.name || '';
                                 this.team = d.team || '';
                                 this.prole = d.role || '';
                                 this.value = d.value || 0;
                             } else {
-                                // fine giro
                                 this.player = '(fine giro)';
                                 this.team = '';
                                 this.prole = '';
@@ -158,9 +146,6 @@ export class AdminComponent implements OnInit {
                 }
             }
 
-
-
-
             if (data.type === 'ROUND_RESET') {
                 this.round = null;
                 this.activeUsers = [];
@@ -169,23 +154,18 @@ export class AdminComponent implements OnInit {
     }
 
     close() {
-        this.api.closeRound().subscribe((res) => {
+        this.adminApi.closeRound().subscribe((res) => {
             this.round = res;
             this.refreshRemaining();
             this.activeUsers = [];
 
-            // stop timer locale
             if (this.timerInterval) {
                 clearInterval(this.timerInterval);
                 this.timerInterval = null;
             }
             this.timeLeft = null;
-
-            // Non chiamiamo next() qui: lo farà il ramo ROUND_CLOSED del WebSocket.
-            // L'overlay lo gestiamo anche via WS per avere un solo flusso uniforme.
         });
     }
-
 
     get sortedBids() {
         if (!this.round || !this.round.bids) return [];
@@ -197,7 +177,7 @@ export class AdminComponent implements OnInit {
     }
 
     load() {
-        this.api.getRound().subscribe(res => {
+        this.adminApi.getRound().subscribe(res => {
             this.round = res;
             this.activeUsers = this.round && this.round.bids ? Object.keys(this.round.bids) : [];
 
@@ -218,7 +198,6 @@ export class AdminComponent implements OnInit {
         });
     }
 
-
     private updateTimeLeft() {
         if (!this.round?.endEpochMillis) return;
         const diff = Math.max(0, Math.floor((this.round.endEpochMillis - Date.now()) / 1000));
@@ -231,16 +210,15 @@ export class AdminComponent implements OnInit {
     }
 
     refreshRemaining() {
-        this.api.getRandomState().subscribe(res => {
+        this.adminApi.getRandomState().subscribe(res => {
             const role = this.role || 'TUTTI';
             this.remainingCount = res.remaining?.[role] ?? 0;
             this.skippedCount = res.skipped?.[role] ?? 0;
         });
     }
 
-    // ---- Azioni round ----
     next() {
-        this.api.randomNext().subscribe(d => {
+        this.adminApi.randomNext().subscribe(d => {
             if (!d) {
                 this.player = '(fine giro)';
                 this.team = '';
@@ -259,14 +237,14 @@ export class AdminComponent implements OnInit {
 
     skip() {
         if (!this.player) return;
-        this.api.randomSkip(this.player, this.team).subscribe(() => {
+        this.adminApi.randomSkip(this.player, this.team).subscribe(() => {
             this.next();
             this.refreshRemaining();
         });
     }
 
     resetSkip() {
-        this.api.randomResetSkip().subscribe(() => {
+        this.adminApi.randomResetSkip().subscribe(() => {
             this.player = '';
             this.team = '';
             this.prole = '';
@@ -283,12 +261,8 @@ export class AdminComponent implements OnInit {
             alert('Durata non valida (min 5s)');
             return;
         }
-        if (!this.pin || !this.pin.trim()) {
-            alert('PIN mancante');
-            return;
-        }
 
-        const payload: any = {
+        const payload: Round = {
             player: this.player,
             playerTeam: this.team || '',
             playerRole: this.prole,
@@ -297,9 +271,10 @@ export class AdminComponent implements OnInit {
             tieBreak: 'NONE'
         };
         if (this.round?.closed && Array.isArray(this.round.tieUserIds) && this.round.tieUserIds.length) {
-            payload.allowedUsers = this.round.tieUserIds;   // ⬅️ passa gli id al BE
+            payload.allowedUsers = this.round.tieUserIds;
         }
-        this.api.startRound(this.pin, payload).subscribe({
+
+        this.adminApi.startRound(payload).subscribe({
             next: () => {
                 this.load();
                 this.refreshRemaining();
@@ -310,7 +285,7 @@ export class AdminComponent implements OnInit {
     }
 
     startAuction() {
-        this.api.randomNext().subscribe(d => {
+        this.adminApi.randomNext().subscribe(d => {
             if (d) {
                 this.player = d.name || '';
                 this.team = d.team || '';
@@ -321,14 +296,8 @@ export class AdminComponent implements OnInit {
         });
     }
 
-    closeAuction() {
-        // TODO: chiamata API che chiude l’intera sessione/mercato
-        // es: this.api.closeAuction().subscribe(...)
-        console.log("Chiusura asta (da implementare lato BE con salvataggio roster_history)");
-    }
-
     reset() {
-        this.api.resetRound(this.pin).subscribe(() => {
+        this.adminApi.resetRound().subscribe(() => {
             this.load();
             this.refreshRemaining();
             this.showWinnerOverlay = false;
@@ -337,9 +306,9 @@ export class AdminComponent implements OnInit {
 
     changeRole() {
         if (!this.role) return;
-        this.api.setRole(this.role).subscribe({
+        this.adminApi.setRole(this.role).subscribe({
             next: () => this.refreshRemaining(),
-            error: (err) => console.error("Errore setRole", err)
+            error: (err) => console.error('Errore setRole', err)
         });
     }
 
@@ -370,7 +339,7 @@ export class AdminComponent implements OnInit {
         dialogRef.afterClosed().subscribe(result => {
             if (result) {
                 this.loadingAssign = true;
-                this.api.manualAssign({
+                this.adminApi.manualAssign({
                     participantId: result.participantId,
                     player: this.player,
                     team: this.team,
@@ -386,5 +355,7 @@ export class AdminComponent implements OnInit {
         });
     }
 
-
+    closeAuction() {
+        //TODO creare il metodo nel BE
+    }
 }

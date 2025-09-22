@@ -1,7 +1,8 @@
-package com.fantasta.api;
+package com.fantasta.rest;
 
 import com.fantasta.dto.RosterDto;
 import com.fantasta.service.RosterQueryService;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -16,6 +17,7 @@ public class RosterQueryResource {
     RosterQueryService rosterQueryService;
 
     @GET
+    @RolesAllowed({"admin", "user"})
     public List<RosterDto> getRosters(
             @QueryParam("participantId") Long participantId,
             @QueryParam("sessionId") Long sessionId

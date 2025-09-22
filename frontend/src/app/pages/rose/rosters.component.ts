@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ApiService } from '../../services/api.service';
+import {UserApiService} from "../../services/user-api.service";
 
 interface Player {
     id: number;
@@ -23,7 +23,7 @@ export class RostersComponent implements OnInit {
 
     rolesOrder = ['PORTIERE','DIFENSORE','CENTROCAMPISTA','ATTACCANTE'];
 
-    constructor(private api: ApiService) {}
+    constructor(private api: UserApiService) {}
 
     ngOnInit(): void {
         this.loadRosters();

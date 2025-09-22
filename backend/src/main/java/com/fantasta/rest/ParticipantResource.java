@@ -4,6 +4,7 @@ import com.fantasta.dto.ParticipantDto;
 import com.fantasta.dto.ParticipantSummaryDto;
 import com.fantasta.model.ParticipantEntity;
 import com.fantasta.service.ParticipantService;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -32,6 +33,7 @@ public class ParticipantResource {
 
     @GET
     @Path("/{id}")
+    @RolesAllowed({"admin", "user"})
     public ParticipantDto getById(@PathParam("id") Long id) {
         ParticipantEntity e = ParticipantEntity.findById(id);
         if (e == null) throw new NotFoundException("Partecipante non trovato");
@@ -40,6 +42,7 @@ public class ParticipantResource {
 
     @GET
     @Path("/all")
+    @RolesAllowed({"admin", "user"})
     public List<ParticipantDto> all() {
         return ParticipantEntity.<ParticipantEntity>listAll()
                 .stream()
@@ -50,6 +53,7 @@ public class ParticipantResource {
     @NoCache
     @GET
     @Path("/summary")
+    @RolesAllowed({"admin", "user"})
     public List<ParticipantSummaryDto> summary() {
         return ParticipantEntity.<ParticipantEntity>listAll().stream()
                 .map(e -> {
@@ -64,7 +68,6 @@ public class ParticipantResource {
                     dto.roleCounts = participantService.roleCountsAsString(e.id);
                     return dto;
                 })
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
     }
-
 }

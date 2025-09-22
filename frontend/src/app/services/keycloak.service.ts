@@ -36,10 +36,11 @@ export class KeycloakService {
         const roles: string[] = tokenParsed?.realm_access?.roles || [];
 
         if (roles.includes('admin')) {
-            this.router.navigate(['/admin']);
+            window.location.href = '/admin';
         } else {
-            this.router.navigate(['/mobile']);
+            window.location.href = '/mobile';
         }
+
     }
 
     logout(): void {

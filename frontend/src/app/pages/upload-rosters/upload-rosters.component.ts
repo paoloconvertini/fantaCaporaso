@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ApiService } from '../../services/api.service';
+import {AdminApiService} from "../../services/admin-api.service";
 
 @Component({
   selector: 'app-upload-rosters',
@@ -12,7 +12,7 @@ export class UploadRostersComponent {
   loading = false;
   adminPin = '1234';
 
-  constructor(private api: ApiService) {}
+  constructor(private api: AdminApiService) {}
 
   onFileSelected(event: any) {
     this.selectedFile = event.target.files[0];
@@ -22,7 +22,7 @@ export class UploadRostersComponent {
     if (!this.selectedFile) return;
 
     this.loading = true;
-    this.api.uploadRosterExcel(this.selectedFile, this.adminPin).subscribe({
+    this.api.uploadRosterExcel(this.selectedFile).subscribe({
       next: res => {
         this.uploadResult = res;
         this.loading = false;

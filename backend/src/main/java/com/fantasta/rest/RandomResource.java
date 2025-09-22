@@ -3,6 +3,7 @@ package com.fantasta.rest;
 import com.fantasta.model.*;
 import com.fantasta.service.*;
 import com.fantasta.ws.RoundSocket;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
@@ -13,16 +14,22 @@ import java.util.Map;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class RandomResource {
+
     @Inject
     RandomSelectorService selector;
+
     @Inject
     DbService db;
 
     @Inject
     RoundSocket socket;
 
+    /**
+     * 🔹 Imposta il ruolo (solo admin)
+     */
     @POST
     @Path("/set-role")
+    @RolesAllowed("admin")
     public Response setRole(Map<String, String> body) {
         String roleStr = body != null ? body.get("role") : null;
         if (roleStr == null || roleStr.isBlank()) {
@@ -34,15 +41,18 @@ public class RandomResource {
         return Response.noContent().build();
     }
 
+    /**
+     * 🔹 Stato corrente random (visibile a tutti)
+     */
     @GET
     @Path("/state")
+    @RolesAllowed({"admin", "user"})
     public Map<String, Object> state() {
         GiroEntity giro = db.ensureCurrentGiro();
 
         String mode = selector != null && selector.getMode() != null ? selector.getMode().name() : "OFF";
         String role = (selector != null && selector.getRole() != null) ? selector.getRole().name() : null;
 
-        // 🔹 nuova struttura: sia remaining che skipped
         Map<String, Object> stats = giro != null ? db.remainingAndSkippedByRole(giro.id) : Map.of();
 
         return Map.ofEntries(
@@ -54,8 +64,12 @@ public class RandomResource {
         );
     }
 
+    /**
+     * 🔹 Estrae il prossimo giocatore (solo admin)
+     */
     @POST
     @Path("/next")
+    @RolesAllowed("admin")
     public Response next() {
         var giro = db.ensureCurrentGiro();
         var m = selector.getMode();
@@ -74,8 +88,12 @@ public class RandomResource {
         )).build();
     }
 
+    /**
+     * 🔹 Salta un giocatore (solo admin)
+     */
     @POST
     @Path("/skip")
+    @RolesAllowed("admin")
     public Response skip(Map<String, String> body) {
         var giro = db.ensureCurrentGiro();
         String name = body != null ? body.get("name") : null;
@@ -89,22 +107,27 @@ public class RandomResource {
         return Response.noContent().build();
     }
 
+    /**
+     * 🔹 Reset degli skip (solo admin)
+     */
     @POST
     @Path("/reset-skip")
+    @RolesAllowed("admin")
     public Response resetSkip() {
         db.resetGiro();
-        // Notifica FE per aggiornare contatori/summary
         socket.broadcast("ROUND_UPDATED", Map.of("reason", "reset_giro"));
         return Response.noContent().build();
     }
 
-
+    /**
+     * 🔹 Torna al pick precedente (solo admin)
+     */
     @POST
     @Path("/prev")
+    @RolesAllowed("admin")
     public Response prev(Map<String, String> body) {
         var giro = db.ensureCurrentGiro();
 
-        // corrente (facoltativo) da escludere
         String name = body != null ? body.get("name") : null;
         String team = body != null ? body.get("team") : null;
 
@@ -123,7 +146,4 @@ public class RandomResource {
                 "value", p.valore == null ? 0 : p.valore
         )).build();
     }
-
-
 }
-

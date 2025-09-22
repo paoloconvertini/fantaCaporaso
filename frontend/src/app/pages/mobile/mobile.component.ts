@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { ApiService } from '../../services/api.service';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { Subscription } from 'rxjs';
+import {UserApiService} from "../../services/user-api.service";
 
 type RoleKey = 'PORTIERE' | 'DIFENSORE' | 'CENTROCAMPISTA' | 'ATTACCANTE';
 
@@ -42,7 +42,7 @@ export class MobileComponent implements OnInit, OnDestroy {
     // UX: mostra l’ultima offerta inviata da questo partecipante
     lastBidAmount: number | null = null;
 
-    constructor(private route: ActivatedRoute, private api: ApiService) {}
+    constructor(private route: ActivatedRoute, private api: UserApiService) {}
 
     ngOnInit(): void {
         this.pid = Number(this.route.snapshot.queryParamMap.get('pid'));

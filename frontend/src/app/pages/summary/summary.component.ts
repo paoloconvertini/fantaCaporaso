@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { ApiService } from '../../services/api.service';
+import {UserApiService} from "../../services/user-api.service";
 
 type RoleKey = 'PORTIERE' | 'DIFENSORE' | 'CENTROCAMPISTA' | 'ATTACCANTE';
 
@@ -32,7 +32,7 @@ export class SummaryComponent implements OnInit {
     loading = true;
     error = '';
 
-    constructor(private api: ApiService) {}
+    constructor(private api: UserApiService) {}
 
     ngOnInit(): void {
         this.load();

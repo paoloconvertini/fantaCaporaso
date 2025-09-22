@@ -1,6 +1,6 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import {ApiService} from "../services/api.service";
+import {UserApiService} from "../services/user-api.service";
 
 @Component({
     selector: 'app-manual-assign-dialog',
@@ -13,7 +13,7 @@ export class ManualAssignDialogComponent {
     amount: number = 0;
 
     constructor(
-        private api: ApiService,
+        private api: UserApiService,
         private dialogRef: MatDialogRef<ManualAssignDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data: any
     ) {
