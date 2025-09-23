@@ -37,6 +37,7 @@ import { ManualAssignDialogComponent } from './dialogs/manual-assign-dialog.comp
 import { AppRoutingModule } from './app-routing.module';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { KeycloakService } from './services/keycloak.service';
+import { ToolbarComponent } from './shared/toolbar/toolbar.component';
 
 // 👉 funzione factory per APP_INITIALIZER
 export function initializeKeycloak(keycloak: KeycloakService) {
@@ -58,6 +59,7 @@ export function initializeKeycloak(keycloak: KeycloakService) {
         UploadRostersComponent,
         AdminMenuComponent,
         ManualAssignDialogComponent,
+        ToolbarComponent,
     ],
     imports: [
         BrowserModule,

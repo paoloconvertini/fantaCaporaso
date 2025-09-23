@@ -12,7 +12,6 @@ import {UploadPlayersComponent} from "./pages/upload-players/upload-players.comp
 import {UploadRostersComponent} from "./pages/upload-rosters/upload-rosters.component";
 
 const routes: Routes = [
-
     // === AREA ADMIN ===
     { path: 'admin', component: AdminComponent },
     { path: 'rosters', component: RostersComponent },
@@ -20,22 +19,21 @@ const routes: Routes = [
     { path: 'upload-rosters', component: UploadRostersComponent },
     { path: 'upload-players', component: UploadPlayersComponent },
 
-
-    // === AREA MOBILE con shell (hamburger + sidenav) ===
+    // === AREA MOBILE con shell ===
     {
         path: 'mobile',
         component: MobileShellComponent,
         children: [
-            { path: '', component: MobileComponent },               // asta corrente
-            { path: 'rosters', component: MobileRostersComponent }, // rose
-            { path: 'players', component: MobilePlayersComponent }  // calciatori
+            { path: '', component: MobileComponent },
+            { path: 'rosters', component: MobileRostersComponent },
+            { path: 'players', component: MobilePlayersComponent }
         ]
     },
 
     { path: 'summary', component: SummaryComponent },
 
     // fallback
-    { path: '**', redirectTo: '' },
+    { path: '**', redirectTo: 'mobile' }
 ];
 
 

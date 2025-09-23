@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Router } from '@angular/router';
 import Keycloak from 'keycloak-js';
 import { environment } from '../../environments/environment';
+import { Router } from '@angular/router';
 
 @Injectable({
     providedIn: 'root'
@@ -20,27 +20,25 @@ export class KeycloakService {
             checkLoginIframe: false
         }).then((authenticated: boolean) => {
             if (authenticated) {
-                this.scheduleRefresh();
                 this.handleRedirect();
+                this.scheduleRefresh();
             }
             return authenticated;
+        }).catch((err: any) => {
+            return false;
         });
+    }
+
+    getUsername(): string {
+        return this.keycloak?.tokenParsed?.preferred_username || '';
     }
 
     getToken(): string | undefined {
         return this.keycloak.token;
     }
 
-    private handleRedirect(): void {
-        const tokenParsed: any = this.keycloak.tokenParsed;
-        const roles: string[] = tokenParsed?.realm_access?.roles || [];
-
-        if (roles.includes('admin')) {
-            window.location.href = '/admin';
-        } else {
-            window.location.href = '/mobile';
-        }
-
+    getRoles(): string[] {
+        return this.keycloak.tokenParsed?.realm_access?.roles || [];
     }
 
     logout(): void {
@@ -54,19 +52,20 @@ export class KeycloakService {
         return this.keycloak.hasRealmRole(role);
     }
 
-    // 🔹 Aggiorna il token periodicamente
     private scheduleRefresh(): void {
         this.refreshInterval = setInterval(() => {
-            this.keycloak.updateToken(60) // refresh se mancano meno di 60s
-                .then(refreshed => {
-                    if (refreshed) {
-                        console.debug('🔄 Token refresh eseguito');
-                    }
-                })
-                .catch(() => {
-                    console.warn('⚠️ Token refresh fallito, faccio logout');
-                    this.logout();
-                });
-        }, 30000); // ogni 30 secondi
+            this.keycloak.updateToken(60)
+                .catch(() => this.logout());
+        }, 30000);
+    }
+
+    private handleRedirect(): void {
+        const roles: string[] = this.getRoles();
+
+        if (roles.includes('admin')) {
+            this.router.navigateByUrl('/admin');
+        } else {
+            this.router.navigateByUrl('/mobile');
+        }
     }
 }
