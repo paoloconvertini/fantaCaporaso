@@ -1,24 +1,28 @@
 <div class="summary-container" *ngIf="!loading && !error">
-    <mat-card class="list-card row-card"
-              *ngFor="let p of participants"
-              [class.is-self]="isSelf(p)">
-        <!-- NOME + badge -->
+    <mat-card
+            class="list-card row-card"
+            *ngFor="let p of participants"
+            [class.is-self]="isSelf(p)"
+    >
+        <!-- Nome + badge -->
         <div class="cell cell-name">
             <span class="list-user">{{ p.name }}</span>
             <span class="badge-self" *ngIf="isSelf(p)">TU</span>
         </div>
 
-        <!-- RUOLI: singola colonna se filtrato, altrimenti tutte -->
+        <!-- Ruoli -->
         <div class="cell cell-roles" *ngIf="roleFilter; else allRoles">
-           <span class="role-count"
-                 [ngClass]="{
-                   p: roleFilter==='PORTIERE',
-                   d: roleFilter==='DIFENSORE',
-                   c: roleFilter==='CENTROCAMPISTA',
-                   a: roleFilter==='ATTACCANTE'
-                 }">
-             {{ roleAbbrev }}: {{ countForFilter(p) }}
-           </span>
+      <span
+              class="role-count"
+              [ngClass]="{
+          p: roleFilter === 'PORTIERE',
+          d: roleFilter === 'DIFENSORE',
+          c: roleFilter === 'CENTROCAMPISTA',
+          a: roleFilter === 'ATTACCANTE'
+        }"
+      >
+        {{ roleAbbrev }}: {{ countForFilter(p) }}
+      </span>
         </div>
 
         <ng-template #allRoles>
@@ -30,7 +34,7 @@
             </div>
         </ng-template>
 
-        <!-- CREDITI residui (ordinati desc) -->
+        <!-- Crediti residui -->
         <div class="cell cell-credits">
             <span class="summary-credits">{{ p.remainingCredits }}</span>
         </div>

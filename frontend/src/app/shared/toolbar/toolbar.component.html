@@ -1,0 +1,18 @@
+<mat-toolbar color="primary">
+    <!-- 🔹 Hamburger menu -->
+    <button mat-icon-button (click)="menuToggle.emit()" aria-label="Menu">
+        <mat-icon>menu</mat-icon>
+    </button>
+
+    <!-- 🔹 Titolo app -->
+    <span class="title">FantaCaporaso</span>
+
+    <span class="spacer"></span>
+
+    <!-- 🔹 Info utente + logout -->
+    <span class="user-info">
+    <mat-icon>person</mat-icon>
+        {{ username }}
+  </span>
+    <button mat-button (click)="logout()">Logout</button>
+</mat-toolbar>

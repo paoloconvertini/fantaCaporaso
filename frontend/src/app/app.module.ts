@@ -28,16 +28,15 @@ import { RostersComponent } from './pages/rose/rosters.component';
 import { PlayersComponent } from './pages/players/players.component';
 import { MobilePlayersComponent } from './pages/mobile/mobile-players/mobile-players.component';
 import { MobileRostersComponent } from './pages/mobile/mobile-rosters/mobile-rosters.component';
-import { MobileShellComponent } from './pages/mobile/mobile-shell/mobile-shell.component';
 import { UploadPlayersComponent } from './pages/upload-players/upload-players.component';
 import { UploadRostersComponent } from './pages/upload-rosters/upload-rosters.component';
-import { AdminMenuComponent } from './shared/admin-menu/admin-menu.component';
 import { ManualAssignDialogComponent } from './dialogs/manual-assign-dialog.component';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { KeycloakService } from './services/keycloak.service';
 import { ToolbarComponent } from './shared/toolbar/toolbar.component';
+import { AppShellComponent } from './shared/app-shell/app-shell.component';
 
 // 👉 funzione factory per APP_INITIALIZER
 export function initializeKeycloak(keycloak: KeycloakService) {
@@ -54,12 +53,11 @@ export function initializeKeycloak(keycloak: KeycloakService) {
         PlayersComponent,
         MobilePlayersComponent,
         MobileRostersComponent,
-        MobileShellComponent,
         UploadPlayersComponent,
         UploadRostersComponent,
-        AdminMenuComponent,
         ManualAssignDialogComponent,
         ToolbarComponent,
+        AppShellComponent,
     ],
     imports: [
         BrowserModule,

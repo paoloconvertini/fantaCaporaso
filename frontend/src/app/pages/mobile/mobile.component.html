@@ -1,32 +1,47 @@
 <div class="mobile-container">
-  <mat-card class="list-card">
-    <h4>{{participant.name}}</h4>
+  <!-- Dati partecipante -->
+  <mat-card class="list-card" *ngIf="participant">
+    <h4>{{ participant.name }}</h4>
     <span class="summary-credits">
-        Residuo: {{ participant.remainingCredits }}/{{ participant.totalCredits }}
-      </span>
+      Residuo: {{ participant.remainingCredits }}/{{ participant.totalCredits }}
+    </span>
   </mat-card>
+
   <!-- Round corrente -->
   <mat-card class="list-card" *ngIf="round && !round.closed">
     <h3>Giocatore in asta</h3>
     <div class="player-info">
-      <h2>{{round.player}}</h2>
-      <h3>{{round.playerTeam}}</h3>
-      <span class="role-tag">{{round.playerRole | slice:0:1}}</span>
+      <h2>{{ round.player }}</h2>
+      <h3>{{ round.playerTeam }}</h3>
+      <span class="role-tag">{{ round.playerRole | slice:0:1 }}</span>
     </div>
 
     <div class="bid-section">
       <mat-form-field>
-        <input matInput [disabled]="round?.allowedUsers?.length && !round.allowedUsers.includes(pid)"
-               type="number" placeholder="La tua offerta" [(ngModel)]="amount" min="0"
-               max="{{participant.remainingCredits}}">
+        <input
+                matInput
+                [disabled]="round?.allowedUsers?.length && !round.allowedUsers.includes(pid)"
+                type="number"
+                placeholder="La tua offerta"
+                [(ngModel)]="amount"
+                min="0"
+                [max]="participant?.remainingCredits"
+        />
       </mat-form-field>
-      <button [disabled]="round?.allowedUsers?.length && !round.allowedUsers.includes(pid)"
-              mat-raised-button color="primary" (click)="send()">Offri</button>
+
+      <button
+              mat-raised-button
+              color="primary"
+              [disabled]="round?.allowedUsers?.length && !round.allowedUsers.includes(pid)"
+              (click)="send()"
+      >
+        Offri
+      </button>
     </div>
+
     <div class="last-bid" *ngIf="lastBidAmount !== null">
       La tua ultima offerta: <b>{{ lastBidAmount }}</b>
     </div>
-
   </mat-card>
 
   <!-- Attivi ora -->
@@ -35,9 +50,14 @@
     <div *ngFor="let user of activeUsers" class="list-row">
       <span class="list-user">{{ user }}</span>
     </div>
-    <div *ngIf="activeUsers.length===0" class="muted">Nessuno</div>
+    <div *ngIf="activeUsers.length === 0" class="muted">Nessuno</div>
   </mat-card>
-  <app-summary class="main-panel" [selfId]="pid"
-               [roleFilter]="(round && !round.closed ? round.playerRole : currentRole) || null">
+
+  <!-- Summary -->
+  <app-summary
+          class="main-panel"
+          [selfId]="pid"
+          [roleFilter]="(round && !round.closed ? round.playerRole : currentRole) || null"
+  >
   </app-summary>
 </div>

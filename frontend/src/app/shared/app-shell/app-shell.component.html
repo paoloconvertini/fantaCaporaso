@@ -1,0 +1,53 @@
+<!-- Toolbar fissa -->
+<app-toolbar (menuToggle)="toggleMenu()"></app-toolbar>
+
+<mat-sidenav-container class="app-shell">
+    <!-- 🔹 Menu sinistro -->
+    <mat-sidenav #menu class="menu-sidenav" mode="side">
+        <div class="menu-header">
+            <h3>Menu</h3>
+            <button mat-icon-button (click)="toggleMenu()" aria-label="Chiudi menu">
+                <mat-icon>close</mat-icon>
+            </button>
+        </div>
+
+        <mat-nav-list>
+            <a mat-list-item routerLink="/players"><mat-icon>sports_soccer</mat-icon> Svincolati</a>
+            <a mat-list-item routerLink="/rosters"><mat-icon>groups_2</mat-icon> Rose</a>
+
+            <ng-container *ngIf="isAdmin">
+                <a mat-list-item routerLink="/admin"><mat-icon>home</mat-icon> Dashboard</a>
+                <a mat-list-item routerLink="/upload-rosters"><mat-icon>file_upload</mat-icon> Upload Rose</a>
+                <a mat-list-item routerLink="/upload-players"><mat-icon>file_upload</mat-icon> Upload Giocatori</a>
+            </ng-container>
+        </mat-nav-list>
+    </mat-sidenav>
+
+    <!-- 🔹 Sidenav destro (summary per admin) -->
+    <mat-sidenav position="end" class="summary-sidenav" *ngIf="isAdmin" [(opened)]="summaryOpen" mode="side">
+        <div class="sidenav-header">
+            <span class="sidenav-title">Summary</span>
+            <button mat-icon-button (click)="summaryOpen = false" aria-label="Chiudi summary">
+                <mat-icon>chevron_right</mat-icon>
+            </button>
+        </div>
+        <app-summary></app-summary>
+    </mat-sidenav>
+
+    <!-- 🔹 Contenuto -->
+    <mat-sidenav-content class="app-content">
+        <router-outlet></router-outlet>
+
+        <!-- Bottone flottante per aprire la summary -->
+        <button
+                *ngIf="isAdmin && !summaryOpen"
+                class="sidenav-toggle-open"
+                mat-fab
+                color="primary"
+                (click)="summaryOpen = true"
+                aria-label="Apri summary"
+        >
+            <mat-icon>chevron_left</mat-icon>
+        </button>
+    </mat-sidenav-content>
+</mat-sidenav-container>

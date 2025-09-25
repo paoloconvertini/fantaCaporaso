@@ -1,0 +1,87 @@
+/* 🔹 Contenitore principale con gradiente */
+.app-shell {
+    height: 100vh;
+    background: linear-gradient(135deg, #2e003e, #512da8);
+    color: #fff;
+    display: flex;
+}
+
+/* 🔹 Sidenav sinistro (menu) */
+.menu-sidenav {
+    width: 240px;
+    background-color: #2e003e;
+    color: #fff;
+    padding-top: 1rem;
+}
+
+/* Header del menu */
+.menu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    margin-bottom: 1rem;
+    color: #ffeb3b;
+    font-weight: bold;
+}
+
+/* Link menu */
+mat-nav-list a {
+    color: #fff !important;
+    font-weight: 500;
+}
+
+mat-nav-list a:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* 🔹 Sidenav destro (summary admin) */
+.summary-sidenav {
+    width: 320px;
+    background-color: #311b92;
+    color: #fff;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header della summary */
+.sidenav-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    color: #ffeb3b;
+    font-weight: bold;
+}
+
+/* 🔹 Contenuto principale */
+.app-content {
+    flex: 1;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+/* 🔹 Pulsante hamburger (toolbar → apri menu) */
+.hamburger-btn,
+button[mat-icon-button] {
+    color: #fff;
+}
+
+/* 🔹 Bottone flottante per aprire la summary */
+.sidenav-toggle-open {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 1000;
+}
+
+.app-content {
+    flex: 1;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}

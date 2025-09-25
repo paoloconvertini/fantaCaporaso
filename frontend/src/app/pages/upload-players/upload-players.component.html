@@ -1,25 +1,32 @@
-<app-admin-menu>
+<div class="upload-container">
     <mat-card class="list-card">
         <h3>Upload Giocatori</h3>
 
         <div class="upload-section">
             <input type="file" (change)="onFileSelected($event)" />
-            <button mat-raised-button color="primary"
+
+            <button
+                    mat-raised-button
+                    color="primary"
                     (click)="uploadFile()"
-                    [disabled]="!selectedFile || loading">
+                    [disabled]="!selectedFile || loading"
+            >
                 Carica
             </button>
+
+            <mat-progress-spinner
+                    *ngIf="loading"
+                    diameter="32"
+                    mode="indeterminate"
+                    color="accent"
+                    style="margin-left:12px; vertical-align:middle;"
+            >
+            </mat-progress-spinner>
         </div>
-        <mat-progress-spinner
-                *ngIf="loading"
-                diameter="32"
-                mode="indeterminate"
-                color="accent"
-                style="margin-left:12px; vertical-align:middle;">
-        </mat-progress-spinner>
+
         <div *ngIf="uploadResult" class="upload-result">
             <h4>Risultato import:</h4>
             <pre>{{ uploadResult | json }}</pre>
         </div>
     </mat-card>
-</app-admin-menu>
+</div>
