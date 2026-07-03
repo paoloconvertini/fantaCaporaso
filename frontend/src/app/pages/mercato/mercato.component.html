@@ -1,0 +1,53 @@
+<div class="p-6 max-w-xl mx-auto">
+    <h2 class="text-xl font-semibold mb-4">Configurazione Mercato</h2>
+
+    <form [formGroup]="form" (ngSubmit)="salva()" *ngIf="!loading; else loadingTpl">
+        <mat-slide-toggle formControlName="attiva" color="primary">
+            Mercato attivo
+        </mat-slide-toggle>
+
+        <div class="mt-2 mb-4" *ngIf="mercatoAttivo; else mercatoChiuso">
+            <span class="text-green-500 font-medium">🟢 Mercato aperto</span>
+        </div>
+        <ng-template #mercatoChiuso>
+            <span class="text-red-500 font-medium">🔴 Mercato chiuso</span>
+        </ng-template>
+
+        <mat-form-field appearance="outline" class="w-full mt-4">
+            <mat-label>Fine sessione</mat-label>
+            <input matInput type="datetime-local" formControlName="fineSessione" />
+        </mat-form-field>
+
+        <div class="grid grid-cols-2 gap-4 mt-4">
+            <mat-form-field appearance="outline">
+                <mat-label>Max Portieri</mat-label>
+                <input matInput type="number" formControlName="maxPortieri" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Max Difensori</mat-label>
+                <input matInput type="number" formControlName="maxDifensori" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Max Centrocampisti</mat-label>
+                <input matInput type="number" formControlName="maxCentrocampisti" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Max Attaccanti</mat-label>
+                <input matInput type="number" formControlName="maxAttaccanti" />
+            </mat-form-field>
+        </div>
+
+        <div class="flex justify-end mt-6">
+            <button mat-raised-button color="primary" type="submit">
+                Salva configurazione
+            </button>
+        </div>
+    </form>
+
+    <ng-template #loadingTpl>
+        <div class="text-gray-500 text-center mt-10">Caricamento configurazione...</div>
+    </ng-template>
+</div>

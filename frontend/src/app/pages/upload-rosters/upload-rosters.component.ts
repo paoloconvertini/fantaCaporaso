@@ -26,11 +26,6 @@ export class UploadRostersComponent {
       next: res => {
         this.uploadResult = res;
         this.loading = false;
-      },
-      error: err => {
-        console.error(err);
-        this.uploadResult = { error: err.message || 'Errore upload' };
-        this.loading = false;
       }
     });
   }

@@ -1,5 +1,5 @@
 /* 🔹 Wrapper del contenuto principale */
-.page-content {
+.players-container {
     display: flex;
     flex-direction: column;
 }
@@ -68,4 +68,93 @@ th {
 .loading {
     margin-top: 1rem;
     font-weight: bold;
+}
+
+.filter-bar {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 4px 2px 14px;
+    scrollbar-width: none;
+}
+
+.filter-bar::-webkit-scrollbar {
+    display: none;
+}
+
+.role-chip {
+    border: 1px solid rgba(255,255,255,0.22);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.role-chip.active {
+    background: #ffeb3b;
+    color: #1f1147;
+    border-color: #ffeb3b;
+}
+
+.players-list {
+    display: none;
+}
+
+@media (max-width: 700px) {
+    .players-table {
+        display: none;
+    }
+
+    .players-list {
+        display: grid;
+        gap: 8px;
+    }
+
+    .player-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px;
+        border-radius: 8px;
+        background: rgba(255,255,255,0.08);
+    }
+
+    .player-main {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .player-main strong,
+    .player-main span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .player-main span {
+        color: #cbd5e1;
+        font-size: 13px;
+    }
+
+    .player-meta {
+        display: flex;
+        align-items: flex-end;
+        flex-direction: column;
+        gap: 5px;
+        flex: 0 0 auto;
+    }
+
+    .role-pill {
+        border-radius: 999px;
+        background: rgba(255,235,59,0.16);
+        color: #ffeb3b;
+        padding: 3px 8px;
+        font-size: 12px;
+        font-weight: 700;
+    }
 }

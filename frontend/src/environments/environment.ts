@@ -1,7 +1,10 @@
+const keycloakUrl = `${window.location.protocol}//${window.location.hostname}:8081`;
+
 export const environment = {
     production: false,
+    useHashRouting: true,
     keycloak: {
-        url: 'http://localhost:8081/',
+        url: keycloakUrl,
         realm: 'fantasta',
         clientId: 'fantasta-frontend'
     }

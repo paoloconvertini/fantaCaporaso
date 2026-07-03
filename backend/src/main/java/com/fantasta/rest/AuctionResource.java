@@ -13,9 +13,11 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import java.io.File;
+import java.util.Map;
 import java.util.Objects;
 
 @Path("/api")
@@ -154,18 +156,16 @@ public class AuctionResource {
         return roundDto;
     }
 
-    /**
-     * 🔹 Chiude l’asta e consolida le rose in history
-     */
     @POST
-    @Path("/close")
+    @Path("/admin/close-auction")
     @Transactional
     @RolesAllowed("admin")
-    public void closeAuction(@QueryParam("sessionId") Long sessionId) {
+    public Response closeAuction(@QueryParam("sessionId") Long sessionId) {
         if (sessionId == null) {
             throw new BadRequestException("SessionId mancante");
         }
         service.closeAuction(sessionId);
+        return Response.ok().entity(Map.of("message", "Asta chiusa con successo")).build();
     }
 
     /**

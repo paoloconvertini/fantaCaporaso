@@ -4,11 +4,13 @@ import com.fantasta.dto.ParticipantDto;
 import com.fantasta.dto.ParticipantSummaryDto;
 import com.fantasta.model.ParticipantEntity;
 import com.fantasta.service.ParticipantService;
+import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import org.jboss.resteasy.reactive.NoCache;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,6 +23,12 @@ public class ParticipantResource {
     @Inject
     ParticipantService participantService;
 
+    @Inject
+    SecurityIdentity identity;
+
+    @Inject
+    JsonWebToken jwt;
+
     private ParticipantDto toDto(ParticipantEntity e) {
         ParticipantDto dto = new ParticipantDto();
         dto.id = e.id;
@@ -29,6 +37,29 @@ public class ParticipantResource {
         dto.spentCredits = participantService.spentCreditsById(e.id);
         dto.remainingCredits = participantService.remainingCreditsById(e.id, e.totalCredits);
         return dto;
+    }
+
+    @GET
+    @Path("/me")
+    @RolesAllowed({"admin", "user"})
+    public ParticipantDto me() {
+        ParticipantEntity e = findCurrentParticipant();
+        if (e == null) {
+            String username = identity.getPrincipal().getName();
+            throw new NotFoundException("Partecipante non trovato per utente " + username);
+        }
+        return toDto(e);
+    }
+
+    private ParticipantEntity findCurrentParticipant() {
+        Object participantIdClaim = jwt.getClaim("participant_id");
+        if (participantIdClaim != null) {
+            Long participantId = Long.valueOf(participantIdClaim.toString());
+            return ParticipantEntity.findById(participantId);
+        }
+
+        String username = identity.getPrincipal().getName();
+        return ParticipantEntity.find("name", username).firstResult();
     }
 
     @GET

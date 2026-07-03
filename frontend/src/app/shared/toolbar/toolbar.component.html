@@ -14,5 +14,8 @@
     <mat-icon>person</mat-icon>
         {{ username }}
   </span>
-    <button mat-button (click)="logout()">Logout</button>
+    <button mat-button class="logout-text" (click)="logout()">Logout</button>
+    <button mat-icon-button class="logout-icon" (click)="logout()" aria-label="Logout">
+        <mat-icon>logout</mat-icon>
+    </button>
 </mat-toolbar>

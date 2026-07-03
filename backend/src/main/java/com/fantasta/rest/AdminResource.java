@@ -1,5 +1,7 @@
 package com.fantasta.rest;
 
+import com.fantasta.dto.CreateKeycloakUserRequest;
+import com.fantasta.service.KeycloakAdminService;
 import com.fantasta.util.ExcelPlayersLoader;
 import com.fantasta.util.ParticipantsLoader;
 import io.quarkus.logging.Log;
@@ -20,6 +22,9 @@ public class AdminResource {
 
     @Inject
     ParticipantsLoader participantsLoader;
+
+    @Inject
+    KeycloakAdminService keycloakAdminService;
 
     /**
      * Ricarica i giocatori da Excel
@@ -62,5 +67,15 @@ public class AdminResource {
                     .entity(java.util.Map.of("error", e.getMessage()))
                     .build();
         }
+    }
+
+    @POST
+    @Path("/users")
+    @RolesAllowed("admin")
+    public Response createUser(CreateKeycloakUserRequest request) {
+        keycloakAdminService.createUser(request);
+        return Response.status(Response.Status.CREATED)
+                .entity(java.util.Map.of("created", true))
+                .build();
     }
 }

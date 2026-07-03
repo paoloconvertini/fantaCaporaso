@@ -68,10 +68,6 @@ export class SummaryComponent implements OnInit {
 
                 this.participants = this.sortParticipants(mapped);
                 this.loading = false;
-            },
-            error: () => {
-                this.error = 'Errore nel caricamento dati';
-                this.loading = false;
             }
         });
     }

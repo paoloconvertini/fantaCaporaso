@@ -22,8 +22,7 @@ export class MobilePlayersComponent implements OnInit {
         if (this.selectedRole) params.role = this.selectedRole;
 
         this.api.getPlayers(params).subscribe({
-            next: data => this.players = data,
-            error: err => console.error('Errore caricamento players', err)
+            next: data => this.players = data
         });
     }
 }

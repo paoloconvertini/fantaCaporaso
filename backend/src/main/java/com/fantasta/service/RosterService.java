@@ -1,10 +1,18 @@
 package com.fantasta.service;
 
+import com.fantasta.dto.ParticipantRosterDto;
+import com.fantasta.dto.RosterDto;
 import com.fantasta.dto.RosterImportResult;
+import com.fantasta.dto.SvincoloRequest;
 import com.fantasta.model.*;
+import io.quarkus.logging.Log;
+import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.ForbiddenException;
+import jakarta.ws.rs.NotFoundException;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -14,14 +22,23 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.chrono.ChronoLocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class RosterService {
 
+    @Inject
+    SecurityIdentity identity;
 
     @Inject
     ParticipantService participantService;
+
+    @Inject
+    MercatoService mercatoService;
 
     /** Massimali per ruolo, letti da properties/env (default: 3-8-8-6) */
     public int max(Role role) {
@@ -127,8 +144,12 @@ public class RosterService {
 
 
     private void copyRosterToHistory(ParticipantEntity participant) {
-        Long sessionId = System.currentTimeMillis(); // per ora timestamp, poi si può usare session ufficiale
+        long sessionId = System.currentTimeMillis(); // per ora timestamp, poi si può usare session ufficiale
         List<RosterEntity> currentRoster = RosterEntity.list("participant", participant);
+        createRoster(sessionId, currentRoster);
+    }
+
+    static void createRoster(long sessionId, List<RosterEntity> currentRoster) {
         for (RosterEntity r : currentRoster) {
             RosterHistoryEntity h = new RosterHistoryEntity();
             h.sessionId = sessionId;
@@ -138,4 +159,160 @@ public class RosterService {
             h.persist();
         }
     }
+
+    @Transactional
+    public void svincola(Long participantId, SvincoloRequest req) {
+        if (participantId == null || req == null || req.playerId == null) {
+            throw new BadRequestException("Parametri mancanti per lo svincolo");
+        }
+
+        // 🔹 Mercato attivo?
+        if (!mercatoService.isMercatoAttivo()) {
+            throw new ForbiddenException("Mercato chiuso: svincolo non consentito");
+        }
+
+        RosterEntity roster = RosterEntity.find(
+                "participant.id = ?1 and player.id = ?2",
+                participantId,
+                req.playerId
+        ).firstResult();
+
+        if (roster == null) {
+            throw new NotFoundException("Giocatore non trovato nella rosa");
+        }
+
+        ParticipantEntity participant = roster.participant;
+        Role role = roster.player.role;
+        if (role == null) {
+            throw new BadRequestException("Ruolo non valido per lo svincolo");
+        }
+
+        // 🔹 Verifica limite svincoli per ruolo
+        int maxSvincoli = mercatoService.getMaxByRole(role.name());
+        int fatti = MercatoSvincolo.getCount(participant, role);
+
+        if (fatti >= maxSvincoli) {
+            throw new ForbiddenException("Hai già raggiunto il limite massimo di svincoli per ruolo " + role.name());
+        }
+
+        // 🔹 Esegui svincolo
+        double oldAmount = roster.amount != null ? roster.amount : 0;
+        roster.delete();
+
+        // 🔹 Registra svincolo
+        MercatoSvincolo.increment(participant, role);
+
+        // 🔹 Riaccredito crediti
+        participant.totalCredits += (int) oldAmount;
+        participant.persist();
+
+        Log.infof(
+                "Svincolato %s (%s) da %s: +%.1f crediti (svincoli %d/%d)",
+                roster.player.name, role, participant.name, oldAmount, fatti + 1, maxSvincoli
+        );
+    }
+
+    @Transactional
+    public List<RosterDto> getRosters() {
+        boolean isAdmin = identity.hasRole("admin");
+        List<RosterEntity> entities;
+
+        if (isAdmin) {
+            entities = RosterEntity.listAll();
+        } else {
+            String username = identity.getPrincipal().getName();
+            ParticipantEntity p = ParticipantEntity.find("name", username).firstResult();
+            if (p == null) {
+                throw new IllegalStateException("Partecipante non trovato per utente: " + username);
+            }
+            entities = RosterEntity.find("participant", p).list();
+        }
+
+        return entities.stream()
+                .map(r -> new RosterDto(
+                        r.participant.id,
+                        r.participant.name,
+                        r.player.id,
+                        r.player.name,
+                        r.player.team,
+                        r.player.role.name(),
+                        r.amount
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public List<RosterDto> getRosterByParticipant(Long participantId) {
+        List<RosterEntity> rosterEntities = RosterEntity.find("participant.id", participantId).list();
+        return toRosterDtoListWithResidui(rosterEntities);
+    }
+
+    @Transactional
+    public List<ParticipantRosterDto> getAllRostersGrouped() {
+        List<RosterEntity> entities = RosterEntity.listAll();
+
+        Map<Long, List<RosterEntity>> grouped = entities.stream()
+                .collect(Collectors.groupingBy(r -> r.participant.id));
+
+        return grouped.entrySet().stream()
+                .map(entry -> {
+                    List<RosterEntity> rosterEntities = entry.getValue();
+                    List<RosterDto> rosterDtos = toRosterDtoListWithResidui(rosterEntities);
+                    RosterEntity sample = rosterEntities.get(0);
+                    return new ParticipantRosterDto(
+                            sample.participant.id,
+                            sample.participant.name,
+                            rosterDtos
+                    );
+                })
+                .toList();
+    }
+
+    @Transactional
+    public List<RosterDto> getAllRosters() {
+        return RosterEntity.findAll().stream()
+                .map(r -> toDto((RosterEntity) r))
+                .collect(Collectors.toList());
+    }
+
+    private RosterDto toDto(RosterEntity r) {
+        return new RosterDto(
+                r.participant.id,
+                r.participant.name,
+                r.player.id,
+                r.player.name,
+                r.player.team,
+                r.player.role.toString(),
+                r.amount
+        );
+    }
+
+    private List<RosterDto> toRosterDtoListWithResidui(List<RosterEntity> rosterEntities) {
+        if (rosterEntities == null || rosterEntities.isEmpty()) {
+            return List.of();
+        }
+
+        ParticipantEntity participant = rosterEntities.get(0).participant;
+        double totaleDisponibile = participant != null ? participant.totalCredits : 500;
+        double spesi = rosterEntities.stream()
+                .mapToDouble(r -> r.amount != null ? r.amount : 0)
+                .sum();
+        double residui = totaleDisponibile - spesi;
+
+        return rosterEntities.stream()
+                .map(r -> new RosterDto(
+                        r.participant.id,
+                        r.participant.name,
+                        r.player.id,
+                        r.player.name,
+                        r.player.team,
+                        r.player.role != null ? r.player.role.name() : null,
+                        r.amount,
+                        residui // 👈 calcolato
+                ))
+                .collect(Collectors.toList());
+    }
+
+
+
 }

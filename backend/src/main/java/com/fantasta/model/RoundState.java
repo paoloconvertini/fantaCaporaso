@@ -9,6 +9,7 @@ public class RoundState {
     public String playerRole;
     public Integer value;             // valore calciatore (Excel colonna E)
     public boolean closed = false;
+    public Double minimumBid;
     public Integer durationSeconds;
     public Long endEpochMillis;
 

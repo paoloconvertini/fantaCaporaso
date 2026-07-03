@@ -3,13 +3,24 @@
         <h3>Svincolati: <b>{{ players.length }}</b></h3>
     </mat-card>
 
-    <!-- Filtro ruolo -->
     <div class="filter-bar">
-        <label for="role">Ruolo:</label>
-        <select id="role" [(ngModel)]="selectedRole" (change)="onRoleChange()">
-            <option [ngValue]="null">Tutti</option>
-            <option *ngFor="let r of roles" [ngValue]="r">{{ r }}</option>
-        </select>
+        <button
+                type="button"
+                class="role-chip"
+                [class.active]="selectedRole === null"
+                (click)="setRole(null)"
+        >
+            Tutti
+        </button>
+        <button
+                type="button"
+                class="role-chip"
+                *ngFor="let r of roles"
+                [class.active]="selectedRole === r"
+                (click)="setRole(r)"
+        >
+            {{ roleLabel(r) }}
+        </button>
     </div>
 
     <mat-card class="list-card">
@@ -36,6 +47,19 @@
 
         <div *ngIf="!loading && !players.length" class="muted text-center">
             Nessun giocatore libero
+        </div>
+
+        <div *ngIf="!loading && players.length" class="players-list">
+            <div *ngFor="let row of players" class="player-row">
+                <div class="player-main">
+                    <strong>{{ row.name }}</strong>
+                    <span>{{ row.team }}</span>
+                </div>
+                <div class="player-meta">
+                    <span class="role-pill">{{ roleLabel(row.role) }}</span>
+                    <strong>{{ row.valore }}</strong>
+                </div>
+            </div>
         </div>
     </mat-card>
 </div>

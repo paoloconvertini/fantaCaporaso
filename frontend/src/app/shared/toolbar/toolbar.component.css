@@ -1,39 +1,117 @@
-/* Barra principale */
+/* 🎨 Barra principale */
 mat-toolbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    min-height: 64px; /* 56px su mobile */
     background: linear-gradient(135deg, #2e003e, #512da8);
     color: #fff;
 }
 
-/* Pulsante hamburger */
+/* ☰ Pulsante hamburger */
 mat-toolbar button[mat-icon-button] {
     color: #fff;
     margin-right: 12px;
+    background: transparent;
+    height: 48px;
+    width: 48px;
+    transition: background-color 0.2s ease;
 }
 
-/* Titolo */
+mat-toolbar button[mat-icon-button]:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 🏷️ Titolo */
 .title {
     font-size: 20px;
     font-weight: bold;
-    flex: 1; /* prende lo spazio centrale */
+    flex: 1;
 }
 
-/* Spacer */
+/* 🔹 Spacer (usato per bilanciare la toolbar) */
 .spacer {
     flex: 1;
 }
 
-/* Info utente a destra */
+/* 👤 Info utente a destra */
 .user-info {
     display: flex;
     align-items: center;
     gap: 6px;
     margin-right: 12px;
+    min-width: 0;
 }
 
 .user-info mat-icon {
     vertical-align: middle;
     font-size: 20px;
+    font-family: 'Material Icons', sans-serif !important; /* forza il font corretto */
+    background: transparent;
+}
+
+/* 🔧 Icone toolbar: fix font globale + no sfondo */
+mat-toolbar mat-icon {
+    font-family: 'Material Icons', sans-serif !important;
+    font-feature-settings: 'liga';
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    letter-spacing: normal;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+}
+
+.logout-icon {
+    display: none;
+}
+
+@media (max-width: 600px) {
+    mat-toolbar {
+        min-height: 56px;
+        padding: 0 6px;
+    }
+
+    mat-toolbar button[mat-icon-button] {
+        width: 40px;
+        height: 40px;
+        margin-right: 4px;
+    }
+
+    .title {
+        font-size: 15px;
+        flex: 0 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .spacer {
+        flex: 1 1 auto;
+    }
+
+    .user-info {
+        max-width: 96px;
+        margin-right: 2px;
+        overflow: hidden;
+        white-space: nowrap;
+        font-size: 13px;
+    }
+
+    .user-info mat-icon {
+        display: none;
+    }
+
+    .logout-text {
+        display: none;
+    }
+
+    .logout-icon {
+        display: inline-flex;
+    }
 }

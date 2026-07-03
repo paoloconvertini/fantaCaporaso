@@ -10,35 +10,39 @@ import { MobilePlayersComponent } from './pages/mobile/mobile-players/mobile-pla
 import { UploadPlayersComponent } from './pages/upload-players/upload-players.component';
 import { UploadRostersComponent } from './pages/upload-rosters/upload-rosters.component';
 import { AppShellComponent } from './shared/app-shell/app-shell.component';
+import {RosaComponent} from "./pages/rose/rosa/rosa.component";
+import {MercatoComponent} from "./pages/mercato/mercato.component";
+import { AdminOnlyGuard, UserOnlyGuard } from './guards/role-redirect.guard';
+import { HomeComponent } from './pages/home/home.component';
+import { environment } from '../environments/environment';
+import { AdminUsersComponent } from './pages/admin-users/admin-users.component';
 
 const routes: Routes = [
     {
         path: '',
         component: AppShellComponent,
         children: [
-            // === AREA ADMIN ===
-            { path: 'admin', component: AdminComponent },
+            { path: '', component: HomeComponent, pathMatch: 'full' },
+            { path: 'admin', component: AdminComponent, canActivate: [AdminOnlyGuard] },
             { path: 'rosters', component: RostersComponent },
             { path: 'players', component: PlayersComponent },
             { path: 'upload-rosters', component: UploadRostersComponent },
             { path: 'upload-players', component: UploadPlayersComponent },
+            { path: 'rosa', component: RosaComponent },
+            { path: 'admin/mercato', component: MercatoComponent, canActivate: [AdminOnlyGuard] },
+            { path: 'admin/users', component: AdminUsersComponent, canActivate: [AdminOnlyGuard] },
 
-            // === AREA MOBILE ===
-            { path: 'mobile', component: MobileComponent },
+            { path: 'mobile', component: MobileComponent, canActivate: [UserOnlyGuard] },
             { path: 'mobile/rosters', component: MobileRostersComponent },
             { path: 'mobile/players', component: MobilePlayersComponent },
 
-            // === SUMMARY (visibile solo se admin, controllato via roles/guard) ===
-            { path: 'summary', component: SummaryComponent },
-
-            // === Fallback ===
-            { path: '**', redirectTo: 'mobile' }
+            { path: 'summary', component: SummaryComponent }
         ]
     }
 ];
 
 @NgModule({
-    imports: [RouterModule.forRoot(routes)],
+    imports: [RouterModule.forRoot(routes, { useHash: environment.useHashRouting })],
     exports: [RouterModule]
 })
 export class AppRoutingModule {}

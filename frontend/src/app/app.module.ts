@@ -1,7 +1,7 @@
 import { NgModule, APP_INITIALIZER } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { FormsModule } from '@angular/forms';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 
 import { MatButtonModule } from '@angular/material/button';
@@ -19,6 +19,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatListModule } from '@angular/material/list';
+import { ErrorInterceptor } from './interceptors/error.interceptor';
 
 import { AppComponent } from './app.component';
 import { AdminComponent } from './pages/admin/admin.component';
@@ -37,6 +38,14 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { KeycloakService } from './services/keycloak.service';
 import { ToolbarComponent } from './shared/toolbar/toolbar.component';
 import { AppShellComponent } from './shared/app-shell/app-shell.component';
+import {RosaComponent} from "./pages/rose/rosa/rosa.component";
+import { MercatoComponent } from './pages/mercato/mercato.component';
+import {MatSlideToggleModule} from "@angular/material/slide-toggle";
+import {MatSnackBarModule} from "@angular/material/snack-bar";
+import { ConfirmDialogComponent } from './dialogs/confirm/confirm-dialog.component';
+import { HomeComponent } from './pages/home/home.component';
+import { AdminUsersComponent } from './pages/admin-users/admin-users.component';
+
 
 // 👉 funzione factory per APP_INITIALIZER
 export function initializeKeycloak(keycloak: KeycloakService) {
@@ -58,6 +67,11 @@ export function initializeKeycloak(keycloak: KeycloakService) {
         ManualAssignDialogComponent,
         ToolbarComponent,
         AppShellComponent,
+        RosaComponent,
+        MercatoComponent,
+        ConfirmDialogComponent,
+        HomeComponent,
+        AdminUsersComponent,
     ],
     imports: [
         BrowserModule,
@@ -79,10 +93,14 @@ export function initializeKeycloak(keycloak: KeycloakService) {
         MatProgressSpinnerModule,
         MatSidenavModule,
         MatToolbarModule,
-        MatListModule
+        MatListModule,
+        MatSlideToggleModule,
+        ReactiveFormsModule,
+        MatSnackBarModule,
     ],
     providers: [
         { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+        { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
         {
             provide: APP_INITIALIZER,
             useFactory: initializeKeycloak,

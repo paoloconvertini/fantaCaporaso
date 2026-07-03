@@ -1,0 +1,48 @@
+<div class="users-page">
+  <section class="users-panel">
+    <div class="panel-header">
+      <div>
+        <h2>Gestione utenti</h2>
+        <p>Crea un accesso Keycloak e collega l'utente a una squadra.</p>
+      </div>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="createUser()" *ngIf="!loading; else loadingTpl">
+      <mat-form-field appearance="outline">
+        <mat-label>Username</mat-label>
+        <input matInput formControlName="username" autocomplete="off">
+        <mat-error *ngIf="form.get('username')?.hasError('required')">Username obbligatorio</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Password</mat-label>
+        <input matInput type="password" formControlName="password" autocomplete="new-password">
+        <mat-error *ngIf="form.get('password')?.hasError('required')">Password obbligatoria</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Nome squadra</mat-label>
+        <mat-select formControlName="participantId">
+          <mat-option *ngFor="let participant of participants" [value]="participant.id">
+            {{ participant.name }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="form.get('participantId')?.hasError('required')">Nome squadra obbligatorio</mat-error>
+      </mat-form-field>
+
+      <div class="actions">
+        <button mat-raised-button color="primary" type="submit" [disabled]="saving">
+          <mat-icon>person_add</mat-icon>
+          Crea utente
+        </button>
+      </div>
+    </form>
+
+    <ng-template #loadingTpl>
+      <div class="loading-state">
+        <mat-spinner diameter="36"></mat-spinner>
+        <span>Caricamento squadre...</span>
+      </div>
+    </ng-template>
+  </section>
+</div>

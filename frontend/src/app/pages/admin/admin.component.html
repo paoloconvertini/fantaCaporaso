@@ -9,11 +9,11 @@
       <mat-button-toggle value="CENTROCAMPISTA">C</mat-button-toggle>
       <mat-button-toggle value="ATTACCANTE">A</mat-button-toggle>
 
-      <button mat-icon-button color="primary" (click)="startAuction()" matTooltip="Inizia asta" [disabled]="!role">
-        <mat-icon>play_arrow</mat-icon>
+      <button mat-icon-button color="primary" (click)="drawNextPlayer()" matTooltip="Estrai giocatore" [disabled]="!role">
+        <mat-icon>shuffle</mat-icon>
       </button>
       <button mat-icon-button color="warn" (click)="closeAuction()" matTooltip="Chiudi asta">
-        <mat-icon>stop</mat-icon>
+        <mat-icon>gavel</mat-icon>
       </button>
     </mat-button-toggle-group>
 

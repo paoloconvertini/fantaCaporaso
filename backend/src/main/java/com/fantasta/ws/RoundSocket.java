@@ -3,6 +3,7 @@ package com.fantasta.ws;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.websockets.next.*;
 import jakarta.enterprise.context.ApplicationScoped;
+import org.jboss.logging.Logger;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @ApplicationScoped
 public class RoundSocket {
 
+    private static final Logger LOG = Logger.getLogger(RoundSocket.class);
     private final Set<WebSocketConnection> conns = ConcurrentHashMap.newKeySet();
     private static final ObjectMapper M = new ObjectMapper();
 
@@ -27,21 +29,39 @@ public class RoundSocket {
     @OnError
     public void onError(WebSocketConnection c, Throwable t) {
         conns.remove(c);
-        t.printStackTrace();
+        LOG.warnf(t, "WebSocket connection failed: %s", c.id());
     }
 
     public void broadcast(String type, Object payload) {
+        String json;
         try {
-            String json = M.writeValueAsString(
+            json = M.writeValueAsString(
                     java.util.Map.of("type", type, "payload", payload)
             );
-            for (var c : conns) {
-                if (c.isOpen()) {
-                    c.sendTextAndAwait(json);
-                }
-            }
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.warnf(e, "Unable to serialize WebSocket message type=%s", type);
+            return;
         }
+
+        for (var c : conns) {
+            if (!c.isOpen()) {
+                conns.remove(c);
+                continue;
+            }
+
+            c.sendText(json)
+                    .subscribe()
+                    .with(
+                            ignored -> {},
+                            failure -> {
+                                conns.remove(c);
+                                LOG.warnf(failure, "Unable to send WebSocket message to %s", c.id());
+                            }
+                    );
+        }
+    }
+
+    int connectionCount() {
+        return conns.size();
     }
 }

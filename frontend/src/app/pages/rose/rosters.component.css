@@ -1,79 +1,248 @@
 /* contenitore generale */
 .rosters-container {
-    padding: 16px;
+    padding: 20px;
     color: #fff;
+    min-height: calc(100vh - 64px);
+    box-sizing: border-box;
+    background: #0f172a;
+}
+
+.page-title {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.page-title h2 {
+    margin: 0;
+    font-size: 1.4rem;
+}
+
+.page-title span {
+    color: #cbd5e1;
+    font-size: 0.9rem;
+}
+
+.rosters-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    background: #111827;
 }
 
 /* tabella */
 .rosters-table {
     width: 100%;
-    border-collapse: collapse;
-    background: #1c1c2b;
-    border-radius: 12px;
-    overflow: hidden;
+    min-width: 2200px;
+    border-collapse: separate;
+    border-spacing: 4px 0;
+    background: #111827;
+    padding: 0 4px 4px;
 }
 
 /* header */
 .rosters-table th {
-    background: #2a2a3d;
-    padding: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #1f2937;
+    padding: 12px 10px;
     font-weight: 600;
     text-align: center;
     font-size: 14px;
-    border-bottom: 1px solid rgba(255,255,255,0.2);
+    border-bottom: 1px solid rgba(255,255,255,0.16);
+    border-right: 1px solid rgba(255,255,255,0.18);
+    box-shadow: inset 1px 0 rgba(255,255,255,0.08), inset -1px 0 rgba(0,0,0,0.32);
+}
+
+.rosters-table th:first-child {
+    left: 0;
+    z-index: 3;
+}
+
+.team-head span,
+.team-head small {
+    display: block;
+}
+
+.team-head {
+    min-width: 140px;
+    border-left: 2px solid rgba(255,255,255,0.16);
+}
+
+.team-head small {
+    margin-top: 4px;
+    color: #a7f3d0;
+    font-size: 12px;
+    font-weight: 500;
 }
 
 /* celle */
 .rosters-table td {
-    padding: 6px 8px;
+    padding: 8px 10px;
     text-align: center;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    border-right: 1px solid rgba(0,0,0,0.22);
     font-size: 13px;
 }
 
 /* indice riga (numero ruolo o Tot) */
 .role-index {
+    position: sticky;
+    left: 0;
+    z-index: 1;
     font-weight: bold;
     text-align: left !important;
-    background: rgba(255,255,255,0.05);
-    padding-left: 10px;
-    width: 100px;
+    background: #1f2937 !important;
+    color: #e5e7eb !important;
+    padding-left: 12px;
+    width: 112px;
+    min-width: 112px;
 }
 
 /* celle giocatore */
 .player-cell {
     min-width: 140px;
     white-space: nowrap;
+    color: #111827;
+    border-left: 2px solid rgba(255,255,255,0.55);
+    border-right: 2px solid rgba(0,0,0,0.18);
 }
 
 /* nome + valore */
-.player-cell span {
-    display: inline-block;
+.player-pill {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    min-height: 24px;
+    width: 100%;
 }
 
-.player-cell small {
-    color: #ffd700;
+.player-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+    justify-self: center;
+    max-width: 100%;
+    font-size: 14px;
     font-weight: 600;
+}
+
+.player-pill small,
+.total-amount {
+    flex: 0 0 auto;
+    min-width: 24px;
+    padding: 1px 5px;
+    border-radius: 999px;
+    background: rgba(17, 24, 39, 0.82);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
 }
 
 /* riga totale */
 .rosters-table tr.totals-row {
-    background: rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.10);
     font-weight: bold;
 }
 
 /* divisore tra ruoli */
 .rosters-table tr.role-separator td {
-    background: transparent;
+    background: #0f172a;
     border: none;
-    height: 12px;
+    height: 16px;
 }
 
 /* colori ruoli */
-.role-portiere td.player-cell { background: #f28b82; color: #000; }
-.role-difensore td.player-cell { background: #81c995; color: #000; }
-.role-centrocampista td.player-cell { background: #aecbfa; color: #000; }
-.role-attaccante td.player-cell { background: #fbbc04; color: #000; }
+.role-portiere td.player-cell { background: #fecaca; }
+.role-difensore td.player-cell { background: #bbf7d0; }
+.role-centrocampista td.player-cell { background: #bfdbfe; }
+.role-attaccante td.player-cell { background: #fde68a; }
+
+.mobile-rosters {
+    display: none;
+}
+
+.team-card {
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    background: #111827;
+    overflow: hidden;
+}
+
+.team-card header {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px;
+    background: #1f2937;
+}
+
+.team-card h3 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.team-card header span {
+    color: #a7f3d0;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.role-block {
+    padding: 12px 14px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.role-title {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.role-title span {
+    color: #cbd5e1;
+    font-size: 12px;
+    text-align: right;
+}
+
+.mobile-player {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.mobile-player b {
+    min-width: 28px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    text-align: center;
+}
+
+.mobile-player span {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.role-empty {
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+.team-card .role-portiere { border-left: 4px solid #ef4444; }
+.team-card .role-difensore { border-left: 4px solid #22c55e; }
+.team-card .role-centrocampista { border-left: 4px solid #3b82f6; }
+.team-card .role-attaccante { border-left: 4px solid #f59e0b; }
 
 /* loading overlay */
 .loading-overlay {
@@ -83,4 +252,29 @@
     justify-content: center;
     height: 200px;
     color: #fff;
+}
+
+.empty-state {
+    text-align: center;
+    color: #cbd5e1;
+    padding: 32px 12px;
+}
+
+@media (max-width: 700px) {
+    .rosters-container {
+        padding: 12px;
+    }
+
+    .page-title {
+        margin-bottom: 12px;
+    }
+
+    .desktop-rosters {
+        display: none;
+    }
+
+    .mobile-rosters {
+        display: grid;
+        gap: 12px;
+    }
 }

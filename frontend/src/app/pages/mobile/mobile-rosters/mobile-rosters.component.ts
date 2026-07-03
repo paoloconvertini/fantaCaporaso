@@ -22,8 +22,7 @@ export class MobileRostersComponent implements OnInit {
             next: data => {
                 this.rosters = data;
                 this.participants = Array.from<string>(new Set(data.map((r: any) => r.participant))).sort();
-            },
-            error: err => console.error('Errore caricamento rosters', err)
+            }
         });
     }
 }

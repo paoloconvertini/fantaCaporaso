@@ -36,8 +36,10 @@ export class MobileComponent implements OnInit, OnDestroy {
     currentRole: RoleKey | '' = '';
 
     // WS & subscriptions
-    private socket: WebSocket | null = null;
+   // private socket: WebSocket | null = null;
     private roleSub?: Subscription;
+    private roundSub?: Subscription;
+    private activeUsersSub?: Subscription;
 
     // UX: mostra l’ultima offerta inviata da questo partecipante
     lastBidAmount: number | null = null;
@@ -49,20 +51,34 @@ export class MobileComponent implements OnInit, OnDestroy {
         if (this.pid) {
             this.loadParticipant();
             this.loadRound();
-            this.connectWebSocket();
         } else {
-            this.status = 'Manca ?pid=ID nell’URL';
+            this.loadCurrentParticipant();
+            this.loadRound();
         }
 
         // sincronizza il filtro ruolo condiviso (ROLE_CHANGED / ROUND_STARTED)
         this.roleSub = this.api.roleFilter$.subscribe(role => {
             this.currentRole = role;
         });
+
+        this.roundSub = this.api.round$.subscribe(round => {
+            this.round = round;
+            if (!round) {
+                this.activeUsers = [];
+                this.lastBidAmount = null;
+            }
+        });
+
+        this.activeUsersSub = this.api.activeUsers$.subscribe(users => {
+            this.activeUsers = users;
+        });
     }
 
     ngOnDestroy(): void {
         this.roleSub?.unsubscribe();
-        this.socket?.close();
+        this.roundSub?.unsubscribe();
+        this.activeUsersSub?.unsubscribe();
+      //  this.socket?.close();
     }
 
     // ---------- API calls ----------
@@ -74,10 +90,21 @@ export class MobileComponent implements OnInit, OnDestroy {
         });
     }
 
+    loadCurrentParticipant() {
+        this.api.getCurrentParticipant().subscribe({
+            next: res => {
+                this.participant = res;
+                this.pid = res?.id || null;
+            },
+            error: () => { this.status = 'Partecipante non trovato per l’utente corrente'; }
+        });
+    }
+
     loadRound() {
         this.api.getRound().subscribe({
             next: (res: any) => {
                 this.round = res || null;
+                this.activeUsers = Object.keys(this.round?.bids || {});
                 // se round nuovo è partito, resetta l’ultima offerta mostrata
                 if (this.round && this.round.closed === false) {
                     this.lastBidAmount = null;
@@ -88,53 +115,7 @@ export class MobileComponent implements OnInit, OnDestroy {
     }
 
     // ---------- WebSocket ----------
-    connectWebSocket() {
-        this.socket = this.api.connectWebSocket();
 
-        this.socket.onopen = () => console.log('WS mobile connesso');
-        this.socket.onmessage = (event) => {
-            try {
-                const msg = JSON.parse(event.data);
-                const type = msg?.type;
-                const payload = msg?.payload || msg || {};
-
-                if (type === 'ROUND_STARTED' || type === 'ROUND_UPDATED') {
-                    this.loadRound();
-                    this.activeUsers = [];           // reset lista attivi a inizio/aggiornamento
-                    this.lastBidAmount = null;       // pulisci l’ultima offerta a inizio round
-                }
-
-                if (type === 'ROUND_CLOSED') {
-                    this.loadRound();
-                    this.loadParticipant();          // aggiorna crediti/roster
-                    this.activeUsers = [];           // svuota lista attivi
-                }
-
-                if (type === 'ROUND_RESET') {
-                    this.round = null;
-                    this.activeUsers = [];
-                    this.lastBidAmount = null;
-                }
-
-                if (type === 'BID_ADDED') {
-                    const user = payload?.user;
-                    const participantId = payload?.participantId;
-                    const amount = payload?.amount;
-
-                    if (user && !this.activeUsers.includes(user)) {
-                        this.activeUsers.push(user);
-                    }
-                    // se è la mia offerta, aggiorna il riepilogo locale
-                    if (this.pid && participantId === this.pid && typeof amount === 'number') {
-                        this.lastBidAmount = amount;
-                    }
-                }
-            } catch { /* ignore parse errors */ }
-        };
-
-        // semplice autoreconnect
-        this.socket.onclose = () => setTimeout(() => this.connectWebSocket(), 1500);
-    }
 
     // ---------- Azioni ----------
     isBidAllowed(): boolean {
@@ -156,7 +137,13 @@ export class MobileComponent implements OnInit, OnDestroy {
         }
 
         const v = Number(this.amount);
-        if (!Number.isFinite(v) || v <= 0) {
+        const minimumBid = Number(this.round?.minimumBid || 1);
+        if (!Number.isFinite(v) || v < minimumBid) {
+            this.status = `Offerta minima ${minimumBid}`;
+            return;
+        }
+
+        if (v <= 0) {
             this.status = 'Inserisci un importo valido';
             return;
         }

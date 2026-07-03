@@ -1,10 +1,22 @@
 <div class="rosters-container" *ngIf="!loading; else loadingTpl">
+    <div class="page-title">
+        <h2>Rose</h2>
+        <span>{{ participants.length }} squadre</span>
+    </div>
 
+    <div *ngIf="!participants.length" class="empty-state">
+        Nessuna rosa disponibile.
+    </div>
+
+    <div class="rosters-scroll desktop-rosters" *ngIf="participants.length">
     <table class="rosters-table">
         <thead>
         <tr>
             <th>#</th>
-            <th *ngFor="let p of participants">{{ p.name }}</th>
+            <th *ngFor="let p of participants" class="team-head">
+                <span>{{ p.name }}</span>
+                <small>{{ totalSpent(p.id) }} crediti</small>
+            </th>
         </tr>
         </thead>
 
@@ -20,11 +32,12 @@
                     </td>
                     <td *ngFor="let p of participants" class="player-cell">
                         <ng-container *ngIf="row.players[p.id] as player">
-            <span *ngIf="row.index !== 'TOT'">
-              {{ player.playerName }} <small>({{ player.amount }})</small>
-            </span>
+                            <span *ngIf="row.index !== 'TOT'" class="player-pill">
+                                <span class="player-name">{{ player.playerName }}</span>
+                                <small>{{ player.amount }}</small>
+                            </span>
 
-                            <strong *ngIf="row.index === 'TOT'">{{ player.amount }}</strong>
+                            <strong *ngIf="row.index === 'TOT'" class="total-amount">{{ player.amount }}</strong>
                         </ng-container>
                     </td>
                 </tr>
@@ -39,6 +52,32 @@
         </tbody>
 
     </table>
+    </div>
+
+    <div class="mobile-rosters" *ngIf="participants.length">
+        <article class="team-card" *ngFor="let participant of participants">
+            <header>
+                <h3>{{ participant.name }}</h3>
+                <span>{{ totalSpent(participant.id) }} crediti</span>
+            </header>
+
+            <section class="role-block" *ngFor="let role of rolesOrder" [ngClass]="'role-' + role.toLowerCase()">
+                <div class="role-title">
+                    <strong>{{ role }}</strong>
+                    <span>{{ playersFor(participant.id, role).length }} giocatori · {{ totalFor(participant.id, role) }} crediti</span>
+                </div>
+
+                <div class="mobile-player" *ngFor="let player of playersFor(participant.id, role)">
+                    <span>{{ player.playerName }}</span>
+                    <b>{{ player.amount }}</b>
+                </div>
+
+                <div class="role-empty" *ngIf="!playersFor(participant.id, role).length">
+                    Nessun giocatore
+                </div>
+            </section>
+        </article>
+    </div>
 
 </div>
 

@@ -64,6 +64,20 @@ mat-nav-list a:hover {
     overflow-y: auto;
 }
 
+@media (max-width: 768px) {
+    .menu-sidenav {
+        width: min(82vw, 280px);
+    }
+
+    .app-content {
+        padding: 10px;
+    }
+
+    .summary-sidenav {
+        width: min(88vw, 320px);
+    }
+}
+
 /* 🔹 Pulsante hamburger (toolbar → apri menu) */
 .hamburger-btn,
 button[mat-icon-button] {

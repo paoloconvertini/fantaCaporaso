@@ -5,9 +5,9 @@
   "defaultSignatureAlgorithm": "RS256",
   "revokeRefreshToken": false,
   "refreshTokenMaxReuse": 0,
-  "accessTokenLifespan": 300,
+  "accessTokenLifespan": 1800,
   "accessTokenLifespanForImplicitFlow": 900,
-  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionIdleTimeout": 28800,
   "ssoSessionMaxLifespan": 36000,
   "ssoSessionIdleTimeoutRememberMe": 0,
   "ssoSessionMaxLifespanRememberMe": 0,
@@ -727,18 +727,18 @@
       "clientId": "fantasta-frontend",
       "name": "FantAsta Frontend",
       "description": "",
-      "rootUrl": "http://localhost:4200",
-      "adminUrl": "http://localhost:4200",
-      "baseUrl": "http://localhost:4200",
+      "rootUrl": "",
+      "adminUrl": "",
+      "baseUrl": "",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "http://localhost:4200/*"
+        "*"
       ],
       "webOrigins": [
-        "+"
+        "*"
       ],
       "notBefore": 0,
       "bearerOnly": false,
@@ -753,7 +753,7 @@
       "attributes": {
         "oidc.ciba.grant.enabled": "false",
         "backchannel.logout.session.required": "true",
-        "post.logout.redirect.uris": "http://localhost:4200/*",
+        "post.logout.redirect.uris": "+",
         "display.on.consent.screen": "false",
         "oauth2.device.authorization.grant.enabled": "false",
         "backchannel.logout.revoke.offline.tokens": "false"
@@ -773,6 +773,24 @@
         "phone",
         "offline_access",
         "microprofile-jwt"
+      ],
+      "protocolMappers": [
+        {
+          "name": "participant_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "introspection.token.claim": "true",
+            "multivalued": "false",
+            "userinfo.token.claim": "true",
+            "user.attribute": "participant_id",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "participant_id",
+            "jsonType.label": "long"
+          }
+        }
       ]
     },
     {
@@ -2284,5 +2302,54 @@
   },
   "clientPolicies": {
     "policies": []
-  }
+  },
+  "users": [
+    {
+      "username": "danilo",
+      "enabled": true,
+      "emailVerified": false,
+      "attributes": {
+        "participant_id": [
+          "1"
+        ]
+      },
+      "realmRoles": [
+        "user"
+      ]
+    },
+    {
+      "username": "angelo",
+      "enabled": true,
+      "emailVerified": false,
+      "attributes": {
+        "participant_id": [
+          "2"
+        ]
+      },
+      "realmRoles": [
+        "user"
+      ]
+    },
+    {
+      "username": "paolo",
+      "enabled": true,
+      "emailVerified": false,
+      "realmRoles": [
+        "admin"
+      ]
+    },
+    {
+      "username": "pasquale",
+      "enabled": true,
+      "emailVerified": false,
+      "attributes": {
+        "participant_id": [
+          "3"
+        ]
+      },
+      "realmRoles": [
+        "user"
+      ]
+    }
+  ]
 }

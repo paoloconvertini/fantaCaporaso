@@ -24,7 +24,7 @@
                 type="number"
                 placeholder="La tua offerta"
                 [(ngModel)]="amount"
-                min="0"
+                [min]="round?.minimumBid || 1"
                 [max]="participant?.remainingCredits"
         />
       </mat-form-field>
@@ -41,6 +41,9 @@
 
     <div class="last-bid" *ngIf="lastBidAmount !== null">
       La tua ultima offerta: <b>{{ lastBidAmount }}</b>
+    </div>
+    <div class="last-bid" *ngIf="round?.minimumBid && round.minimumBid > 1">
+      Offerta minima spareggio: <b>{{ round.minimumBid }}</b>
     </div>
   </mat-card>
 

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import {UserApiService} from "../../services/user-api.service";
+import { forkJoin } from 'rxjs';
 
 interface Player {
     id: number;
@@ -20,6 +21,7 @@ export class RostersComponent implements OnInit {
 
     participants: { id: number, name: string }[] = [];
     table: any[] = []; // righe della tabella pivotata
+    rosterByParticipantRole: { [participantId: number]: { [role: string]: Player[] } } = {};
 
     rolesOrder = ['PORTIERE','DIFENSORE','CENTROCAMPISTA','ATTACCANTE'];
 
@@ -31,28 +33,29 @@ export class RostersComponent implements OnInit {
 
     loadRosters() {
         this.loading = true;
-        this.api.getRosters().subscribe({
-            next: (data: Player[]) => {
-                this.buildTable(data);
+        forkJoin({
+            participants: this.api.getAllParticipants(),
+            rosters: this.api.getRosters()
+        }).subscribe({
+            next: ({ participants, rosters }) => {
+                this.buildTable(rosters, participants);
                 this.loading = false;
             },
-            error: (err) => {
-                console.error('Errore caricamento rosters', err);
+            error: () => {
+                this.participants = [];
+                this.table = [];
                 this.loading = false;
             }
         });
     }
 
-    private buildTable(rosters: Player[]) {
-        // 1. prendo i partecipanti
-        const participantsMap = new Map<number,string>();
-        rosters.forEach(r => {
-            if (!participantsMap.has(r.participantId)) {
-                participantsMap.set(r.participantId, r.participantName);
-            }
-        });
-        this.participants = Array.from(participantsMap.entries())
-            .map(([id,name]) => ({ id, name }));
+    private buildTable(rosters: Player[], participants: { id: number; name: string }[]) {
+        this.rosterByParticipantRole = {};
+
+        // 1. mostro sempre tutti i partecipanti, anche senza giocatori assegnati.
+        this.participants = [...participants]
+            .map(p => ({ id: p.id, name: p.name }))
+            .sort((a, b) => a.name.localeCompare(b.name));
 
         // 2. raggruppo per ruolo → lista di giocatori ordinati per partecipante
         const groupedByRole: { [role: string]: { [pid: number]: Player[] } } = {};
@@ -61,11 +64,20 @@ export class RostersComponent implements OnInit {
             if (!groupedByRole[role]) groupedByRole[role] = {};
             if (!groupedByRole[role][p.participantId]) groupedByRole[role][p.participantId] = [];
             groupedByRole[role][p.participantId].push(p);
+
+            if (!this.rosterByParticipantRole[p.participantId]) this.rosterByParticipantRole[p.participantId] = {};
+            if (!this.rosterByParticipantRole[p.participantId][role]) this.rosterByParticipantRole[p.participantId][role] = [];
+            this.rosterByParticipantRole[p.participantId][role].push(p);
         });
 
         // ordino ogni lista di giocatori per amount decrescente
         Object.values(groupedByRole).forEach(byTeam =>
             Object.values(byTeam).forEach(list =>
+                list.sort((a,b) => b.amount - a.amount)
+            )
+        );
+        Object.values(this.rosterByParticipantRole).forEach(byRole =>
+            Object.values(byRole).forEach(list =>
                 list.sort((a,b) => b.amount - a.amount)
             )
         );
@@ -99,6 +111,20 @@ export class RostersComponent implements OnInit {
 
     tableByRole(role: string) {
         return this.table.filter(r => r.role === role);
+    }
+
+    playersFor(participantId: number, role: string): Player[] {
+        return this.rosterByParticipantRole[participantId]?.[role] || [];
+    }
+
+    totalFor(participantId: number, role: string): number {
+        return this.playersFor(participantId, role)
+            .reduce((sum, player) => sum + (player.amount || 0), 0);
+    }
+
+    totalSpent(participantId: number): number {
+        return this.rolesOrder
+            .reduce((sum, role) => sum + this.totalFor(participantId, role), 0);
     }
 
 }

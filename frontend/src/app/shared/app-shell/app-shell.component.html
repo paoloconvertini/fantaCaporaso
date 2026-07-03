@@ -12,13 +12,26 @@
         </div>
 
         <mat-nav-list>
-            <a mat-list-item routerLink="/players"><mat-icon>sports_soccer</mat-icon> Svincolati</a>
-            <a mat-list-item routerLink="/rosters"><mat-icon>groups_2</mat-icon> Rose</a>
-
+            <a *ngIf="isAdmin"  mat-list-item routerLink="/admin" (click)="menu.close()"><mat-icon>home</mat-icon> Dashboard</a>
+            <a mat-list-item routerLink="/players" (click)="menu.close()"><mat-icon>sports_soccer</mat-icon> Svincolati</a>
+            <a mat-list-item routerLink="/rosters" (click)="menu.close()"><mat-icon>groups_2</mat-icon> Rose</a>
+            <!-- 🔹 Nuova voce: Gestione Rosa -->
+            <a mat-list-item routerLink="/rosa" (click)="menu.close()">
+                <mat-icon>list_alt</mat-icon>
+                Gestione Rosa
+            </a>
             <ng-container *ngIf="isAdmin">
-                <a mat-list-item routerLink="/admin"><mat-icon>home</mat-icon> Dashboard</a>
-                <a mat-list-item routerLink="/upload-rosters"><mat-icon>file_upload</mat-icon> Upload Rose</a>
-                <a mat-list-item routerLink="/upload-players"><mat-icon>file_upload</mat-icon> Upload Giocatori</a>
+                <!-- 🔹 Nuova voce: Configurazione Mercato -->
+                <a mat-list-item routerLink="/admin/mercato" (click)="menu.close()">
+                    <mat-icon>settings</mat-icon>
+                    Configurazione Mercato
+                </a>
+                <a mat-list-item routerLink="/admin/users" (click)="menu.close()">
+                    <mat-icon>manage_accounts</mat-icon>
+                    Utenti
+                </a>
+                <a mat-list-item routerLink="/upload-rosters" (click)="menu.close()"><mat-icon>file_upload</mat-icon> Upload Rose</a>
+                <a mat-list-item routerLink="/upload-players" (click)="menu.close()"><mat-icon>file_upload</mat-icon> Upload Giocatori</a>
             </ng-container>
         </mat-nav-list>
     </mat-sidenav>

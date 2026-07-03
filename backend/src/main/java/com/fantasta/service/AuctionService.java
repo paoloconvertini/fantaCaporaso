@@ -1,20 +1,23 @@
 package com.fantasta.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fantasta.model.*;
 import com.fantasta.ws.RoundSocket;
-import io.vertx.core.Vertx;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
-import javax.xml.xpath.XPathEvaluationResult;
 import java.io.File;
+import java.time.Instant;
 import java.util.*;
 
 @ApplicationScoped
 public class AuctionService {
+    private static final String CURRENT_ROUND_STATE_ID = "current";
+
     private RoundState state;
-    private final Random rnd = new Random();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Inject
     ParticipantService participantService;
@@ -28,10 +31,15 @@ public class AuctionService {
     @Inject
     DbService dbService;
 
+    @Transactional
     public synchronized RoundState get() {
+        if (state == null) {
+            state = loadCurrentState();
+        }
         return state;
     }
 
+    @Transactional
     public synchronized RoundState start(String player, String team, String role,
                                          Integer duration, String tieBreak, Integer value,
                                          Set<Long> allowedUsers) {
@@ -42,6 +50,7 @@ public class AuctionService {
         s.playerRole = role;
         s.value = value;
         s.closed = false;
+        s.minimumBid = minimumBidFor(allowedUsers);
         s.durationSeconds = duration;
         s.endEpochMillis = (duration != null && duration > 0)
                 ? (System.currentTimeMillis() + duration * 1000L)
@@ -53,6 +62,7 @@ public class AuctionService {
         s.tieUsers = null;
 
         this.state = s;
+        persistCurrentState();
         return state;
     }
 
@@ -65,8 +75,9 @@ public class AuctionService {
         if (participantId == null)
             throw new IllegalArgumentException("Partecipante mancante");
 
-        if (amount < 1)
-            throw new IllegalArgumentException("Offerta minima 1");
+        double minimumBid = state.minimumBid != null ? state.minimumBid : 1D;
+        if (amount < minimumBid)
+            throw new IllegalArgumentException("Offerta minima " + formatAmount(minimumBid));
 
         ParticipantEntity p = ParticipantEntity.findById(participantId);
         if (p == null)
@@ -100,8 +111,30 @@ public class AuctionService {
         payload.put("amount", amount);
 
         socket.broadcast("BID_ADDED", payload);
+        persistCurrentState();
 
         return state;
+    }
+
+    private Double minimumBidFor(Set<Long> allowedUsers) {
+        if (state == null || allowedUsers == null || allowedUsers.isEmpty() || state.bids == null || state.bids.isEmpty()) {
+            return 1D;
+        }
+
+        double maxAllowedBid = state.bids.entrySet().stream()
+                .filter(e -> allowedUsers.contains(Long.valueOf(e.getKey())))
+                .mapToDouble(Map.Entry::getValue)
+                .max()
+                .orElse(0D);
+
+        return Math.max(1D, maxAllowedBid + 1D);
+    }
+
+    private String formatAmount(double amount) {
+        if (amount == Math.rint(amount)) {
+            return String.valueOf((int) amount);
+        }
+        return String.valueOf(amount);
     }
 
     @Transactional
@@ -145,11 +178,14 @@ public class AuctionService {
         state.durationSeconds = null;
         Map<String, Object> payload = Map.of("reason", "round_closed", "roundId", state.roundId);
         socket.broadcast("SUMMARY_UPDATED", payload);
+        persistCurrentState();
         return state;
     }
 
+    @Transactional
     public synchronized void reset() {
         state = null;
+        clearCurrentState();
     }
 
     @Transactional
@@ -173,6 +209,7 @@ public class AuctionService {
         state.closed = true;
         state.tieUsers = null;
         state.allowedUsers = null;
+        persistCurrentState();
 
         // 🔔 NOTIFICA SUMMARY
         socket.broadcast("SUMMARY_UPDATED", Map.of("reason", "manual_assign"));
@@ -183,18 +220,13 @@ public class AuctionService {
     public void closeAuction(Long sessionId) {
         // Copia lo stato corrente delle rose
         List<RosterEntity> roster = RosterEntity.listAll();
-        for (RosterEntity r : roster) {
-            RosterHistoryEntity h = new RosterHistoryEntity();
-            h.sessionId = sessionId;
-            h.participant = r.participant;
-            h.player = r.player;
-            h.amount = r.amount;
-            h.persist();
-        }
+        RosterService.createRoster(sessionId, roster);
 
         // Pulisce giro e skip
         GiroEntity.deleteAll();
         SkipEntity.deleteAll();
+        state = null;
+        clearCurrentState();
         socket.broadcast("SUMMARY_UPDATED", Map.of("reason", "auction_closed", "sessionId", sessionId));
 
     }
@@ -222,6 +254,43 @@ public class AuctionService {
         r.delete();
         socket.broadcast("SUMMARY_UPDATED", Map.of("reason", "release"));
 
+    }
+
+    private void persistCurrentState() {
+        if (state == null) {
+            clearCurrentState();
+            return;
+        }
+
+        try {
+            AuctionRoundStateEntity entity = AuctionRoundStateEntity.findById(CURRENT_ROUND_STATE_ID);
+            if (entity == null) {
+                entity = new AuctionRoundStateEntity();
+                entity.id = CURRENT_ROUND_STATE_ID;
+            }
+            entity.stateJson = objectMapper.writeValueAsString(state);
+            entity.updatedAt = Instant.now();
+            entity.persist();
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Impossibile salvare lo stato round", e);
+        }
+    }
+
+    private RoundState loadCurrentState() {
+        AuctionRoundStateEntity entity = AuctionRoundStateEntity.findById(CURRENT_ROUND_STATE_ID);
+        if (entity == null || entity.stateJson == null || entity.stateJson.isBlank()) {
+            return null;
+        }
+
+        try {
+            return objectMapper.readValue(entity.stateJson, RoundState.class);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Impossibile leggere lo stato round salvato", e);
+        }
+    }
+
+    private void clearCurrentState() {
+        AuctionRoundStateEntity.deleteById(CURRENT_ROUND_STATE_ID);
     }
 
     /**

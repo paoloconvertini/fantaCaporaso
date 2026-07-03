@@ -3,6 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { AdminApiService } from '../../services/admin-api.service';
 import { ManualAssignDialogComponent } from '../../dialogs/manual-assign-dialog.component';
 import {Round} from "../../models/round.model";
+import {MatSnackBar} from "@angular/material/snack-bar";
 
 type SummaryRow = { name: string, remainingCredits: number, need: any };
 
@@ -28,12 +29,16 @@ export class AdminComponent implements OnInit, OnDestroy {
     value = 0;
     loadingAssign = false;
     private lastHandledClosedRoundId: string | null = null;
+    private roundSocket?: WebSocket;
+    private reconnectTimer?: any;
+    private destroyed = false;
     summaryOpen = true;
     winnerPayload: { user: string; amount: number; player: string } | null = null;
 
     constructor(
         private adminApi: AdminApiService,
-        private dialog: MatDialog
+        private dialog: MatDialog,
+        private snackBar: MatSnackBar
     ) {}
 
     toggleSummary(open?: boolean) {
@@ -47,9 +52,14 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy() {
+        this.destroyed = true;
         if (this.timerInterval) {
             clearInterval(this.timerInterval);
         }
+        if (this.reconnectTimer) {
+            clearTimeout(this.reconnectTimer);
+        }
+        this.roundSocket?.close();
     }
 
     // --- ROUND NAVIGATION ---
@@ -86,9 +96,21 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
 
     connectWs() {
+        this.roundSocket?.close();
         const sock = this.adminApi.connectWebSocket();
+        this.roundSocket = sock;
+
+        sock.onopen = () => {
+            this.snackBar.open('Connessione live attiva', 'Chiudi', { duration: 1500 });
+        };
+
         sock.onmessage = (msg) => {
-            const data = JSON.parse(msg.data);
+            let data: any;
+            try {
+                data = JSON.parse(msg.data);
+            } catch {
+                return;
+            }
 
             if (data.type === 'BID_ADDED') {
                 if (data.payload?.user && !this.activeUsers.includes(data.payload.user)) {
@@ -128,20 +150,7 @@ export class AdminComponent implements OnInit, OnDestroy {
                     const closedId = payload.roundId || null;
                     if (!closedId || this.lastHandledClosedRoundId !== closedId) {
                         this.lastHandledClosedRoundId = closedId;
-                        this.adminApi.randomNext().subscribe(d => {
-                            if (d) {
-                                this.player = d.name || '';
-                                this.team = d.team || '';
-                                this.prole = d.role || '';
-                                this.value = d.value || 0;
-                            } else {
-                                this.player = '(fine giro)';
-                                this.team = '';
-                                this.prole = '';
-                                this.value = 0;
-                            }
-                            this.refreshRemaining();
-                        });
+                        this.loadNextPlayer();
                     }
                 }
             }
@@ -151,19 +160,33 @@ export class AdminComponent implements OnInit, OnDestroy {
                 this.activeUsers = [];
             }
         };
+
+        sock.onerror = () => {
+            this.snackBar.open('Connessione live interrotta', 'Chiudi', { duration: 2500 });
+        };
+
+        sock.onclose = () => {
+            if (this.destroyed) return;
+            this.reconnectTimer = setTimeout(() => this.connectWs(), 2000);
+        };
     }
 
     close() {
-        this.adminApi.closeRound().subscribe((res) => {
-            this.round = res;
-            this.refreshRemaining();
-            this.activeUsers = [];
+        this.adminApi.closeRound().subscribe({
+            next: (res) => {
+                this.round = res;
+                this.refreshRemaining();
+                this.activeUsers = [];
 
-            if (this.timerInterval) {
-                clearInterval(this.timerInterval);
-                this.timerInterval = null;
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+                this.timeLeft = null;
+            },
+            error: (err) => {
+                this.showError('Errore chiusura round', err);
             }
-            this.timeLeft = null;
         });
     }
 
@@ -177,23 +200,28 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
 
     load() {
-        this.adminApi.getRound().subscribe(res => {
-            this.round = res;
-            this.activeUsers = this.round && this.round.bids ? Object.keys(this.round.bids) : [];
+        this.adminApi.getRound().subscribe({
+            next: (res) => {
+                this.round = res;
+                this.activeUsers = this.round && this.round.bids ? Object.keys(this.round.bids) : [];
 
-            const end = this.round?.endEpochMillis as number | null;
-            const isActive = !!this.round && this.round.closed === false && !!end && end > Date.now();
+                const end = this.round?.endEpochMillis as number | null;
+                const isActive = !!this.round && this.round.closed === false && !!end && end > Date.now();
 
-            if (isActive) {
-                if (this.timerInterval) clearInterval(this.timerInterval);
-                this.updateTimeLeft();
-                this.timerInterval = setInterval(() => this.updateTimeLeft(), 1000);
-            } else {
-                if (this.timerInterval) {
-                    clearInterval(this.timerInterval);
-                    this.timerInterval = null;
+                if (isActive) {
+                    if (this.timerInterval) clearInterval(this.timerInterval);
+                    this.updateTimeLeft();
+                    this.timerInterval = setInterval(() => this.updateTimeLeft(), 1000);
+                } else {
+                    if (this.timerInterval) {
+                        clearInterval(this.timerInterval);
+                        this.timerInterval = null;
+                    }
+                    this.timeLeft = null;
                 }
-                this.timeLeft = null;
+            },
+            error: (err) => {
+                this.showError('Errore caricamento round', err);
             }
         });
     }
@@ -210,45 +238,46 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
 
     refreshRemaining() {
-        this.adminApi.getRandomState().subscribe(res => {
-            const role = this.role || 'TUTTI';
-            this.remainingCount = res.remaining?.[role] ?? 0;
-            this.skippedCount = res.skipped?.[role] ?? 0;
+        this.adminApi.getRandomState().subscribe({
+            next: (res) => {
+                const role = this.role || 'TUTTI';
+                this.remainingCount = res.remaining?.[role] ?? 0;
+                this.skippedCount = res.skipped?.[role] ?? 0;
+            },
+            error: (err) => {
+                this.showError('Errore stato random', err);
+            }
         });
     }
 
     next() {
-        this.adminApi.randomNext().subscribe(d => {
-            if (!d) {
-                this.player = '(fine giro)';
-                this.team = '';
-                this.prole = '';
-                this.value = 0;
-                return;
-            } else {
-                this.player = d.name || '';
-                this.team = d.team || '';
-                this.prole = d.role || '';
-                this.value = d.value || 0;
-            }
-            this.refreshRemaining();
-        });
+        this.loadNextPlayer();
     }
 
     skip() {
         if (!this.player) return;
-        this.adminApi.randomSkip(this.player, this.team).subscribe(() => {
-            this.next();
-            this.refreshRemaining();
+        this.adminApi.randomSkip(this.player, this.team).subscribe({
+            next: () => {
+                this.next();
+                this.refreshRemaining();
+            },
+            error: (err) => {
+                this.showError('Errore skip giocatore', err);
+            }
         });
     }
 
     resetSkip() {
-        this.adminApi.randomResetSkip().subscribe(() => {
-            this.player = '';
-            this.team = '';
-            this.prole = '';
-            this.refreshRemaining();
+        this.adminApi.randomResetSkip().subscribe({
+            next: () => {
+                this.player = '';
+                this.team = '';
+                this.prole = '';
+                this.refreshRemaining();
+            },
+            error: (err) => {
+                this.showError('Errore reset giro', err);
+            }
         });
     }
 
@@ -267,11 +296,13 @@ export class AdminComponent implements OnInit, OnDestroy {
             playerTeam: this.team || '',
             playerRole: this.prole,
             value: this.value,
+            minimumBid: 1,
             durationSeconds: Number(this.duration),
             tieBreak: 'NONE'
         };
         if (this.round?.closed && Array.isArray(this.round.tieUserIds) && this.round.tieUserIds.length) {
             payload.allowedUsers = this.round.tieUserIds;
+            payload.minimumBid = this.minimumBidForTieBreak();
         }
 
         this.adminApi.startRound(payload).subscribe({
@@ -284,23 +315,20 @@ export class AdminComponent implements OnInit, OnDestroy {
         });
     }
 
-    startAuction() {
-        this.adminApi.randomNext().subscribe(d => {
-            if (d) {
-                this.player = d.name || '';
-                this.team = d.team || '';
-                this.prole = d.role || '';
-                this.value = d.value || 0;
-            }
-            this.refreshRemaining();
-        });
+    drawNextPlayer() {
+        this.loadNextPlayer();
     }
 
     reset() {
-        this.adminApi.resetRound().subscribe(() => {
-            this.load();
-            this.refreshRemaining();
-            this.showWinnerOverlay = false;
+        this.adminApi.resetRound().subscribe({
+            next: () => {
+                this.load();
+                this.refreshRemaining();
+                this.showWinnerOverlay = false;
+            },
+            error: (err) => {
+                this.showError('Errore reset round', err);
+            }
         });
     }
 
@@ -350,12 +378,65 @@ export class AdminComponent implements OnInit, OnDestroy {
                     this.load();
                     this.refreshRemaining();
                     this.loadingAssign = false;
+                }, (err) => {
+                    this.loadingAssign = false;
+                    this.showError('Errore assegnazione manuale', err);
                 });
             }
         });
     }
 
     closeAuction() {
-        //TODO creare il metodo nel BE
+        if (!confirm('Sei sicuro di voler chiudere l’asta?')) return;
+
+        const sessionId = Date.now();
+        this.adminApi.closeAuction(sessionId).subscribe({
+            next: () => {
+                this.snackBar.open('Asta chiusa con successo', 'Chiudi', { duration: 3000 });
+                this.refreshRemaining();
+            },
+            error: (err) => {
+                this.showError('Errore chiusura asta', err);
+            }
+        });
+    }
+
+    private loadNextPlayer(): void {
+        this.adminApi.randomNext().subscribe({
+            next: (d) => {
+                if (!d) {
+                    this.player = '(fine giro)';
+                    this.team = '';
+                    this.prole = '';
+                    this.value = 0;
+                } else {
+                    this.player = d.name || '';
+                    this.team = d.team || '';
+                    this.prole = d.role || '';
+                    this.value = d.value || 0;
+                }
+                this.refreshRemaining();
+            },
+            error: (err) => {
+                this.showError('Errore estrazione giocatore', err);
+            }
+        });
+    }
+
+    private minimumBidForTieBreak(): number {
+        const bids = Object.values(this.round?.bids || {})
+            .map(amount => Number(amount))
+            .filter(amount => Number.isFinite(amount));
+
+        if (!bids.length) {
+            return 1;
+        }
+
+        return Math.max(...bids) + 1;
+    }
+
+    private showError(prefix: string, err: any): void {
+        const message = err?.error?.message || err?.error?.error || err?.message || 'errore sconosciuto';
+        this.snackBar.open(`${prefix}: ${message}`, 'Chiudi', { duration: 4000 });
     }
 }

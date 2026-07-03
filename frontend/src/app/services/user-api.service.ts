@@ -10,8 +10,12 @@ type RoleKey = 'PORTIERE' | 'DIFENSORE' | 'CENTROCAMPISTA' | 'ATTACCANTE';
 export class UserApiService {
 
   private base: string;
+  public round$ = new BehaviorSubject<any | null>(null);
   public summaryUpdated$ = new Subject<void>();
   public roleFilter$ = new BehaviorSubject<RoleKey | ''>('');
+  public activeUsers$ = new BehaviorSubject<string[]>([]);
+  private socket?: WebSocket;
+  private reconnectTimer?: any;
 
   constructor(private http: HttpClient) {
     this.base = (window as any).__API_BASE__ || '';
@@ -51,6 +55,10 @@ export class UserApiService {
     return this.http.get(`${this.base}/api/participant/${id}`);
   }
 
+  getCurrentParticipant(): Observable<any> {
+    return this.http.get(`${this.base}/api/participant/me`);
+  }
+
   getAllParticipants(): Observable<any[]> {
     return this.http.get<any[]>(`${this.base}/api/participant/all`);
   }
@@ -70,28 +78,58 @@ export class UserApiService {
 
   // 🔹 WEBSOCKET
   connectWebSocket(): WebSocket {
+    if (this.socket && this.socket.readyState !== WebSocket.CLOSED) {
+      return this.socket;
+    }
+
     const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
     const ws = new WebSocket(`${protocol}://${location.host}/ws/round`);
+    this.socket = ws;
 
-    ws.addEventListener('message', (evt) => {
-      try {
-        const data = JSON.parse((evt as MessageEvent).data);
-        const t = data?.type;
-        const payload = data?.payload || data || {};
+      ws.addEventListener('message', (evt) => {
+          try {
+              const data = JSON.parse((evt as MessageEvent).data);
+              const t = data?.type;
+              const payload = data?.payload || data || {};
 
-        if (t === 'SUMMARY_UPDATED' || t === 'ROUND_CLOSED' || t === 'ROUND_RESET') {
-          this.summaryUpdated$.next();
-        }
+              if (t === 'SUMMARY_UPDATED' || t === 'ROUND_CLOSED' || t === 'ROUND_RESET') {
+                  this.summaryUpdated$.next();
+              }
 
-        if (t === 'ROLE_CHANGED' && payload?.role) {
-          this.roleFilter$.next(payload.role as RoleKey);
-        }
-        if (t === 'ROUND_STARTED' && payload?.playerRole) {
-          this.roleFilter$.next(payload.playerRole as RoleKey);
-        }
-      } catch { /* ignore JSON errors */ }
-    });
+              if (t === 'BID_ADDED' && payload?.user) {
+                  const users = this.activeUsers$.value;
+                  if (!users.includes(payload.user)) {
+                      this.activeUsers$.next([...users, payload.user]);
+                  }
+              }
 
-    return ws;
+              if (t === 'ROLE_CHANGED' && payload?.role) {
+                  this.roleFilter$.next(payload.role as RoleKey);
+              }
+
+              if (t === 'ROUND_STARTED') {
+                  this.roleFilter$.next(payload?.playerRole as RoleKey);
+                  this.activeUsers$.next([]);
+                  this.round$.next(payload); // 👈 aggiungi questo
+              }
+
+              if (t === 'ROUND_CLOSED') {
+                  this.activeUsers$.next([]);
+                  this.round$.next(null); // 👈 azzera quando finisce
+              }
+          } catch { /* ignore JSON errors */ }
+      });
+
+      ws.addEventListener('close', () => {
+          this.socket = undefined;
+          clearTimeout(this.reconnectTimer);
+          this.reconnectTimer = setTimeout(() => this.connectWebSocket(), 2000);
+      });
+
+      ws.addEventListener('error', () => {
+          ws.close();
+      });
+
+      return ws;
   }
 }

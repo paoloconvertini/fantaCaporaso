@@ -13,6 +13,7 @@ public class RoundDto {
     public String playerTeam;
     public String playerRole;
     public boolean closed;
+    public Double minimumBid;
     public Map<String, Integer> bids;   // chiave = nome partecipante
     public Winner winner;
     public Integer durationSeconds;
@@ -31,6 +32,7 @@ public class RoundDto {
         dto.playerTeam = s.playerTeam;
         dto.playerRole = s.playerRole;
         dto.closed = s.closed;
+        dto.minimumBid = s.minimumBid;
         dto.durationSeconds = s.durationSeconds;
         dto.endEpochMillis = s.endEpochMillis;
         dto.winner = s.winner;
@@ -69,6 +71,10 @@ public class RoundDto {
             dto.tieUserIds = Collections.emptyList();
             dto.tieUsers = Collections.emptyList();
         }
+
+        dto.allowedUsers = (s.allowedUsers == null)
+                ? Collections.emptyList()
+                : new ArrayList<>(s.allowedUsers);
 
         return dto;
     }

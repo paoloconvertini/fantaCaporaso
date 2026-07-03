@@ -36,8 +36,8 @@ export class PlayersComponent implements OnInit {
                 this.players = data;
                 this.loading = false;
             },
-            error: err => {
-                console.error('Errore caricamento players', err);
+            error: () => {
+                this.players = [];
                 this.loading = false;
             }
         });
@@ -45,5 +45,20 @@ export class PlayersComponent implements OnInit {
 
     onRoleChange(): void {
         this.loadPlayers();
+    }
+
+    setRole(role: string | null): void {
+        this.selectedRole = role;
+        this.loadPlayers();
+    }
+
+    roleLabel(role: string): string {
+        const labels: Record<string, string> = {
+            PORTIERE: 'POR',
+            DIFENSORE: 'DIF',
+            CENTROCAMPISTA: 'CEN',
+            ATTACCANTE: 'ATT'
+        };
+        return labels[role] || role;
     }
 }

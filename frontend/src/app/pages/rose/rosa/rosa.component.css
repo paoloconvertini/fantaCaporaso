@@ -1,0 +1,149 @@
+.rosa-container {
+    padding: 1rem;
+    color: #fff;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* 🔹 Select partecipante */
+.participant-selector {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.mat-mdc-form-field {
+    color: #fff;
+}
+
+/* 🔹 Tabs ruoli */
+.ruoli-tabs {
+    display: flex;
+    justify-content: space-around;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    padding: 4px;
+}
+
+.ruoli-tabs button {
+    flex: 1;
+    color: #eee !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    border-radius: 6px;
+    padding: 8px;
+    line-height: 1.2;
+}
+
+.ruoli-tabs button.active {
+    background: #7e57c2 !important; /* viola chiaro */
+    color: #fff !important;
+}
+
+.ruoli-tabs .count {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-top: 2px;
+}
+
+/* 🔹 Tabella */
+table {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    border-radius: 8px;
+    border-collapse: collapse;
+    overflow: hidden;
+}
+
+.rosa-table {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+th.mat-header-cell {
+    color: #d1c4e9; /* viola chiaro */
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 8px 12px;
+}
+
+td.mat-cell {
+    color: #fff;
+    padding: 8px 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+tr.mat-row:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* 🔹 Icona svincolo */
+button[mat-icon-button] mat-icon {
+    color: #ffb74d; /* arancio */
+    font-size: 22px;
+}
+
+button[mat-icon-button]:hover mat-icon {
+    color: #ff9800;
+}
+
+/* Testo bianco nel mat-select */
+::ng-deep .mat-form-field-appearance-fill .mat-select-value,
+::ng-deep .mat-select-value-text {
+    color: #fff !important;
+}
+
+/* Etichetta (label) bianca */
+::ng-deep .mat-form-field-label {
+    color: #fff !important;
+}
+
+/* Freccia bianca */
+::ng-deep .mat-select-arrow {
+    color: #fff !important;
+}
+
+.crediti-container {
+    color: #fff;
+    text-align: right;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.crediti-container strong {
+    color: #ffd54f; /* giallo oro */
+    font-weight: 600;
+}
+
+@media (max-width: 700px) {
+    .rosa-container {
+        padding: 8px 0;
+    }
+
+    .ruoli-tabs {
+        gap: 4px;
+    }
+
+    .ruoli-tabs button {
+        min-width: 0;
+        padding: 7px 3px;
+        font-size: 12px;
+    }
+
+    .crediti-container {
+        text-align: left;
+        font-size: 14px;
+    }
+
+    th.mat-header-cell,
+    td.mat-cell {
+        padding: 7px 8px;
+        font-size: 13px;
+    }
+}

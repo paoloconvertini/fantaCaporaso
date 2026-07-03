@@ -22,8 +22,13 @@ export class AdminApiService {
     return this.http.post(`${this.base}/api/start`, round);
   }
 
+
   closeRound(): Observable<any> {
-    return this.http.post(`${this.base}/api/round/close`, {});
+      return this.http.post(`${this.base}/api/round/close`, {});
+  }
+
+  closeAuction(sessionId: number): Observable<any> {
+    return this.http.post(`${this.base}/api/admin/close-auction?sessionId=${sessionId}`, {});
   }
 
   resetRound(): Observable<any> {
@@ -75,6 +80,10 @@ export class AdminApiService {
   // 🔹 MANUAL ASSIGN
   manualAssign(payload: any): Observable<any> {
     return this.http.post(`${this.base}/api/assign`, payload);
+  }
+
+  createKeycloakUser(payload: { username: string; password: string; participantId: number }): Observable<any> {
+    return this.http.post(`${this.base}/api/admin/users`, payload);
   }
 
   // 🔹 WEBSOCKET

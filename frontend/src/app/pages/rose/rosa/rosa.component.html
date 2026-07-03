@@ -1,0 +1,84 @@
+<div class="rosa-container">
+    <h2 class="text-xl font-semibold text-center text-white mb-4 uppercase">
+        Rosa Attuale
+    </h2>
+
+    <!-- 🔹 Admin: selettore partecipante -->
+    <div *ngIf="isAdmin" class="participant-selector">
+        <mat-form-field appearance="fill" color="accent">
+            <mat-label>Partecipante</mat-label>
+            <mat-select [(value)]="selectedParticipantId" (selectionChange)="loadRoster()">
+                <mat-option *ngFor="let p of participants" [value]="p.id">{{ p.name }}</mat-option>
+            </mat-select>
+        </mat-form-field>
+    </div>
+    <div class="crediti-container">
+        <span>Crediti residui: <strong>{{ residui }}</strong></span>
+    </div>
+
+    <!-- 🔹 Mini tab ruoli -->
+    <div class="ruoli-tabs">
+        <button
+                mat-button
+                *ngFor="let role of roles"
+                [class.active]="selectedRole === role.code"
+                (click)="filterByRole(role.code)"
+        >
+            {{ role.label }}
+            <br />
+            <span class="count">
+        {{ getCountForRole(role.code) }}
+      </span>
+        </button>
+    </div>
+
+    <!-- 🔹 Tabella rosa -->
+    <div *ngIf="!loading && filteredRoster.length > 0" class="rosa-table">
+        <table mat-table [dataSource]="filteredRoster" class="mat-elevation-z2 w-full">
+            <!-- Squadra -->
+            <ng-container matColumnDef="team">
+                <th mat-header-cell *matHeaderCellDef> Squadra </th>
+                <td mat-cell *matCellDef="let r"> {{ r.team }} </td>
+            </ng-container>
+
+            <!-- Giocatore -->
+            <ng-container matColumnDef="player">
+                <th mat-header-cell *matHeaderCellDef> Giocatore </th>
+                <td mat-cell *matCellDef="let r"> {{ r.playerName }} </td>
+            </ng-container>
+
+            <!-- Valore -->
+            <ng-container matColumnDef="amount">
+                <th mat-header-cell *matHeaderCellDef> Valore </th>
+                <td mat-cell *matCellDef="let r"> {{ r.amount | number: '1.0-0' }} </td>
+            </ng-container>
+
+            <!-- Azioni -->
+            <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let r">
+                    <button
+                            mat-icon-button
+                            color="warn"
+                            (click)="confermaSvincolo(r)"
+                            [disabled]="!mercatoAttivo"
+                            matTooltip="{{ mercatoAttivo ? 'Svincola giocatore' : 'Mercato chiuso' }}"
+                    >
+                        <mat-icon>person_remove</mat-icon>
+                    </button>
+                </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="['team','player','amount','actions']"></tr>
+            <tr mat-row *matRowDef="let row; columns: ['team','player','amount','actions']"></tr>
+        </table>
+    </div>
+
+    <p *ngIf="!loading && filteredRoster.length === 0" class="text-gray-300 text-center mt-4">
+        {{ isAdmin && !selectedParticipantId
+        ? 'Seleziona un partecipante per visualizzare la rosa.'
+        : 'Nessun giocatore presente.' }}
+    </p>
+
+    <mat-progress-bar *ngIf="loading" mode="indeterminate" color="accent"></mat-progress-bar>
+</div>
