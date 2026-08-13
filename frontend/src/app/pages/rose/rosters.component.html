@@ -1,7 +1,12 @@
 <div class="rosters-container" *ngIf="!loading; else loadingTpl">
     <div class="page-title">
-        <h2>Rose</h2>
-        <span>{{ participants.length }} squadre</span>
+        <div>
+            <h2>Rose</h2>
+            <span>{{ participants.length }} squadre</span>
+        </div>
+        <button *ngIf="isAdmin" mat-stroked-button type="button" class="export-button" (click)="exportRosters()">
+            <mat-icon>download</mat-icon> Esporta rose FantaMaster
+        </button>
     </div>
 
     <div *ngIf="!participants.length" class="empty-state">
@@ -15,6 +20,7 @@
             <th>#</th>
             <th *ngFor="let p of participants" class="team-head">
                 <span>{{ p.name }}</span>
+                <small class="team-username">{{ p.username ? '@' + p.username : 'account non configurato' }}</small>
                 <small>{{ totalSpent(p.id) }} crediti</small>
             </th>
         </tr>
@@ -58,6 +64,7 @@
         <article class="team-card" *ngFor="let participant of participants">
             <header>
                 <h3>{{ participant.name }}</h3>
+                <small class="team-username">{{ participant.username ? '@' + participant.username : 'account non configurato' }}</small>
                 <span>{{ totalSpent(participant.id) }} crediti</span>
             </header>
 

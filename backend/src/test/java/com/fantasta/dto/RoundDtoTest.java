@@ -65,4 +65,30 @@ class RoundDtoTest {
         assertNotNull(dto.allowedUsers);
         assertTrue(dto.allowedUsers.isEmpty());
     }
+
+    @Test
+    void toDtoShowsBidderNamesButHidesAmountsWhileRoundIsOpen() {
+        RoundState state = new RoundState();
+        state.closed = false;
+        state.bids = new LinkedHashMap<>();
+        state.bids.put("Squadra test", 25D);
+
+        RoundDto dto = RoundDto.toDto(state);
+
+        assertTrue(dto.bids.isEmpty());
+        assertEquals(List.of("Squadra test"), dto.bidders);
+    }
+
+    @Test
+    void toDtoRevealsBidsAfterRoundCloses() {
+        RoundState state = new RoundState();
+        state.closed = true;
+        state.bids = new LinkedHashMap<>();
+        state.bids.put("invalid-id", 25D);
+
+        RoundDto dto = RoundDto.toDto(state);
+
+        assertEquals(25, dto.bids.get("invalid-id"));
+        assertEquals(List.of("invalid-id"), dto.bidders);
+    }
 }

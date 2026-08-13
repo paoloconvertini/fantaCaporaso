@@ -1,6 +1,6 @@
 /* 🔹 Contenitore principale con gradiente */
 .app-shell {
-    height: 100vh;
+    height: calc(100vh - 64px);
     background: linear-gradient(135deg, #2e003e, #512da8);
     color: #fff;
     display: flex;
@@ -65,6 +65,9 @@ mat-nav-list a:hover {
 }
 
 @media (max-width: 768px) {
+    .app-shell {
+        height: calc(100vh - 56px);
+    }
     .menu-sidenav {
         width: min(82vw, 280px);
     }

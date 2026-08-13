@@ -28,7 +28,8 @@ public class PlayerAdminResource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Transactional
     @RolesAllowed("admin")
-    public Response uploadPlayers(@RestForm("file") InputStream file) {
+    public Response uploadPlayers(@RestForm("file") InputStream file,
+                                  @RestForm("confirm") String confirm) {
         if (file == null) {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity(java.util.Map.of("error", "File Excel mancante"))
@@ -36,8 +37,15 @@ public class PlayerAdminResource {
         }
 
         try {
-            PlayerImportResult result = dbService.syncPlayersFromExcel(file);
+            boolean confirmed = Boolean.parseBoolean(confirm);
+            PlayerImportResult result = confirmed
+                    ? dbService.replacePlayersFromExcel(file)
+                    : dbService.previewPlayersFromExcel(file);
             return Response.ok(result).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(java.util.Map.of("error", e.getMessage()))
+                    .build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(java.util.Map.of("error", e.getMessage()))

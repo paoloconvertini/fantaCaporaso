@@ -35,7 +35,7 @@ import { ManualAssignDialogComponent } from './dialogs/manual-assign-dialog.comp
 
 import { AppRoutingModule } from './app-routing.module';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
-import { KeycloakService } from './services/keycloak.service';
+import { AuthService } from './services/auth.service';
 import { ToolbarComponent } from './shared/toolbar/toolbar.component';
 import { AppShellComponent } from './shared/app-shell/app-shell.component';
 import {RosaComponent} from "./pages/rose/rosa/rosa.component";
@@ -45,11 +45,11 @@ import {MatSnackBarModule} from "@angular/material/snack-bar";
 import { ConfirmDialogComponent } from './dialogs/confirm/confirm-dialog.component';
 import { HomeComponent } from './pages/home/home.component';
 import { AdminUsersComponent } from './pages/admin-users/admin-users.component';
+import { LoginComponent } from './pages/login/login.component';
 
 
-// 👉 funzione factory per APP_INITIALIZER
-export function initializeKeycloak(keycloak: KeycloakService) {
-    return () => keycloak.init();
+export function initializeAuth(auth: AuthService) {
+    return () => auth.init();
 }
 
 @NgModule({
@@ -72,6 +72,7 @@ export function initializeKeycloak(keycloak: KeycloakService) {
         ConfirmDialogComponent,
         HomeComponent,
         AdminUsersComponent,
+        LoginComponent,
     ],
     imports: [
         BrowserModule,
@@ -103,8 +104,8 @@ export function initializeKeycloak(keycloak: KeycloakService) {
         { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
         {
             provide: APP_INITIALIZER,
-            useFactory: initializeKeycloak,
-            deps: [KeycloakService],
+            useFactory: initializeAuth,
+            deps: [AuthService],
             multi: true
         }
     ],

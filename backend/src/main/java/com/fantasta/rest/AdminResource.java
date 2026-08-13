@@ -1,8 +1,7 @@
 package com.fantasta.rest;
 
-import com.fantasta.dto.CreateKeycloakUserRequest;
-import com.fantasta.service.KeycloakAdminService;
-import com.fantasta.util.ExcelPlayersLoader;
+import com.fantasta.dto.CreateUserRequest;
+import com.fantasta.service.AppUserService;
 import com.fantasta.util.ParticipantsLoader;
 import io.quarkus.logging.Log;
 import jakarta.annotation.security.RolesAllowed;
@@ -18,34 +17,10 @@ import jakarta.ws.rs.core.Response;
 public class AdminResource {
 
     @Inject
-    ExcelPlayersLoader excel;
-
-    @Inject
     ParticipantsLoader participantsLoader;
 
     @Inject
-    KeycloakAdminService keycloakAdminService;
-
-    /**
-     * Ricarica i giocatori da Excel
-     * Accesso riservato agli utenti con ruolo "admin"
-     */
-    @POST
-    @Path("/reload-players")
-    @Transactional
-    @RolesAllowed("admin")
-    public Response reload() {
-        try {
-            int n = excel.loadFromExcel();
-            Log.infof("Reloaded %d players from Excel", n);
-            return Response.ok(java.util.Map.of("imported", n)).build();
-        } catch (Exception e) {
-            Log.error("Failed to reload players", e);
-            return Response.status(500)
-                    .entity(java.util.Map.of("error", e.getMessage()))
-                    .build();
-        }
-    }
+    AppUserService appUserService;
 
     /**
      * Inserisce i partecipanti iniziali dal classpath
@@ -72,10 +47,17 @@ public class AdminResource {
     @POST
     @Path("/users")
     @RolesAllowed("admin")
-    public Response createUser(CreateKeycloakUserRequest request) {
-        keycloakAdminService.createUser(request);
+    public Response createUser(CreateUserRequest request) {
+        appUserService.createUser(request);
         return Response.status(Response.Status.CREATED)
                 .entity(java.util.Map.of("created", true))
                 .build();
+    }
+
+    @GET
+    @Path("/users")
+    @RolesAllowed("admin")
+    public Response users() {
+        return Response.ok(appUserService.listUsers()).build();
     }
 }

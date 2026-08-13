@@ -8,6 +8,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.jboss.logging.Logger;
@@ -33,6 +34,9 @@ public class DbService {
 
     /** Conta quanti giocatori sono disponibili (non assegnati e non skippati in questo giro). */
     private Long countAvail(Long giroId, Role role) {
+        if (role == Role.PORTIERE) {
+            return (long) availableGoalkeeperDoors(giroId).size();
+        }
         String q = "select count(p) from PlayerEntity p " +
                 "where p.active = true " + // 👈
                 "and p.id not in (select r.player.id from RosterEntity r) " +
@@ -48,7 +52,10 @@ public class DbService {
     private Long countSkipped(Long giroId, Role role) {
         String q = "select count(s) from SkipEntity s " +
                 "where s.giro.id = ?1 and s.player.active = true"; // 👈
-        if (role != null) q += " and s.player.role = ?2";
+        if (role == Role.PORTIERE) {
+            q = "select count(distinct s.player.team) from SkipEntity s " +
+                    "where s.giro.id = ?1 and s.player.active = true and s.player.role = ?2";
+        } else if (role != null) q += " and s.player.role = ?2";
 
         var query = Panache.getEntityManager().createQuery(q);
         query.setParameter(1, giroId);
@@ -123,6 +130,17 @@ public class DbService {
      */
     @Transactional
     public PlayerEntity drawRandom(Long giroId, Role role) {
+        if (role == Role.PORTIERE) {
+            List<List<PlayerEntity>> doors = new ArrayList<>(availableGoalkeeperDoors(giroId).values());
+            if (doors.isEmpty()) return null;
+            List<PlayerEntity> selectedDoor = doors.get(ThreadLocalRandom.current().nextInt(doors.size()));
+            PlayerEntity picked = selectedDoor.get(ThreadLocalRandom.current().nextInt(selectedDoor.size()));
+            GiroPickEntity gp = new GiroPickEntity();
+            gp.giro = GiroEntity.findById(giroId);
+            gp.player = picked;
+            gp.persist();
+            return picked;
+        }
         String q = "select p from PlayerEntity p " +
                 "where p.active = true " + // 👈
                 "and p.id not in (select r.player.id from RosterEntity r) " +
@@ -169,10 +187,17 @@ public class DbService {
     public void skip(Long giroId, PlayerEntity p) {
         GiroEntity g = GiroEntity.findById(giroId);
         if (g == null) return;
-        var s = new SkipEntity();
-        s.player = p;
-        s.giro = g;
-        s.persist();
+        List<PlayerEntity> players = p.role == Role.PORTIERE
+                ? PlayerEntity.list("active = true and role = ?1 and lower(team) = ?2",
+                    Role.PORTIERE, normalizeTeam(p.team))
+                : List.of(p);
+        for (PlayerEntity player : players) {
+            if (SkipEntity.count("giro = ?1 and player = ?2", g, player) > 0) continue;
+            var s = new SkipEntity();
+            s.player = player;
+            s.giro = g;
+            s.persist();
+        }
     }
 
     // ====== ASSEGNAZIONE ======
@@ -180,20 +205,160 @@ public class DbService {
     /** Marca un giocatore come assegnato a un partecipante (crea la riga di roster). */
     @Transactional
     public void markAssigned(String roundId, PlayerEntity player, Long participantId, Double amount) {
+        assignPurchasedPlayer(player, participantId, amount);
+    }
+
+    /**
+     * Registra un acquisto. Per un portiere assegna l'intero pacchetto della porta:
+     * titolare (quotazione più alta) + due riserve, quando disponibili.
+     */
+    @Transactional
+    public List<RosterEntity> assignPurchasedPlayer(PlayerEntity player, Long participantId, Double amount) {
         ParticipantEntity participant = ParticipantEntity.findById(participantId);
         if (participant == null) {
             throw new IllegalArgumentException("Partecipante non trovato con id=" + participantId);
         }
+        if (player == null || amount == null || amount <= 0) {
+            throw new IllegalArgumentException("Giocatore o importo non valido");
+        }
+        if (RosterEntity.count("player", player) > 0) {
+            throw new IllegalStateException("Giocatore già assegnato: " + player.name);
+        }
 
-        RosterEntity rosterEntry = new RosterEntity();
-        rosterEntry.participant = participant;
-        rosterEntry.player = player;
-        rosterEntry.amount = amount;
-        rosterEntry.persist();
+        List<PlayerEntity> packagePlayers = player.role == Role.PORTIERE
+                ? goalkeeperPackage(player)
+                : List.of(player);
+        if (player.role == Role.PORTIERE && amount < 3D) {
+            throw new IllegalArgumentException("Offerta minima per la porta: 3 crediti");
+        }
+        if (amount < packagePlayers.size()) {
+            throw new IllegalArgumentException("Importo insufficiente per il pacchetto portieri");
+        }
 
-        // Se vuoi, puoi anche aggiornare un flag sul player:
-        // player.assigned = true;
-        // player.persist();
+        List<RosterEntity> created = new ArrayList<>();
+        for (int i = 0; i < packagePlayers.size(); i++) {
+            PlayerEntity packagePlayer = packagePlayers.get(i);
+            if (RosterEntity.count("player", packagePlayer) > 0) {
+                throw new IllegalStateException("Giocatore già assegnato: " + packagePlayer.name);
+            }
+            RosterEntity rosterEntry = new RosterEntity();
+            rosterEntry.participant = participant;
+            rosterEntry.player = packagePlayer;
+            rosterEntry.amount = player.role == Role.PORTIERE
+                    ? (i == 0 ? amount - (packagePlayers.size() - 1) : 1D)
+                    : amount;
+            rosterEntry.persist();
+            packagePlayer.assigned = true;
+            packagePlayer.persist();
+            created.add(rosterEntry);
+        }
+        return created;
+    }
+
+    /** Restituisce il pacchetto nell'ordine titolare, riserve. */
+    public List<PlayerEntity> goalkeeperPackage(PlayerEntity calledPlayer) {
+        if (calledPlayer == null || calledPlayer.role != Role.PORTIERE) {
+            throw new IllegalArgumentException("Portiere non valido");
+        }
+        String team = normalizeTeam(calledPlayer.team);
+        long teamTotal = PlayerEntity.count("active = true and role = ?1 and lower(team) = ?2", Role.PORTIERE, team);
+        long teamAssigned = RosterEntity.count("player.role = ?1 and lower(player.team) = ?2", Role.PORTIERE, team);
+        boolean donorStillAuctionable = teamTotal == 4 && teamAssigned == 1;
+        if (teamAssigned > 0 && !donorStillAuctionable) {
+            throw new IllegalStateException("Porta già assegnata: " + calledPlayer.team);
+        }
+
+        List<PlayerEntity> available = PlayerEntity.<PlayerEntity>list(
+                "active = true and role = ?1 and lower(team) = ?2 " +
+                        "and id not in (select r.player.id from RosterEntity r)",
+                Role.PORTIERE, team);
+        available.sort(goalkeeperOrder());
+        if (available.isEmpty()) {
+            throw new IllegalStateException("Nessun portiere disponibile per " + calledPlayer.team);
+        }
+
+        List<PlayerEntity> selected = new ArrayList<>();
+        if (available.size() <= 3) {
+            selected.addAll(available);
+        } else {
+            selected.add(available.get(0));
+            selected.add(available.get(1));
+            List<PlayerEntity> lowest = lowestValued(available.subList(2, available.size()));
+            selected.add(lowest.get(ThreadLocalRandom.current().nextInt(lowest.size())));
+        }
+
+        if (selected.size() == 2) {
+            findSurplusGoalkeeper(team).ifPresent(selected::add);
+        }
+        return selected;
+    }
+
+    public int purchaseSize(PlayerEntity player) {
+        return player != null && player.role == Role.PORTIERE ? goalkeeperPackage(player).size() : 1;
+    }
+
+    private Optional<PlayerEntity> findSurplusGoalkeeper(String targetTeam) {
+        List<PlayerEntity> all = PlayerEntity.<PlayerEntity>list("active = true and role = ?1", Role.PORTIERE);
+        Map<String, List<PlayerEntity>> byTeam = new HashMap<>();
+        for (PlayerEntity goalkeeper : all) {
+            byTeam.computeIfAbsent(normalizeTeam(goalkeeper.team), ignored -> new ArrayList<>()).add(goalkeeper);
+        }
+
+        List<PlayerEntity> candidates = new ArrayList<>();
+        for (Map.Entry<String, List<PlayerEntity>> entry : byTeam.entrySet()) {
+            if (entry.getKey().equals(targetTeam) || entry.getValue().size() != 4) continue;
+            List<PlayerEntity> teamPlayers = entry.getValue();
+            teamPlayers.sort(goalkeeperOrder());
+            List<PlayerEntity> free = teamPlayers.stream()
+                    .filter(p -> RosterEntity.count("player", p) == 0)
+                    .toList();
+            int assigned = teamPlayers.size() - free.size();
+            if (assigned == 0) {
+                candidates.addAll(lowestValued(teamPlayers.subList(2, teamPlayers.size())));
+            } else if (assigned == 3 && free.size() == 1) {
+                candidates.add(free.get(0));
+            }
+        }
+        if (candidates.isEmpty()) return Optional.empty();
+        return Optional.of(candidates.get(ThreadLocalRandom.current().nextInt(candidates.size())));
+    }
+
+    private List<PlayerEntity> lowestValued(List<PlayerEntity> players) {
+        double minimum = players.stream().mapToDouble(this::goalkeeperValue).min().orElse(0D);
+        return players.stream().filter(p -> Double.compare(goalkeeperValue(p), minimum) == 0).toList();
+    }
+
+    private Comparator<PlayerEntity> goalkeeperOrder() {
+        return Comparator.comparingDouble(this::goalkeeperValue).reversed()
+                .thenComparing(p -> p.name == null ? "" : p.name, String.CASE_INSENSITIVE_ORDER);
+    }
+
+    private double goalkeeperValue(PlayerEntity player) {
+        return player.valore == null ? 0D : player.valore;
+    }
+
+    private String normalizeTeam(String team) {
+        return team == null ? "" : team.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private Map<String, List<PlayerEntity>> availableGoalkeeperDoors(Long giroId) {
+        List<PlayerEntity> free = PlayerEntity.<PlayerEntity>list(
+                "active = true and role = ?1 " +
+                        "and id not in (select r.player.id from RosterEntity r) " +
+                        "and id not in (select s.player.id from SkipEntity s where s.giro.id = ?2)",
+                Role.PORTIERE, giroId);
+        Map<String, List<PlayerEntity>> freeByTeam = free.stream()
+                .collect(java.util.stream.Collectors.groupingBy(p -> normalizeTeam(p.team)));
+        Map<String, List<PlayerEntity>> result = new HashMap<>();
+        for (Map.Entry<String, List<PlayerEntity>> entry : freeByTeam.entrySet()) {
+            String team = entry.getKey();
+            long total = PlayerEntity.count("active = true and role = ?1 and lower(team) = ?2", Role.PORTIERE, team);
+            long assigned = RosterEntity.count("player.role = ?1 and lower(player.team) = ?2", Role.PORTIERE, team);
+            if (assigned == 0 || (total == 4 && assigned == 1 && entry.getValue().size() == 3)) {
+                result.put(team, entry.getValue());
+            }
+        }
+        return result;
     }
 
     // ====== LOOKUP ======
@@ -250,18 +415,27 @@ public class DbService {
         Map<String, ExcelRow> excelByName = new HashMap<>();
         try (Workbook wb = new XSSFWorkbook(is)) {
             Sheet sheet = wb.getSheetAt(0);
+            Map<String, Integer> columns = findColumns(sheet);
             for (Row row : sheet) {
-                if (row.getRowNum() == 0) continue;
-                String roleStr = getCellStr(row.getCell(1, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL));
-                String name    = getCellStr(row.getCell(2, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL));
-                String team    = getCellStr(row.getCell(3, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL));
-                Double valore  = parseValore(row.getCell(4, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL));
+                String roleStr = getCellStr(row.getCell(columns.get("role"), Row.MissingCellPolicy.RETURN_BLANK_AS_NULL));
+                String name    = getCellStr(row.getCell(columns.get("name"), Row.MissingCellPolicy.RETURN_BLANK_AS_NULL));
+                String team    = getCellStr(row.getCell(columns.get("team"), Row.MissingCellPolicy.RETURN_BLANK_AS_NULL));
+                Double valore  = parseValore(row.getCell(columns.get("value"), Row.MissingCellPolicy.RETURN_BLANK_AS_NULL));
 
                 if (name == null || name.isBlank()) continue;
                 Role role = Role.fromString(roleStr);
                 if (role == null) continue;
+                if (team == null || team.isBlank()) {
+                    throw new IllegalArgumentException("Squadra mancante per " + name);
+                }
+                if (valore == null || valore < 0) {
+                    throw new IllegalArgumentException("Quotazione non valida per " + name);
+                }
 
                 String key = norm(name);
+                if (excelByName.containsKey(key)) {
+                    throw new IllegalArgumentException("Calciatore duplicato: " + name);
+                }
                 excelByName.put(key, new ExcelRow(
                         name.trim(),
                         team == null ? "" : team.trim(),
@@ -270,7 +444,83 @@ public class DbService {
             }
         }
 
+        if (excelByName.isEmpty()) {
+            throw new IllegalArgumentException("Nessun calciatore valido trovato nel file Excel");
+        }
+
         return applyExcelToDb(excelByName);
+    }
+
+    /** Valida il file FantaMaster senza modificare il database. */
+    public PlayerImportResult previewPlayersFromExcel(InputStream is) throws Exception {
+        Map<String, ExcelRow> rows = parseExcel(is);
+        return new PlayerImportResult(rows.size(), rows.size(), 0, 0, 0, 0, true);
+    }
+
+    /** Sostituzione completa del catalogo per il cambio stagione. */
+    @Transactional
+    public PlayerImportResult replacePlayersFromExcel(InputStream is) throws Exception {
+        Map<String, ExcelRow> rows = parseExcel(is);
+
+        int unassigned = Math.toIntExact(RosterEntity.count());
+        GiroPickEntity.deleteAll();
+        SkipEntity.deleteAll();
+        RosterEntity.deleteAll();
+        RosterHistoryEntity.deleteAll();
+        GiroEntity.deleteAll();
+        AuctionRoundStateEntity.deleteAll();
+        PlayerEntity.deleteAll();
+
+        for (ExcelRow xr : rows.values()) {
+            PlayerEntity p = new PlayerEntity();
+            p.name = xr.name;
+            p.team = xr.team;
+            p.role = xr.role;
+            p.valore = xr.valore;
+            p.assigned = false;
+            p.active = true;
+            p.persist();
+        }
+        return new PlayerImportResult(rows.size(), rows.size(), 0, 0, 0, unassigned, false);
+    }
+
+    private Map<String, ExcelRow> parseExcel(InputStream is) throws Exception {
+        Map<String, ExcelRow> rows = new LinkedHashMap<>();
+        try (Workbook wb = WorkbookFactory.create(is)) {
+            Sheet sheet = wb.getSheetAt(0);
+            Map<String, Integer> columns = findColumns(sheet);
+            for (Row row : sheet) {
+                String name = getCellStr(row.getCell(columns.get("name"), Row.MissingCellPolicy.RETURN_BLANK_AS_NULL));
+                String team = getCellStr(row.getCell(columns.get("team"), Row.MissingCellPolicy.RETURN_BLANK_AS_NULL));
+                String roleText = getCellStr(row.getCell(columns.get("role"), Row.MissingCellPolicy.RETURN_BLANK_AS_NULL));
+                Role role = Role.fromString(roleText);
+                if (role == null) continue;
+                Double value = parseValore(row.getCell(columns.get("value"), Row.MissingCellPolicy.RETURN_BLANK_AS_NULL));
+                if (name == null || name.isBlank()) throw new IllegalArgumentException("Nome calciatore mancante alla riga " + (row.getRowNum() + 1));
+                if (team == null || team.isBlank()) throw new IllegalArgumentException("Squadra mancante per " + name);
+                if (value == null || value < 0) throw new IllegalArgumentException("Quotazione non valida per " + name);
+                String key = norm(name);
+                if (rows.containsKey(key)) throw new IllegalArgumentException("Calciatore duplicato: " + name);
+                rows.put(key, new ExcelRow(name.trim(), team.trim(), role, value));
+            }
+        }
+        if (rows.isEmpty()) throw new IllegalArgumentException("Nessun calciatore valido trovato nel file Excel");
+        return rows;
+    }
+
+    private static Map<String, Integer> findColumns(Sheet sheet) {
+        for (Row row : sheet) {
+            Map<String, Integer> found = new HashMap<>();
+            for (Cell cell : row) {
+                String text = norm(getCellStr(cell));
+                if (text.equals("nome")) found.put("name", cell.getColumnIndex());
+                if (text.equals("squadra")) found.put("team", cell.getColumnIndex());
+                if (text.equals("ruolo")) found.put("role", cell.getColumnIndex());
+                if (text.equals("quotazione") || text.equals("valore")) found.put("value", cell.getColumnIndex());
+            }
+            if (found.keySet().containsAll(Set.of("name", "team", "role", "value"))) return found;
+        }
+        throw new IllegalArgumentException("Intestazioni richieste non trovate: Nome, Squadra, Ruolo, Quotazione");
     }
 
     private PlayerImportResult applyExcelToDb(Map<String, ExcelRow> excelByName) {

@@ -4,8 +4,6 @@ import com.fantasta.model.PlayerEntity;
 import com.fantasta.model.Role;
 import com.fantasta.service.DbService;
 import io.quarkus.logging.Log;
-import io.quarkus.runtime.Startup;
-import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -18,27 +16,10 @@ import java.nio.file.Path;
 import java.util.Objects;
 
 @ApplicationScoped
-@Startup
 public class ExcelPlayersLoader {
 
     @Inject
     DbService dbService;
-
-    @PostConstruct
-    @Transactional
-    public void init() {
-        try {
-            if (PlayerEntity.count() == 0) {
-                int n = loadFromExcel(); // primo seed
-                Log.infof("ExcelPlayersLoader: imported %d players from Excel (seed)", n);
-            } else {
-                var rep = dbService.syncPlayersFromExcel(); // sincronizzazione completa
-                Log.infof("ExcelPlayersLoader: sync done %s", rep);
-            }
-        } catch (Exception e) {
-            Log.error("ExcelPlayersLoader: failed at startup", e);
-        }
-    }
 
     /**
      * PRIMO IMPORT (seed): inserisce solo chi non esiste per *nome* (case-insensitive).

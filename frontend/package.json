@@ -5,7 +5,11 @@
   "scripts": {
     "start": "ng serve --configuration development --host 0.0.0.0 --port 4200 --proxy-config proxy.conf.js",
     "build": "ng build --configuration development",
-    "build:prod": "ng build --configuration production"
+    "build:prod": "ng build --configuration production",
+    "test": "ng test --watch=false --browsers=ChromeHeadless",
+    "auction:start": "bash ../scripts/start-auction.sh",
+    "auction:status": "bash ../scripts/status-auction.sh",
+    "auction:stop": "bash ../scripts/stop-auction.sh"
   },
   "dependencies": {
     "@angular/animations": "14.3.0",
@@ -17,7 +21,7 @@
     "@angular/platform-browser": "14.3.0",
     "@angular/platform-browser-dynamic": "14.3.0",
     "@angular/router": "14.3.0",
-    "keycloak-js": "^26.2.0",
+    "material-icons": "^1.13.14",
     "rxjs": "7.5.7",
     "tslib": "2.4.1",
     "zone.js": "0.11.8"
@@ -26,8 +30,14 @@
     "@angular-devkit/build-angular": "14.2.12",
     "@angular/cli": "14.2.12",
     "@angular/compiler-cli": "14.3.0",
-    "@types/keycloak-js": "^2.5.4",
+    "@types/jasmine": "~4.3.0",
     "@types/node": "16.18.11",
+    "jasmine-core": "~4.5.0",
+    "karma": "~6.4.0",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.0.0",
     "typescript": "4.7.4"
   },
   "overrides": {
@@ -45,7 +55,7 @@
     "@types/node": "16.18.11"
   },
   "engines": {
-    "node": ">=16 <17"
+    "node": ">=20 <21"
   },
   "volta": {
     "node": "20.19.5",

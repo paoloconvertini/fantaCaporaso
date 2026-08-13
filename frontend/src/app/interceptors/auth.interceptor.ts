@@ -5,26 +5,14 @@ import {
     HttpInterceptor,
     HttpRequest
 } from '@angular/common/http';
-import { from, Observable } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
-import { KeycloakService } from '../services/keycloak.service';
+import { Observable } from 'rxjs';
+import { AuthService } from '../services/auth.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-    constructor(private keycloakService: KeycloakService) {}
+    constructor(private auth: AuthService) {}
 
     intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-        return from(this.keycloakService.getValidToken()).pipe(
-            switchMap(token => {
-                if (token) {
-                    const authReq = req.clone({
-                        setHeaders: { Authorization: `Bearer ${token}` }
-                    });
-                    return next.handle(authReq);
-                }
-
-                return next.handle(req);
-            })
-        );
+        return next.handle(req.clone({ withCredentials: true }));
     }
 }

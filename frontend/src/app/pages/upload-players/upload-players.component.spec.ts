@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { AdminApiService } from '../../services/admin-api.service';
 
 import { UploadPlayersComponent } from './upload-players.component';
 
@@ -8,7 +10,9 @@ describe('UploadPlayersComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ UploadPlayersComponent ]
+      declarations: [UploadPlayersComponent],
+      providers: [{ provide: AdminApiService, useValue: {} }],
+      schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();
 

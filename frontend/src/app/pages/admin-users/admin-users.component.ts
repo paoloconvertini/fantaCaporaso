@@ -17,8 +17,18 @@ type ParticipantOption = {
 export class AdminUsersComponent implements OnInit {
   form!: FormGroup;
   participants: ParticipantOption[] = [];
+  users: any[] = [];
   loading = false;
   saving = false;
+
+  get configuredParticipants(): number {
+    return this.users.filter(user => !!user.participantId).length;
+  }
+
+  get unconfiguredParticipants(): ParticipantOption[] {
+    const configured = new Set(this.users.map(user => Number(user.participantId)).filter(Boolean));
+    return this.participants.filter(participant => !configured.has(participant.id));
+  }
 
   constructor(
     private fb: FormBuilder,
@@ -30,25 +40,32 @@ export class AdminUsersComponent implements OnInit {
   ngOnInit(): void {
     this.form = this.fb.group({
       username: ['', [Validators.required, Validators.minLength(3)]],
-      password: ['', [Validators.required, Validators.minLength(4)]],
-      participantId: [null, Validators.required]
+      password: ['fanta2026', [Validators.required, Validators.minLength(4)]],
+      permanentPassword: [true],
+      participantId: [null],
+      participantName: [''],
+      totalCredits: [500, [Validators.required, Validators.min(1)]]
     });
 
     this.loadParticipants();
+    this.loadUsers();
   }
 
   createUser(): void {
-    if (this.form.invalid) {
+    if (this.form.invalid || (!this.form.value.participantId && !this.form.value.participantName?.trim())) {
       this.form.markAllAsTouched();
       this.snackBar.open('Compila tutti i campi richiesti', 'Chiudi', { duration: 3000 });
       return;
     }
 
     this.saving = true;
-    this.adminApi.createKeycloakUser(this.form.value).subscribe({
+    this.adminApi.createUser(this.form.value).subscribe({
       next: () => {
         this.snackBar.open('Utente creato', 'Chiudi', { duration: 2500 });
         this.form.reset();
+        this.form.patchValue({ totalCredits: 500, password: 'fanta2026', permanentPassword: true });
+        this.loadParticipants();
+        this.loadUsers();
         this.saving = false;
       },
       error: (err) => {
@@ -59,7 +76,7 @@ export class AdminUsersComponent implements OnInit {
     });
   }
 
-  private loadParticipants(): void {
+  loadParticipants(): void {
     this.loading = true;
     this.userApi.getAllParticipants().subscribe({
       next: (participants: any[]) => {
@@ -72,6 +89,13 @@ export class AdminUsersComponent implements OnInit {
         this.loading = false;
         this.snackBar.open('Errore caricamento squadre', 'Chiudi', { duration: 3000 });
       }
+    });
+  }
+
+  loadUsers(): void {
+    this.adminApi.getUsers().subscribe({
+      next: users => this.users = users,
+      error: () => this.snackBar.open('Errore caricamento utenti', 'Chiudi', { duration: 3000 })
     });
   }
 }

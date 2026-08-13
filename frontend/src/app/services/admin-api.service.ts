@@ -65,15 +65,21 @@ export class AdminApiService {
   }
 
   // 🔹 UPLOAD
-  uploadRosterExcel(file: File): Observable<any> {
+  uploadRosterExcel(file: File, confirm = false): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('confirm', String(confirm));
     return this.http.post<any>(`${this.base}/api/admin/rosters/upload`, formData);
   }
 
-  uploadPlayersExcel(file: File): Observable<any> {
+  exportRostersExcel(): Observable<Blob> {
+    return this.http.get(`${this.base}/api/admin/rosters/export`, { responseType: 'blob' });
+  }
+
+  uploadPlayersExcel(file: File, confirm = false): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('confirm', String(confirm));
     return this.http.post<any>(`${this.base}/api/admin/players/upload`, formData);
   }
 
@@ -82,8 +88,12 @@ export class AdminApiService {
     return this.http.post(`${this.base}/api/assign`, payload);
   }
 
-  createKeycloakUser(payload: { username: string; password: string; participantId: number }): Observable<any> {
+  createUser(payload: { username: string; password: string; participantId: number; role?: string }): Observable<any> {
     return this.http.post(`${this.base}/api/admin/users`, payload);
+  }
+
+  getUsers(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.base}/api/admin/users`);
   }
 
   // 🔹 WEBSOCKET

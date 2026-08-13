@@ -1,6 +1,6 @@
 <div class="upload-container">
     <mat-card class="list-card">
-        <h3>Upload Giocatori</h3>
+        <h3>Importa quotazioni FantaMaster</h3>
 
         <div class="upload-section">
             <input type="file" (change)="onFileSelected($event)" />
@@ -11,7 +11,7 @@
                     (click)="uploadFile()"
                     [disabled]="!selectedFile || loading"
             >
-                Carica
+                Verifica file
             </button>
 
             <mat-progress-spinner
@@ -25,8 +25,17 @@
         </div>
 
         <div *ngIf="uploadResult" class="upload-result">
-            <h4>Risultato import:</h4>
+            <h4>{{ uploadResult.preview ? 'Anteprima import:' : 'Risultato import:' }}</h4>
             <pre>{{ uploadResult | json }}</pre>
+            <button
+                    *ngIf="uploadResult.preview"
+                    mat-raised-button
+                    color="warn"
+                    (click)="confirmImport()"
+                    [disabled]="loading"
+            >
+                Conferma sostituzione completa
+            </button>
         </div>
     </mat-card>
 </div>

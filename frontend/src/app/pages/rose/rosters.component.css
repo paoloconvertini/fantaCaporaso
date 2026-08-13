@@ -9,11 +9,15 @@
 
 .page-title {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     gap: 16px;
     margin-bottom: 16px;
 }
+
+.page-title > div { display: flex; align-items: baseline; gap: 12px; }
+.export-button { color: #dbeafe; border-color: rgba(147,197,253,.6); }
+.export-button mat-icon { margin-right: 6px; }
 
 .page-title h2 {
     margin: 0;
@@ -267,7 +271,12 @@
 
     .page-title {
         margin-bottom: 12px;
+        align-items: stretch;
+        flex-direction: column;
     }
+
+    .page-title > div { justify-content: space-between; }
+    .export-button { width: 100%; }
 
     .desktop-rosters {
         display: none;
@@ -278,3 +287,4 @@
         gap: 12px;
     }
 }
+.team-username { display: block; color: #94a3b8; font-size: .72rem; font-weight: 400; }

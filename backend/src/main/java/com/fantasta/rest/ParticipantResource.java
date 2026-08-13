@@ -3,14 +3,15 @@ package com.fantasta.rest;
 import com.fantasta.dto.ParticipantDto;
 import com.fantasta.dto.ParticipantSummaryDto;
 import com.fantasta.model.ParticipantEntity;
+import com.fantasta.model.AppUserEntity;
 import com.fantasta.service.ParticipantService;
+import com.fantasta.service.RosterService;
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import org.jboss.resteasy.reactive.NoCache;
-import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,18 +25,21 @@ public class ParticipantResource {
     ParticipantService participantService;
 
     @Inject
-    SecurityIdentity identity;
+    RosterService rosterService;
 
     @Inject
-    JsonWebToken jwt;
+    SecurityIdentity identity;
 
     private ParticipantDto toDto(ParticipantEntity e) {
         ParticipantDto dto = new ParticipantDto();
         dto.id = e.id;
         dto.name = e.name;
+        AppUserEntity account = AppUserEntity.find("participant", e).firstResult();
+        dto.username = account == null ? null : account.username;
         dto.totalCredits = e.totalCredits;
         dto.spentCredits = participantService.spentCreditsById(e.id);
         dto.remainingCredits = participantService.remainingCreditsById(e.id, e.totalCredits);
+        dto.maxBid = rosterService.maxBid(e.id, e.totalCredits, 1);
         return dto;
     }
 
@@ -52,7 +56,7 @@ public class ParticipantResource {
     }
 
     private ParticipantEntity findCurrentParticipant() {
-        Object participantIdClaim = jwt.getClaim("participant_id");
+        Object participantIdClaim = identity.getAttribute("participant_id");
         if (participantIdClaim != null) {
             Long participantId = Long.valueOf(participantIdClaim.toString());
             return ParticipantEntity.findById(participantId);
@@ -95,6 +99,7 @@ public class ParticipantResource {
 
                     dto.spentCredits = participantService.spentCreditsById(e.id);
                     dto.remainingCredits = Math.max(0, dto.totalCredits - dto.spentCredits);
+                    dto.maxBid = rosterService.maxBid(e.id, e.totalCredits, 1);
 
                     dto.roleCounts = participantService.roleCountsAsString(e.id);
                     return dto;

@@ -12,15 +12,18 @@ import { UploadRostersComponent } from './pages/upload-rosters/upload-rosters.co
 import { AppShellComponent } from './shared/app-shell/app-shell.component';
 import {RosaComponent} from "./pages/rose/rosa/rosa.component";
 import {MercatoComponent} from "./pages/mercato/mercato.component";
-import { AdminOnlyGuard, UserOnlyGuard } from './guards/role-redirect.guard';
+import { AdminOnlyGuard, AuthGuard, UserOnlyGuard } from './guards/role-redirect.guard';
 import { HomeComponent } from './pages/home/home.component';
 import { environment } from '../environments/environment';
 import { AdminUsersComponent } from './pages/admin-users/admin-users.component';
+import { LoginComponent } from './pages/login/login.component';
 
 const routes: Routes = [
+    { path: 'login', component: LoginComponent },
     {
         path: '',
         component: AppShellComponent,
+        canActivate: [AuthGuard],
         children: [
             { path: '', component: HomeComponent, pathMatch: 'full' },
             { path: 'admin', component: AdminComponent, canActivate: [AdminOnlyGuard] },

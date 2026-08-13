@@ -1,9 +1,10 @@
 <div class="users-page">
   <section class="users-panel">
     <div class="panel-header">
+      <a mat-button routerLink="/admin" class="back-link"><mat-icon>arrow_back</mat-icon> Dashboard asta</a>
       <div>
         <h2>Gestione utenti</h2>
-        <p>Crea un accesso Keycloak e collega l'utente a una squadra.</p>
+        <p>Crea un accesso e collega l'utente a una squadra.</p>
       </div>
     </div>
 
@@ -18,16 +19,28 @@
         <mat-label>Password</mat-label>
         <input matInput type="password" formControlName="password" autocomplete="new-password">
         <mat-error *ngIf="form.get('password')?.hasError('required')">Password obbligatoria</mat-error>
+        <mat-error *ngIf="form.get('password')?.hasError('minlength')">Usa almeno 4 caratteri</mat-error>
+        <mat-hint>Password definitiva: non sarà richiesto il cambio al primo accesso.</mat-hint>
       </mat-form-field>
 
       <mat-form-field appearance="outline">
-        <mat-label>Nome squadra</mat-label>
+        <mat-label>Squadra esistente (opzionale)</mat-label>
         <mat-select formControlName="participantId">
           <mat-option *ngFor="let participant of participants" [value]="participant.id">
             {{ participant.name }}
           </mat-option>
         </mat-select>
-        <mat-error *ngIf="form.get('participantId')?.hasError('required')">Nome squadra obbligatorio</mat-error>
+      </mat-form-field>
+
+      <p>Oppure crea un nuovo partecipante:</p>
+      <mat-form-field appearance="outline">
+        <mat-label>Nome nuova squadra</mat-label>
+        <input matInput formControlName="participantName" autocomplete="off">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Crediti iniziali</mat-label>
+        <input matInput type="number" min="1" formControlName="totalCredits">
       </mat-form-field>
 
       <div class="actions">
@@ -44,5 +57,35 @@
         <span>Caricamento squadre...</span>
       </div>
     </ng-template>
+
+    <section class="accounts-section">
+      <div class="accounts-heading">
+        <div>
+          <h3>Account configurati</h3>
+          <p>{{ configuredParticipants }} squadre con accesso · {{ unconfiguredParticipants.length }} senza account</p>
+        </div>
+        <span class="account-count">{{ users.length }}</span>
+      </div>
+
+      <div class="accounts-table" *ngIf="users.length; else noUsersTpl">
+        <div class="account-row account-header">
+          <span>Username</span><span>Squadra</span><span>Stato</span>
+        </div>
+        <div class="account-row" *ngFor="let user of users">
+          <strong>@{{ user.username }}</strong>
+          <span>{{ user.participantName || (user.role === 'admin' ? 'Amministratore' : 'Non associata') }}</span>
+          <span class="status-chip" [class.warning]="user.mustChangePassword">
+            {{ user.mustChangePassword ? 'Cambio richiesto' : 'Attivo' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="unconfigured" *ngIf="unconfiguredParticipants.length">
+        <strong>Squadre senza account</strong>
+        <span *ngFor="let participant of unconfiguredParticipants">{{ participant.name }}</span>
+      </div>
+    </section>
+
+    <ng-template #noUsersTpl><p>Nessun account configurato.</p></ng-template>
   </section>
 </div>

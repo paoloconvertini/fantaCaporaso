@@ -1,13 +1,14 @@
 import { TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
-import { MercatoServiceService } from './mercato.service';
+import { MercatoService } from './mercato.service';
 
-describe('MercatoServiceService', () => {
-  let service: MercatoServiceService;
+describe('MercatoService', () => {
+  let service: MercatoService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
-    service = TestBed.inject(MercatoServiceService);
+    TestBed.configureTestingModule({ imports: [HttpClientTestingModule] });
+    service = TestBed.inject(MercatoService);
   });
 
   it('should be created', () => {

@@ -28,6 +28,9 @@ export class AdminComponent implements OnInit, OnDestroy {
     remainingCount = 0;
     value = 0;
     loadingAssign = false;
+    participantCount = 0;
+    availablePlayers = 0;
+    openSlotsCount = 0;
     private lastHandledClosedRoundId: string | null = null;
     private roundSocket?: WebSocket;
     private reconnectTimer?: any;
@@ -49,6 +52,7 @@ export class AdminComponent implements OnInit, OnDestroy {
         this.connectWs();
         this.load();
         this.refreshRemaining();
+        this.loadPreparationState();
     }
 
     ngOnDestroy() {
@@ -112,8 +116,8 @@ export class AdminComponent implements OnInit, OnDestroy {
                 return;
             }
 
-            if (data.type === 'BID_ADDED') {
-                if (data.payload?.user && !this.activeUsers.includes(data.payload.user)) {
+            if (data.type === 'BID_ADDED' && data.payload?.user) {
+                if (!this.activeUsers.includes(data.payload.user)) {
                     this.activeUsers.push(data.payload.user);
                 }
             }
@@ -175,6 +179,7 @@ export class AdminComponent implements OnInit, OnDestroy {
         this.adminApi.closeRound().subscribe({
             next: (res) => {
                 this.round = res;
+                this.load();
                 this.refreshRemaining();
                 this.activeUsers = [];
 
@@ -199,11 +204,20 @@ export class AdminComponent implements OnInit, OnDestroy {
         return arr.sort((a, b) => b.amount - a.amount);
     }
 
+    get automaticMinimumMessage(): string | null {
+        const bids = this.sortedBids;
+        const charged = Number(this.round?.winner?.amount);
+        if (!this.round?.closed || !this.round?.winner || bids.length !== 1 || charged >= bids[0].amount) return null;
+        return `Unico offerente: costo assegnato d’ufficio a ${charged} ${charged === 1 ? 'credito' : 'crediti'}.`;
+    }
+
     load() {
         this.adminApi.getRound().subscribe({
             next: (res) => {
                 this.round = res;
-                this.activeUsers = this.round && this.round.bids ? Object.keys(this.round.bids) : [];
+                this.activeUsers = this.round?.closed
+                    ? Object.keys(this.round.bids || {})
+                    : [...(this.round?.bidders || [])];
 
                 const end = this.round?.endEpochMillis as number | null;
                 const isActive = !!this.round && this.round.closed === false && !!end && end > Date.now();
@@ -243,11 +257,24 @@ export class AdminComponent implements OnInit, OnDestroy {
                 const role = this.role || 'TUTTI';
                 this.remainingCount = res.remaining?.[role] ?? 0;
                 this.skippedCount = res.skipped?.[role] ?? 0;
+                this.availablePlayers = res.remaining?.TUTTI ?? 0;
+                this.openSlotsCount = res.openSlots?.[role] ?? 0;
             },
             error: (err) => {
                 this.showError('Errore stato random', err);
             }
         });
+    }
+
+    loadPreparationState() {
+        this.adminApi.getUsers().subscribe({
+            next: users => this.participantCount = users.filter(user => user.role !== 'admin').length,
+            error: () => this.participantCount = 0
+        });
+    }
+
+    get auctionReady(): boolean {
+        return this.participantCount > 0 && this.availablePlayers > 0;
     }
 
     next() {

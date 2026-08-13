@@ -15,6 +15,7 @@ public class RoundDto {
     public boolean closed;
     public Double minimumBid;
     public Map<String, Integer> bids;   // chiave = nome partecipante
+    public List<String> bidders;        // nomi visibili anche a round aperto, senza importi
     public Winner winner;
     public Integer durationSeconds;
     public Long endEpochMillis;
@@ -22,6 +23,7 @@ public class RoundDto {
     public List<Long> tieUserIds;
     public List<Long> allowedUsers;
     public Integer value;               // (opzionale) valore del calciatore
+    public Integer purchaseSize;
 
     public static RoundDto toDto(RoundState s) {
         if (s == null) return null;
@@ -37,25 +39,25 @@ public class RoundDto {
         dto.endEpochMillis = s.endEpochMillis;
         dto.winner = s.winner;
         dto.value = s.value;
+        dto.purchaseSize = s.purchaseSize;
 
-        // bids: id -> nome
+        Map<String, Integer> namedBids = new LinkedHashMap<>();
         if (s.bids != null) {
-            Map<String, Integer> out = new LinkedHashMap<>();
             s.bids.forEach((idStr, amount) -> {
                 try {
                     Long id = Long.valueOf(idStr);
                     ParticipantEntity p = ParticipantEntity.findById(id);
                     String name = (p != null ? p.name : ("??-" + id));
-                    out.put(name, (int)Math.round(amount));
+                    namedBids.put(name, (int)Math.round(amount));
                 } catch (NumberFormatException e) {
                     // fallback: usa la chiave così com'è
-                    out.put(idStr, (int)Math.round(amount));
+                    namedBids.put(idStr, (int)Math.round(amount));
                 }
             });
-            dto.bids = out;
-        } else {
-            dto.bids = Collections.emptyMap();
         }
+        dto.bidders = new ArrayList<>(namedBids.keySet());
+        // I nomi sono pubblici; gli importi diventano pubblici soltanto a round chiuso.
+        dto.bids = s.closed ? namedBids : Collections.emptyMap();
 
         // tie users: ids -> nomi (+ tieni anche gli ids)
         if (s.tieUsers != null && !s.tieUsers.isEmpty()) {

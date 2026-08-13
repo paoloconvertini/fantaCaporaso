@@ -14,7 +14,6 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.resteasy.reactive.RestForm;
 
 import java.io.InputStream;
@@ -32,9 +31,6 @@ public class RosterResource {
     @Inject
     SecurityIdentity identity;
 
-    @Inject
-    JsonWebToken jwt;
-
     /**
      * Upload Excel → importa i roster
      * Accesso consentito solo agli admin
@@ -44,7 +40,8 @@ public class RosterResource {
     @Transactional
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @RolesAllowed("admin")
-    public Response uploadExcel(@RestForm("file") InputStream file) {
+    public Response uploadExcel(@RestForm("file") InputStream file,
+                                @RestForm("confirm") String confirm) {
         try {
             if (file == null) {
                 return Response.status(Response.Status.BAD_REQUEST)
@@ -52,7 +49,7 @@ public class RosterResource {
                         .build();
             }
 
-            RosterImportResult result = rosterService.importFromExcel(file);
+            RosterImportResult result = rosterService.importFromExcel(file, Boolean.parseBoolean(confirm));
             return Response.ok(result).build();
         } catch (Exception e) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -61,9 +58,19 @@ public class RosterResource {
         }
     }
 
+    @GET
+    @Path("/export")
+    @Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    @RolesAllowed("admin")
+    public Response exportExcel() {
+        return Response.ok(rosterService.exportFantaMaster())
+                .header("Content-Disposition", "attachment; filename=rose_fantamaster.xlsx")
+                .build();
+    }
+
     @POST
     @Path("/svincola")
-    @RolesAllowed({"user", "admin"})
+    @RolesAllowed("admin")
     public Response svincola(@QueryParam("participantId") Long participantId, SvincoloRequest req) {
         rosterService.svincola(participantId, req);
         return Response.ok().build();
@@ -77,8 +84,10 @@ public class RosterResource {
 
     @GET
     @Path("/mine")
+    @RolesAllowed({"admin", "user"})
     public List<RosterDto> getMyRoster(@QueryParam("participantId") Long participantId) {
-        if (identity.hasRole("admin") && participantId != null) {
+        // Consultazione pubblica tra partecipanti; le modifiche restano admin-only.
+        if (participantId != null) {
             return rosterService.getRosterByParticipant(participantId);
         }
 
@@ -91,7 +100,7 @@ public class RosterResource {
     }
 
     private ParticipantEntity findCurrentParticipant() {
-        Object participantIdClaim = jwt.getClaim("participant_id");
+        Object participantIdClaim = identity.getAttribute("participant_id");
         if (participantIdClaim != null) {
             Long participantId = Long.valueOf(participantIdClaim.toString());
             return ParticipantEntity.findById(participantId);

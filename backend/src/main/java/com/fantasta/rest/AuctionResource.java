@@ -15,22 +15,23 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
+import org.jboss.logging.Logger;
 
 import java.io.File;
 import java.util.Map;
-import java.util.Objects;
 
 @Path("/api")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @ApplicationScoped
 public class AuctionResource {
+    private static final Logger LOG = Logger.getLogger(AuctionResource.class);
 
     @Inject
     Vertx vertx;
 
     // stato per il timer
-    private Long autoCloseTimerId = null;
+    private volatile Long autoCloseTimerId = null;
     private volatile String scheduledRoundId = null;
 
     @Inject
@@ -78,7 +79,7 @@ public class AuctionResource {
                 payload.value,
                 payload.allowedUsers
         );
-        socket.broadcast("ROUND_STARTED", s);
+        socket.broadcast("ROUND_STARTED", RoundDto.toDto(s));
 
         // --- AUTO-CLOSE TIMER ---
         if (autoCloseTimerId != null) {
@@ -88,30 +89,29 @@ public class AuctionResource {
 
         if (s.endEpochMillis != null) {
             scheduledRoundId = s.roundId;
+            String expectedRoundId = s.roundId;
             long delay = Math.max(0L, s.endEpochMillis - System.currentTimeMillis());
 
             autoCloseTimerId = vertx.setTimer(delay, id -> {
-                // ✅ Verifica che il round non sia cambiato/già chiuso
-                RoundState current = service.get();
-                if (current == null || current.closed || !Objects.equals(current.roundId, scheduledRoundId)) {
-                    autoCloseTimerId = null;
-                    scheduledRoundId = null;
-                    return;
-                }
-
-                // ✅ Esegui la chiusura su worker thread (DB-safe)
-                vertx.executeBlocking(promise -> {
+                // Ogni accesso transazionale resta sul worker thread: il callback del
+                // timer gira sul thread I/O e non puo' aprire direttamente una JTA.
+                vertx.<RoundDto>executeBlocking(promise -> {
                     try {
-                        RoundState closed = service.close();
-                        socket.broadcast("ROUND_CLOSED", closed);
-                        promise.complete();
+                        promise.complete(service.closeIfActiveDto(expectedRoundId));
                     } catch (Throwable t) {
                         promise.fail(t);
                     }
+                }, false).onComplete(result -> {
+                    if (result.succeeded() && result.result() != null) {
+                        socket.broadcast("ROUND_CLOSED", result.result());
+                    } else if (result.failed()) {
+                        LOG.errorf(result.cause(), "Chiusura automatica fallita per il round %s", expectedRoundId);
+                    }
+                    if (expectedRoundId.equals(scheduledRoundId)) {
+                        autoCloseTimerId = null;
+                        scheduledRoundId = null;
+                    }
                 });
-
-                autoCloseTimerId = null;
-                scheduledRoundId = null;
             });
         }
         return RoundDto.toDto(s);

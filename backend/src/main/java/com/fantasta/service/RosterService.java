@@ -17,11 +17,13 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.chrono.ChronoLocalDateTime;
@@ -65,80 +67,157 @@ public class RosterService {
         return participantService.roleCounts(participantId);
     }
 
+    /** Massimo spendibile conservando un credito per ogni posto che restera' vuoto. */
+    public int maxBid(Long participantId, int totalCredits, int purchaseSize) {
+        int remainingCredits = participantService.remainingCreditsById(participantId, totalCredits);
+        Map<Role, Integer> counts = participantService.roleCounts(participantId);
+        int remainingSlots = 0;
+        for (Role role : Role.values()) {
+            remainingSlots += Math.max(0, max(role) - counts.getOrDefault(role, 0));
+        }
+        int reservedCredits = Math.max(0, remainingSlots - Math.max(1, purchaseSize));
+        return Math.max(0, remainingCredits - reservedCredits);
+    }
+
+    /** Posti rosa ancora vuoti, sommati su tutti i partecipanti e divisi per ruolo. */
+    public Map<String, Integer> openSlotsByRole() {
+        int participants = Math.toIntExact(ParticipantEntity.count());
+        Map<String, Integer> result = new LinkedHashMap<>();
+        int total = 0;
+        for (Role role : Role.values()) {
+            int assigned = Math.toIntExact(RosterEntity.count("player.role", role));
+            int open = Math.max(0, participants * max(role) - assigned);
+            result.put(role.name(), open);
+            total += open;
+        }
+        result.put("TUTTI", total);
+        return result;
+    }
+
     @Transactional
-    public RosterImportResult importFromExcel(InputStream in) {
+    public RosterImportResult importFromExcel(InputStream in, boolean confirm) {
         List<String> errors = new ArrayList<>();
         int inserted = 0;
+        int teamsCreated = 0;
+        int teamsFound = 0;
+        int defaultCredits = Integer.parseInt(System.getProperty("app.credits.total",
+                System.getenv().getOrDefault("APP_CREDITS_TOTAL", "500")));
 
         try (Workbook workbook = WorkbookFactory.create(in)) {
-            Sheet sheet = workbook.getSheetAt(0);
-
-            // Giocatori assegnati in questo import
             Set<Long> assignedNow = new HashSet<>();
+            Set<Long> resetParticipants = new HashSet<>();
 
-            // Per tenere traccia ultimo participant
-            String currentParticipant = null;
-
-            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
-                Row row = sheet.getRow(i);
-                if (row == null) continue;
-
-                String participantName = row.getCell(0).getStringCellValue().trim();
-                String playerName = row.getCell(1).getStringCellValue().trim();
-                Double amount = row.getCell(2).getNumericCellValue();
-
-                // 🔹 Participant
-                ParticipantEntity participant = ParticipantEntity.find("name", participantName).firstResult();
+            for (Sheet sheet : workbook) {
+                String participantName = cellText(sheet.getRow(0), 0);
+                if (participantName.isBlank()) {
+                    errors.add("Foglio senza nome squadra: " + sheet.getSheetName());
+                    continue;
+                }
+                teamsFound++;
+                ParticipantEntity participant = ParticipantEntity.find("lower(name) = ?1", participantName.toLowerCase(Locale.ROOT)).firstResult();
                 if (participant == null) {
-                    errors.add("Participant non trovato: " + participantName);
-                    continue;
+                    teamsCreated++;
+                    if (confirm) {
+                        participant = new ParticipantEntity();
+                        participant.name = participantName;
+                        participant.totalCredits = defaultCredits;
+                        participant.persist();
+                    }
                 }
-
-                // 🔹 Player (match diretto, nomi già allineati)
-                PlayerEntity player = PlayerEntity.find("LOWER(name) = ?1", playerName.toLowerCase()).firstResult();
-                if (player == null) {
-                    errors.add("Giocatore non trovato: " + playerName);
-                    continue;
-                }
-
-                // 🔹 Cambio participant → reset roster
-                if (!participantName.equals(currentParticipant)) {
+                if (confirm && resetParticipants.add(participant.id)) {
                     copyRosterToHistory(participant);
                     RosterEntity.delete("participant", participant);
-                    currentParticipant = participantName;
                 }
-
-                // 🔹 Inserisci riga di roster
-                RosterEntity roster = new RosterEntity();
-                roster.participant = participant;
-                roster.player = player;
-                roster.amount = amount;
-                roster.persist();
-
-                // 🔹 Marca come assegnato
-                player.assigned = true;
-                player.persist();
-
-                assignedNow.add(player.id);
-
-                inserted++;
+                for (int i = 2; i <= sheet.getLastRowNum(); i++) {
+                    Row row = sheet.getRow(i);
+                    String playerName = cellText(row, 0);
+                    if (playerName.isBlank() || playerName.startsWith("Ultimo aggiornamento:") || playerName.equalsIgnoreCase("Scarica FantaMaster")) continue;
+                    String team = cellText(row, 1);
+                    double amount = numericCell(row, 3);
+                    PlayerEntity player = PlayerEntity.find("lower(name) = ?1 and lower(team) = ?2",
+                            playerName.toLowerCase(Locale.ROOT), team.toLowerCase(Locale.ROOT)).firstResult();
+                    if (player == null) {
+                        errors.add("Giocatore non trovato: " + playerName + " (" + team + ")");
+                        continue;
+                    }
+                    inserted++;
+                    if (!confirm) continue;
+                    RosterEntity roster = new RosterEntity();
+                    roster.participant = participant;
+                    roster.player = player;
+                    roster.amount = amount;
+                    roster.persist();
+                    player.assigned = true;
+                    assignedNow.add(player.id);
+                }
             }
 
-            if (assignedNow.isEmpty()) {
-                // Caso limite: nessun giocatore importato → svincola tutti
-                PlayerEntity.update("assigned = false WHERE assigned = true");
-            } else {
-                // Svincola chi era assegnato ma non è più nell’import
+            if (confirm && !assignedNow.isEmpty()) {
                 PlayerEntity.update("assigned = false WHERE assigned = true AND id NOT IN ?1", assignedNow);
+            } else if (confirm) {
+                PlayerEntity.update("assigned = false WHERE assigned = true");
             }
-
-
-
         } catch (Exception e) {
             throw new RuntimeException("Errore durante l'import da Excel: " + e.getMessage(), e);
         }
+        return new RosterImportResult(inserted, errors, teamsFound, teamsCreated, !confirm);
+    }
 
-        return new RosterImportResult(inserted, errors);
+    @Transactional
+    public byte[] exportFantaMaster() {
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            List<ParticipantEntity> participants = ParticipantEntity.list("order by name");
+            for (ParticipantEntity participant : participants) {
+                Sheet sheet = workbook.createSheet(safeSheetName(participant.name, workbook));
+                Row title = sheet.createRow(0);
+                title.createCell(0).setCellValue(participant.name);
+                Row header = sheet.createRow(1);
+                header.createCell(0).setCellValue("Nome");
+                header.createCell(1).setCellValue("Squadra");
+                header.createCell(2).setCellValue("Ruolo");
+                header.createCell(3).setCellValue("Costo");
+                List<RosterEntity> roster = RosterEntity.list("participant = ?1 order by player.role, player.name", participant);
+                int rowIndex = 2;
+                for (RosterEntity entry : roster) {
+                    Row row = sheet.createRow(rowIndex++);
+                    row.createCell(0).setCellValue(entry.player.name);
+                    row.createCell(1).setCellValue(entry.player.team);
+                    row.createCell(2).setCellValue(entry.player.role.name());
+                    row.createCell(3).setCellValue(entry.amount == null ? 0 : entry.amount);
+                }
+                sheet.setColumnWidth(0, 28 * 256);
+                sheet.setColumnWidth(1, 18 * 256);
+                sheet.setColumnWidth(2, 18 * 256);
+                sheet.setColumnWidth(3, 12 * 256);
+            }
+            workbook.write(out);
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw new IllegalStateException("Impossibile esportare le rose", e);
+        }
+    }
+
+    private String safeSheetName(String name, Workbook workbook) {
+        String base = org.apache.poi.ss.util.WorkbookUtil.createSafeSheetName(name);
+        base = base.substring(0, Math.min(31, base.length()));
+        String candidate = base;
+        int suffix = 2;
+        while (workbook.getSheet(candidate) != null) {
+            String end = " " + suffix++;
+            candidate = base.substring(0, Math.min(base.length(), 31 - end.length())) + end;
+        }
+        return candidate;
+    }
+
+    private String cellText(Row row, int index) {
+        if (row == null || row.getCell(index) == null) return "";
+        return new org.apache.poi.ss.usermodel.DataFormatter().formatCellValue(row.getCell(index)).trim();
+    }
+
+    private double numericCell(Row row, int index) {
+        String text = cellText(row, index).replace(',', '.');
+        try { return Double.parseDouble(text); }
+        catch (NumberFormatException e) { throw new IllegalArgumentException("Costo non valido: " + text); }
     }
 
 
@@ -259,9 +338,11 @@ public class RosterService {
                     List<RosterEntity> rosterEntities = entry.getValue();
                     List<RosterDto> rosterDtos = toRosterDtoListWithResidui(rosterEntities);
                     RosterEntity sample = rosterEntities.get(0);
+                    AppUserEntity account = AppUserEntity.find("participant", sample.participant).firstResult();
                     return new ParticipantRosterDto(
                             sample.participant.id,
                             sample.participant.name,
+                            account == null ? null : account.username,
                             rosterDtos
                     );
                 })

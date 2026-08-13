@@ -8,6 +8,7 @@ public class RoundState {
     public String playerTeam;
     public String playerRole;
     public Integer value;             // valore calciatore (Excel colonna E)
+    public Integer purchaseSize;
     public boolean closed = false;
     public Double minimumBid;
     public Integer durationSeconds;

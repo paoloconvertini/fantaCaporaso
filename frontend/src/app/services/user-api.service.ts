@@ -34,6 +34,15 @@ export class UserApiService {
     return this.http.get(`${this.base}/api/round`);
   }
 
+  /** Recupera lo stato canonico dopo navigazioni o messaggi WebSocket persi. */
+  refreshRound(): void {
+    this.getRound().subscribe({
+      next: round => this.applyRound(round),
+      // Un errore di rete temporaneo non deve cancellare un round gia' visibile.
+      error: () => undefined
+    });
+  }
+
   // 🔹 RANDOM (solo consultazione)
   getRandomState(): Observable<any> {
     return this.http.get(`${this.base}/api/random/state`);
@@ -108,16 +117,26 @@ export class UserApiService {
               }
 
               if (t === 'ROUND_STARTED') {
-                  this.roleFilter$.next(payload?.playerRole as RoleKey);
-                  this.activeUsers$.next([]);
-                  this.round$.next(payload); // 👈 aggiungi questo
+                  this.applyRound(payload);
+                  // Il payload rende immediata la UI; l'API la riallinea allo stato persistito.
+                  this.refreshRound();
               }
 
               if (t === 'ROUND_CLOSED') {
                   this.activeUsers$.next([]);
-                  this.round$.next(null); // 👈 azzera quando finisce
+                  this.applyRound(payload);
+              }
+
+              if (t === 'ROUND_RESET') {
+                  this.activeUsers$.next([]);
+                  this.round$.next(null);
               }
           } catch { /* ignore JSON errors */ }
+      });
+
+      ws.addEventListener('open', () => {
+          // Se ROUND_STARTED e' arrivato mentre il telefono era offline, lo recuperiamo qui.
+          this.refreshRound();
       });
 
       ws.addEventListener('close', () => {
@@ -131,5 +150,19 @@ export class UserApiService {
       });
 
       return ws;
+  }
+
+  private applyRound(round: any | null): void {
+    this.round$.next(round || null);
+    if (!round) {
+      this.activeUsers$.next([]);
+      return;
+    }
+    if (round.playerRole) {
+      this.roleFilter$.next(round.playerRole as RoleKey);
+    }
+    this.activeUsers$.next(round.closed
+      ? Object.keys(round.bids || {})
+      : [...(round.bidders || [])]);
   }
 }

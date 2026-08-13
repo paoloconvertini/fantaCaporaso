@@ -1,6 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import {UserApiService} from "../../services/user-api.service";
 import { forkJoin } from 'rxjs';
+import { AdminApiService } from '../../services/admin-api.service';
+import { AuthService } from '../../services/auth.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 interface Player {
     id: number;
@@ -18,17 +21,36 @@ interface Player {
 })
 export class RostersComponent implements OnInit {
     loading = false;
+    isAdmin = false;
 
-    participants: { id: number, name: string }[] = [];
+    participants: { id: number, name: string, username?: string }[] = [];
     table: any[] = []; // righe della tabella pivotata
     rosterByParticipantRole: { [participantId: number]: { [role: string]: Player[] } } = {};
 
     rolesOrder = ['PORTIERE','DIFENSORE','CENTROCAMPISTA','ATTACCANTE'];
 
-    constructor(private api: UserApiService) {}
+    constructor(private api: UserApiService,
+                private adminApi: AdminApiService,
+                private auth: AuthService,
+                private snackBar: MatSnackBar) {}
 
     ngOnInit(): void {
+        this.isAdmin = this.auth.hasRole('admin');
         this.loadRosters();
+    }
+
+    exportRosters(): void {
+        this.adminApi.exportRostersExcel().subscribe({
+            next: blob => {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `rose_fantamaster_${new Date().toISOString().slice(0, 10)}.xlsx`;
+                link.click();
+                URL.revokeObjectURL(url);
+            },
+            error: () => this.snackBar.open('Errore esportazione rose', 'Chiudi', { duration: 3500 })
+        });
     }
 
     loadRosters() {
@@ -49,12 +71,12 @@ export class RostersComponent implements OnInit {
         });
     }
 
-    private buildTable(rosters: Player[], participants: { id: number; name: string }[]) {
+    private buildTable(rosters: Player[], participants: { id: number; name: string; username?: string }[]) {
         this.rosterByParticipantRole = {};
 
         // 1. mostro sempre tutti i partecipanti, anche senza giocatori assegnati.
         this.participants = [...participants]
-            .map(p => ({ id: p.id, name: p.name }))
+            .map(p => ({ id: p.id, name: p.name, username: p.username }))
             .sort((a, b) => a.name.localeCompare(b.name));
 
         // 2. raggruppo per ruolo → lista di giocatori ordinati per partecipante

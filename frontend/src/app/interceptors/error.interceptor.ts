@@ -9,11 +9,12 @@ import {
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { KeycloakService } from '../services/keycloak.service';
+import { Router } from '@angular/router';
+import { AuthService } from '../services/auth.service';
 
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
-    constructor(private snackBar: MatSnackBar, private keycloak: KeycloakService) {}
+    constructor(private snackBar: MatSnackBar, private auth: AuthService, private router: Router) {}
 
     intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
         return next.handle(req).pipe(
@@ -43,8 +44,8 @@ export class ErrorInterceptor implements HttpInterceptor {
                     panelClass: ['snackbar-error']
                 });
 
-                if (err.status === 401) {
-                    this.keycloak.loginCurrentPage();
+                if (err.status === 401 && !req.url.includes('/api/auth/login')) {
+                    this.router.navigateByUrl('/login');
                 }
 
                 return throwError(() => err);

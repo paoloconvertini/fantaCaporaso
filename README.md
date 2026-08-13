@@ -1,183 +1,229 @@
+# FantAsta
 
-# FantAsta – v10 (Random + Team da Excel B/C/D)
+Gestore dell'asta Fantacalcio con backend Quarkus, frontend Angular, PostgreSQL e aggiornamenti live WebSocket.
 
-- Excel unico: **B=Ruolo**, **C=Nome**, **D=Squadra** (prima riga intestazione).
-- Admin mostra **giocatore, squadra, ruolo**; random per **TUTTI** o **RUOLO**, **skip** e **reset giro**.
-- RoundState espone playerTeam/playerRole per display.
+L'autenticazione e' interna all'applicazione: utenti, ruoli e hash password sono salvati in PostgreSQL; il backend emette un JWT in cookie `HttpOnly`. Keycloak non e' piu' necessario.
 
-## Avvio
-1) Copia `players.xlsx` in `backend/src/main/resources/` (o usa `-Dplayers.file`).
-2) Compila `config/application-dev.properties` con i valori locali.
-3) Avvia Postgres e Keycloak:
-```bash
-cd backend
-docker compose up -d
+## Architettura operativa
+
+Lo scenario previsto per l'asta usa un solo Mac:
+
+```text
+partecipanti -> Cloudflare Tunnel -> Nginx -> frontend
+                                         -> backend -> PostgreSQL locale
 ```
-4) Avvia il backend:
+
+Cloudflare Tunnel usa una connessione in uscita e non richiede IP pubblico, port forwarding o database remoto. Neon non fa parte del percorso operativo.
+La configurazione di produzione autorizza gli origin generati da `trycloudflare.com`, oltre a localhost e agli indirizzi LAN privati sulla porta 8088.
+
+## Requisiti
+
+- Docker Desktop con Docker Compose
+- Java 21 per lo sviluppo backend
+- Maven 3.9+
+- Node 20.19.5 e npm 10 per lo sviluppo frontend
+- un tunnel Cloudflare configurato verso `http://reverse-proxy:80` per l'accesso pubblico
+
+## Sviluppo
+
+1. Preparare gli env locali:
+
+```bash
+cp config/application-dev.env.example config/application-dev.env
+cp config/application-dev.env.example backend/.env
+```
+
+Compilare i secret e le credenziali. Il catalogo calciatori non viene più sincronizzato automaticamente all'avvio: l'import stagionale è un'operazione esplicita dell'admin.
+
+2. Avviare PostgreSQL:
+
+```bash
+docker compose -f backend/docker-compose.yml up -d postgres
+```
+
+3. Avviare il backend con Java 21:
+
 ```bash
 cd backend
+set -a
+source ../config/application-dev.env
+set +a
 mvn quarkus:dev
 ```
-5) Avvia il frontend:
+
+4. Avviare il frontend:
+
 ```bash
 cd frontend
+npm install
 npm run start
 ```
 
-Frontend locale → `http://localhost:4200`
-Frontend LAN → `http://<IP-LAN-DELLA-MACCHINA>:4200`
+URL frontend: `http://localhost:4200`.
 
-Il frontend usa lo stesso hostname del browser per raggiungere Keycloak sulla porta `8081`.
+## Stack completo locale
 
-## Avvio prod-like locale
+Creare il file reale, ignorato da Git:
 
-Questo avvio serve per provare il comportamento di produzione in locale, dietro reverse proxy, senza usare Angular dev server e senza esporre direttamente backend o Keycloak al browser.
-
-Comando:
 ```bash
-docker compose --env-file config/application-prod.local.env.example -f docker-compose.prod.yml up -d --build
+cp config/application-prod.local.env.example config/application-prod.local.env
 ```
 
-URL dal Mac:
-```bash
-http://localhost:8088
-```
-
-URL da telefono sulla stessa rete:
-```bash
-http://<IP-LAN-DEL-MAC>:8088
-```
-
-In questa configurazione il browser conosce solo il reverse proxy sulla porta `8088`:
-- frontend: `/`
-- backend API: `/api/*`
-- WebSocket: `/ws/*`
-- Keycloak: `/auth/*`
-
-Database usati in prod-like locale:
-- database applicativo: container Docker `postgres`
-- database Keycloak: container Docker `keycloak-db`
-- volumi persistenti: `prod_pgdata` e `prod_kcdata`
-
-Questa configurazione **non usa Neon**. Neon sara' usato solo se una configurazione di produzione reale imposta esplicitamente il database esterno nelle variabili d'ambiente.
-
-Per fermare lo stack:
-```bash
-docker compose --env-file config/application-prod.local.env.example -f docker-compose.prod.yml down
-```
-
-Per cancellare anche i dati locali Docker, incluse aste, utenti importati e database Keycloak:
-```bash
-docker compose --env-file config/application-prod.local.env.example -f docker-compose.prod.yml down -v
-```
-
-## Avvio produzione reale cloud
-
-La produzione reale usa uno stack separato, per non rompere sviluppo e prod-like locale:
-
-- sviluppo: `backend/docker-compose.yml` + `mvn quarkus:dev` + `npm run start`
-- prod-like locale: `docker-compose.prod.yml` + `config/application-prod.local.env.example`
-- cloud reale: `docker-compose.cloud.yml` + un file env reale non committato
-
-Il profilo cloud e' pensato per:
-- frontend Angular servito da Nginx
-- backend Quarkus in container
-- Keycloak in container
-- database Keycloak locale persistente su volume Docker
-- database applicativo esterno Neon/Postgres
-- HTTPS pubblico tramite Cloudflare Tunnel
-
-Preparazione:
-```bash
-cp config/application-cloud.env.example config/application-cloud.env
-```
-
-Compilare `config/application-cloud.env` con valori reali:
-- `PUBLIC_BASE_URL=https://...`
-- `CLOUDFLARE_TUNNEL_TOKEN=...`
-- credenziali Neon in `POSTGRES_*`
-- `POSTGRES_JDBC_PARAMS=?sslmode=require`
-- password Keycloak forti
-- `KEYCLOAK_BACKEND_SECRET` uguale al secret del client `fantasta-backend`
-
-Avvio cloud:
-```bash
-docker compose --env-file config/application-cloud.env -f docker-compose.cloud.yml up -d --build
-```
-
-Log:
-```bash
-docker compose --env-file config/application-cloud.env -f docker-compose.cloud.yml logs -f
-```
-
-Stop:
-```bash
-docker compose --env-file config/application-cloud.env -f docker-compose.cloud.yml down
-```
-
-In cloud il browser deve conoscere solo `PUBLIC_BASE_URL`. Non deve usare porte backend, porte Keycloak, IP pubblici o URL Neon.
-
-Prima di aprire la produzione agli utenti, verificare in Keycloak il client frontend:
-- Valid redirect URIs: `https://dominio/*`
-- Web origins: `https://dominio`
-- Post logout redirect URIs: `https://dominio/*`
-
-Durante i test iniziali si puo' usare una configurazione piu' permissiva, ma va ristretta prima dell'asta reale.
-
-### Cloudflare Tunnel
-
-Prerequisiti:
-- dominio `fantacaporaso.it` gestito su Cloudflare
-- sottodominio desiderato: `asta.fantacaporaso.it`
-- server/VPS con Docker e Docker Compose
-
-Creazione tunnel:
-1. Accedere a Cloudflare.
-2. Aprire **Zero Trust**.
-3. Andare in **Networks** → **Tunnels**.
-4. Creare un nuovo tunnel.
-5. Scegliere tipo **Cloudflared**.
-6. Assegnare un nome, ad esempio `fantasta-prod`.
-7. Copiare il token del tunnel.
-8. Inserire il token in `config/application-cloud.env`:
-
-```env
-CLOUDFLARE_TUNNEL_TOKEN=...
-```
-
-Configurazione Public Hostname:
-- Subdomain: `asta`
-- Domain: `fantacaporaso.it`
-- Type: `HTTP`
-- URL: `http://reverse-proxy:80`
+Sostituire almeno `POSTGRES_PASSWORD`, `JWT_SECRET`, `BOOTSTRAP_ADMIN_USERNAME` e `BOOTSTRAP_ADMIN_PASSWORD`. `JWT_SECRET` deve avere almeno 32 caratteri.
 
 Avvio:
+
 ```bash
-docker compose --env-file config/application-cloud.env -f docker-compose.cloud.yml up -d --build
+docker compose --env-file config/application-prod.local.env -f docker-compose.prod.yml up -d --build
 ```
 
 Verifica:
+
 ```bash
-docker compose --env-file config/application-cloud.env -f docker-compose.cloud.yml logs -f cloudflared
+docker compose --env-file config/application-prod.local.env -f docker-compose.prod.yml ps
+curl --fail http://localhost:8088/api/auth/me
 ```
 
-Poi aprire:
-```text
-https://asta.fantacaporaso.it
+La seconda verifica deve rispondere `401`: dimostra che proxy e backend sono raggiungibili e l'endpoint e' protetto.
+
+Lo stack espone per default il solo reverse proxy su `127.0.0.1:8088`. Per una prova diretta dalla LAN impostare temporaneamente `PUBLIC_BIND_ADDRESS=0.0.0.0`.
+
+## Accesso pubblico con Cloudflare
+
+### Avvio asta da IntelliJ
+
+Nel selettore delle configurazioni Run sono disponibili:
+
+- `ASTA - AVVIA`: ferma PostgreSQL di sviluppo, avvia lo stack completo sul volume persistente `backend_pgdata`, crea il Quick Tunnel e stampa il link da condividere;
+- `ASTA - STATO`: ristampa link, container e controlli di raggiungibilità;
+- `ASTA - FERMA`: arresta lo stack senza `-v` e riavvia il solo PostgreSQL di sviluppo.
+
+Il link `trycloudflare.com` rimane invariato finché il container `cloudflared` resta attivo. Durante l'asta non riavviare Docker Desktop, non sospendere il Mac e non eseguire nuovamente `ASTA - AVVIA`. Conservare anche il link LAN mostrato in console come alternativa per i dispositivi collegati alla stessa rete.
+
+Il flusso non usa `CLOUDFLARE_TUNNEL_TOKEN`: si tratta deliberatamente di un Quick Tunnel temporaneo per la singola sessione d'asta. Il tunnel forza HTTP/2 su TCP per evitare le disconnessioni QUIC/UDP osservate sulla rete locale. Per l'avvio manuale usare `./scripts/start-auction.sh`; per il controllo `./scripts/status-auction.sh`.
+
+Il browser deve conoscere soltanto l'URL HTTPS pubblico. PostgreSQL e backend non pubblicano porte nello stack completo.
+
+## Backup e ripristino
+
+Creare un backup prima delle prove finali e prima dell'asta:
+
+```bash
+./scripts/backup-db.sh
 ```
 
-## Deploy cloud iniziale
-- Eseguire una sola istanza backend: lo stato live dell'asta e le connessioni WebSocket sono locali alla JVM.
-- Il reverse proxy deve supportare WebSocket su `/ws/*` con `Upgrade`/`Connection` header e timeout lunghi.
-- Evitare autoscaling orizzontale finche' lo stato round e il broadcast WebSocket non saranno spostati su storage/pub-sub condiviso.
+I dump sono salvati in `backups/`, esclusa da Git. Copiare il dump pre-asta anche su un disco o cartella esterna al repository.
 
-## Login
-- Gli utenti con ruolo Keycloak `admin` entrano nella gestione asta.
-- Gli altri utenti entrano nella pagina mobile per puntare.
-- La pagina mobile risolve il partecipante corrente tramite `GET /api/participant/me`.
-- Per associare un utente a un partecipante, esporre nel token Keycloak il claim `participant_id`.
-- Se `participant_id` non è presente, il backend usa come fallback lo username Keycloak uguale al nome del partecipante.
+Ripristino distruttivo:
 
-## Tunnel (rapido)
-- ngrok: `ngrok http 8080`
-- Cloudflare: `cloudflared tunnel --url http://<HOST-BACKEND>:8080`
+```bash
+./scripts/restore-db.sh --confirm backups/fantasta-YYYYMMDD-HHMMSS.dump
+```
+
+Il ripristino ferma il backend, ricrea il database, importa il dump e riavvia il backend.
+
+## Cambio stagione e import FantaMaster
+
+Prima di cambiare stagione creare sempre un backup. Dalla pagina admin `Importa quotazioni FantaMaster` selezionare il file `.xlsx` con le colonne `Nome`, `Squadra`, `Ruolo` e `Quotazione`.
+
+`Importa rose FantaMaster` legge tutti i fogli del file `rose_lega_*.xlsx`. Il nome squadra nella prima riga di ogni foglio identifica il partecipante: se manca viene creato con i crediti iniziali configurati, anche quando il foglio non contiene calciatori. L'anteprima non modifica il database; la sostituzione avviene soltanto dopo conferma. Gli account vengono poi associati manualmente dalla gestione utenti, dove la password proposta `fanta2026` e' definitiva e non richiede il cambio al primo accesso.
+
+La gestione utenti mostra username, squadra associata e stato dell'account, oltre alle squadre ancora prive di accesso. Le pagine delle rose riportano lo username sotto il nome della squadra per rendere immediata la verifica delle associazioni.
+
+Il pulsante `Esporta rose FantaMaster` nella dashboard produce un file `.xlsx` con un foglio per partecipante e le colonne `Nome`, `Squadra`, `Ruolo`, `Costo`, reimportabile dallo stesso flusso.
+
+Il primo passaggio esegue soltanto l'anteprima: valida intestazioni, campi, ruoli, quotazioni e nomi duplicati senza modificare PostgreSQL. La successiva conferma sostituisce completamente il catalogo e azzera rose, storico rose, estrazioni, skip e stato dell'asta. Se la validazione fallisce non viene cancellato nulla.
+
+Il riavvio ordinario del backend non importa né cancella calciatori. Hibernate resta configurato con strategia `update`, che aggiorna lo schema senza ricreare il database; il volume PostgreSQL conserva i dati.
+
+## Partecipanti e primo accesso
+
+L'admin usa `Gestione utenti` (`/admin/users`) per collegare un account a una squadra esistente oppure creare contestualmente un nuovo partecipante indicando nome squadra e crediti iniziali.
+
+La password consegnata dall'admin è temporanea e deve avere almeno 4 caratteri. Al primo login l'account riceve una sessione limitata e deve scegliere una password diversa prima di poter accedere ad asta, rose e calciatori. I crediti iniziali sono configurabili esclusivamente dall'admin.
+
+## Flusso asta iniziale
+
+La dashboard guida l'admin nella sequenza operativa: configurazione partecipanti, scelta del ruolo, estrazione, avvio delle offerte e chiusura. Il round termina alla scadenza del timer oppure quando l'admin usa la chiusura manuale; in entrambi i casi vince l'offerta più alta. In caso di parità il round successivo è riservato ai soli partecipanti a pari merito e parte da un credito oltre l'offerta precedente. L'assegnazione manuale rimane sempre disponibile.
+
+I partecipanti raggiungono sempre il round attivo dalla voce `Asta corrente` del menu. La pagina recupera lo stato persistito anche dopo una navigazione o una riconnessione WebSocket, senza richiedere un aggiornamento manuale. Durante il countdown admin e partecipanti vedono i nomi di chi ha puntato, deduplicati, ma mai gli importi. Alla chiusura, tutti vedono contemporaneamente la graduatoria completa, il vincitore e l'importo. Durante l'asta la rosa è consultabile, ma lo svincolo dei calciatori è riservato all'admin.
+
+Il riepilogo mostra sempre i conteggi P/D/C/A, i crediti residui e il massimo spendibile per un singolo calciatore. Il massimo conserva obbligatoriamente almeno 1 credito per ogni altro posto ancora libero; per la porta il limite considera il numero effettivo di portieri acquistati insieme.
+
+La dashboard admin mostra, per il ruolo selezionato, sia le chiamate ancora disponibili sia i posti rosa complessivamente vuoti su tutte le squadre. Per i portieri i posti sono conteggiati singolarmente, anche se una porta può riempirne più di uno con una sola asta.
+
+Durante un round la pagina mobile riporta gli stessi due valori in forma compatta e non interattiva: icona Material `casino` per le chiamate disponibili e `group_add` per i posti rosa vuoti.
+
+Il calciatore battuto è mostrato su una singola riga mobile con ruolo, nome, squadra e quotazione FantaMaster (`paid`), distinta dall'importo offerto.
+
+Se alla chiusura esiste un solo offerente, la puntata resta visibile come valore dichiarato ma il costo effettivamente addebitato è 1 credito per un calciatore normale e 3 crediti per la porta. Con almeno due offerenti il vincitore paga la propria offerta completa; parità e spareggio restano invariati.
+
+Admin e partecipanti ricevono inoltre un breve messaggio esplicativo quando il costo minimo viene applicato d'ufficio all'unico offerente.
+
+Ogni riga del riepilogo squadre apre la rosa selezionata. Tutti gli utenti autenticati possono consultare le rose; le operazioni di svincolo restano disponibili esclusivamente all'admin e secondo lo stato del mercato.
+
+Un giocatore senza offerte può essere saltato. Quando il ruolo non ha più chiamate disponibili, `Ricomincia giro` rende nuovamente estraibili tutti i giocatori saltati e ancora liberi.
+
+Per i portieri si acquista la porta della squadra, non il singolo nome estratto. Il pacchetto contiene normalmente tre portieri, ha base minima 3 e addebita 1 credito a ciascuna riserva; il resto dell'offerta viene attribuito al titolare con quotazione più alta. Se la squadra ha quattro portieri vengono scelti i primi due per valore e uno casuale tra quelli con valore minimo. Se ne ha soltanto due, il sistema aggiunge quando disponibile un portiere eccedente a valore minimo proveniente da una squadra con quattro.
+
+## Test e build
+
+Backend:
+
+```bash
+cd backend
+JAVA_HOME=$(/usr/libexec/java_home -v 21) mvn test
+```
+
+Frontend:
+
+```bash
+cd frontend
+npm test
+npm run build:prod
+```
+
+Build completa Docker:
+
+```bash
+docker compose --env-file config/application-prod.local.env -f docker-compose.prod.yml build
+```
+
+## Checklist pre-asta
+
+- Docker Desktop configurato per non sospendere il Mac.
+- Mac collegato all'alimentazione e rete stabile; preferire Ethernet.
+- Java 21 e Node 20 verificati.
+- test backend e frontend verdi.
+- tutte le immagini Docker costruite prima del giorno dell'asta.
+- volume PostgreSQL e spazio disco verificati.
+- backup recente creato e copiato fuori dal repository.
+- login admin e login di almeno un partecipante verificati.
+- ruoli admin/user e associazioni alle squadre verificati.
+- caricamento giocatori e rose provato con i file definitivi.
+- puntata, chiusura turno e aggiornamento WebSocket provati da almeno due dispositivi.
+- tunnel verificato dalla rete cellulare, non soltanto dal Wi-Fi locale.
+- token Cloudflare e password non presenti nei file versionati.
+- autoscaling disabilitato: lo stato live e le connessioni WebSocket appartengono a una singola JVM.
+
+## Arresto
+
+Senza tunnel:
+
+```bash
+docker compose --env-file config/application-prod.local.env -f docker-compose.prod.yml down
+```
+
+Con tunnel:
+
+```bash
+docker compose --env-file config/application-prod.local.env -f docker-compose.prod.yml -f docker-compose.cloud.yml down
+```
+
+Non aggiungere `-v` durante l'uso ordinario: cancellerebbe il database locale.
+
+## Debito tecnico dopo l'asta
+
+Il frontend usa ancora Angular 14. `npm audit --omit=dev` segnala vulnerabilita' corrette soltanto passando a una versione Angular moderna, con cambiamenti incompatibili. Per ridurre il rischio immediato, l'app non usa HTML/SVG dinamico o bypass del sanitizer e Nginx applica una Content Security Policy restrittiva. Dopo l'asta va pianificato l'upgrade completo di Angular, Material e toolchain, senza usare `npm audit fix --force` alla cieca.
+
+Il database esistente usa ancora l'aggiornamento schema Hibernate. Dopo l'asta va creata una baseline Flyway verificata e il profilo di produzione deve passare dalla modifica automatica dello schema alla sola validazione.

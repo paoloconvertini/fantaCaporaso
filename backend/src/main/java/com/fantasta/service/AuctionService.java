@@ -1,5 +1,6 @@
 package com.fantasta.service;
 
+import com.fantasta.dto.RoundDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fantasta.model.*;
@@ -49,8 +50,10 @@ public class AuctionService {
         s.playerTeam = team;
         s.playerRole = role;
         s.value = value;
+        PlayerEntity calledPlayer = dbService.findByNameTeam(player, team);
+        s.purchaseSize = calledPlayer == null ? 1 : dbService.purchaseSize(calledPlayer);
         s.closed = false;
-        s.minimumBid = minimumBidFor(allowedUsers);
+        s.minimumBid = minimumBidFor(allowedUsers, role);
         s.durationSeconds = duration;
         s.endEpochMillis = (duration != null && duration > 0)
                 ? (System.currentTimeMillis() + duration * 1000L)
@@ -89,36 +92,39 @@ public class AuctionService {
             }
         }
         Role role = Role.fromString(state.playerRole);
+        if (role == null) throw new IllegalArgumentException("Ruolo non valido");
+        PlayerEntity auctionPlayer = dbService.findByNameTeam(state.player, state.playerTeam);
+        if (auctionPlayer == null) throw new IllegalArgumentException("Giocatore non trovato");
+        int purchaseSize = dbService.purchaseSize(auctionPlayer);
 
         // ✅ residuo calcolato da RosterService
         int residuo = participantService.remainingCreditsById(p.id, p.totalCredits);
         if (amount > residuo)
             throw new IllegalArgumentException("Offerta supera il credito residuo");
+        int maxBid = rosterService.maxBid(p.id, p.totalCredits, purchaseSize);
+        if (amount > maxBid)
+            throw new IllegalArgumentException("Offerta massima " + maxBid + ": conserva almeno 1 credito per ogni posto libero");
 
         // ✅ quota per ruolo
         int current = participantService.roleCounts(p.id).getOrDefault(role, 0);
         int max = rosterService.max(role);
-        if (current >= max)
+        if (current + purchaseSize > max)
             throw new IllegalArgumentException("Quota piena per ruolo " + role);
 
         // ✅ aggiorna stato round
         state.bids.put(String.valueOf(p.id), amount);
 
-        // broadcast (facciamo qui, così API rimane solo "bridge")
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("user", p.name);
-        payload.put("participantId", p.id);
-        payload.put("amount", amount);
-
-        socket.broadcast("BID_ADDED", payload);
+        // Durante il round e' pubblico soltanto chi ha puntato, mai l'importo.
+        socket.broadcast("BID_ADDED", Map.of("user", p.name));
         persistCurrentState();
 
         return state;
     }
 
-    private Double minimumBidFor(Set<Long> allowedUsers) {
+    private Double minimumBidFor(Set<Long> allowedUsers, String role) {
+        double roleMinimum = Role.fromString(role) == Role.PORTIERE ? 3D : 1D;
         if (state == null || allowedUsers == null || allowedUsers.isEmpty() || state.bids == null || state.bids.isEmpty()) {
-            return 1D;
+            return roleMinimum;
         }
 
         double maxAllowedBid = state.bids.entrySet().stream()
@@ -127,7 +133,7 @@ public class AuctionService {
                 .max()
                 .orElse(0D);
 
-        return Math.max(1D, maxAllowedBid + 1D);
+        return Math.max(roleMinimum, maxAllowedBid + 1D);
     }
 
     private String formatAmount(double amount) {
@@ -139,6 +145,38 @@ public class AuctionService {
 
     @Transactional
     public synchronized RoundState close() {
+        return closeCurrentRound();
+    }
+
+    /**
+     * Chiude il round solo se e' ancora quello per cui era stato programmato il timer.
+     * Il controllo e la chiusura condividono lo stesso monitor delle offerte, quindi
+     * un'offerta viene interamente accettata prima della chiusura oppure rifiutata
+     * perche' il round risulta gia' chiuso.
+     */
+    @Transactional
+    public synchronized RoundState closeIfActive(String expectedRoundId) {
+        if (state == null) {
+            state = loadCurrentState();
+        }
+        if (state == null || state.closed || !Objects.equals(state.roundId, expectedRoundId)) {
+            return null;
+        }
+        return closeCurrentRound();
+    }
+
+    @Transactional
+    public synchronized RoundDto closeIfActiveDto(String expectedRoundId) {
+        if (state == null) {
+            state = loadCurrentState();
+        }
+        if (state == null || state.closed || !Objects.equals(state.roundId, expectedRoundId)) {
+            return null;
+        }
+        return RoundDto.toDto(closeCurrentRound());
+    }
+
+    private RoundState closeCurrentRound() {
         if (state == null) throw new IllegalStateException("Nessun round attivo");
         if (state.closed) return state;
 
@@ -157,14 +195,18 @@ public class AuctionService {
             var e = top.get(0);
             Long id = Long.valueOf(e.getKey());
             ParticipantEntity p = ParticipantEntity.findById(id);
-            state.winner = new Winner(id, p != null ? p.name : ("??-" + id), e.getValue());
+            PlayerEntity player = dbService.findByNameTeam(state.player, state.playerTeam);
+            double chargedAmount = e.getValue();
+            if (state.bids.size() == 1 && player != null) {
+                chargedAmount = player.role == Role.PORTIERE
+                        ? Math.max(3D, dbService.purchaseSize(player))
+                        : 1D;
+            }
+            state.winner = new Winner(id, p != null ? p.name : ("??-" + id), chargedAmount);
 
             // 🔹 Salvataggio su DB
-            if (p != null) {
-                PlayerEntity player = dbService.findByNameTeam(state.player, state.playerTeam);
-                if (player != null) {
-                    dbService.markAssigned(state.roundId, player, p.id, e.getValue());
-                }
+            if (p != null && player != null) {
+                dbService.markAssigned(state.roundId, player, p.id, chargedAmount);
             }
         } else {
             // Parità: spareggio
@@ -200,8 +242,25 @@ public class AuctionService {
         PlayerEntity player = dbService.findByNameTeam(playerName, team);
         if (player == null) throw new IllegalArgumentException("Giocatore non trovato: " + playerName);
 
+        int purchaseSize = dbService.purchaseSize(player);
+        int current = participantService.roleCounts(p.id).getOrDefault(player.role, 0);
+        if (current + purchaseSize > rosterService.max(player.role)) {
+            throw new IllegalArgumentException("Quota piena per ruolo " + player.role);
+        }
+        int remaining = participantService.remainingCreditsById(p.id, p.totalCredits);
+        if (amount == null || amount > remaining) {
+            throw new IllegalArgumentException("Importo supera il credito residuo");
+        }
+        int maxBid = rosterService.maxBid(p.id, p.totalCredits, purchaseSize);
+        if (amount > maxBid) {
+            throw new IllegalArgumentException("Importo massimo " + maxBid + ": conserva almeno 1 credito per ogni posto libero");
+        }
+        if (player.role == Role.PORTIERE && amount < 3D) {
+            throw new IllegalArgumentException("Offerta minima per la porta: 3 crediti");
+        }
+
         // 🔹 Salvataggio su DB
-        dbService.markAssigned(String.valueOf(System.currentTimeMillis()), player, p.id, amount);
+        dbService.assignPurchasedPlayer(player, p.id, amount);
 
         // 🔹 Aggiorna RoundState
         if (state == null) state = new RoundState();

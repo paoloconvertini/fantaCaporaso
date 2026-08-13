@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { KeycloakService } from '../../services/keycloak.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-home',
@@ -9,17 +9,17 @@ import { KeycloakService } from '../../services/keycloak.service';
         <h2>FantaCaporaso</h2>
 
         <p class="home-subtitle">
-          {{ keycloak.isAdmin ? 'Gestione asta' : 'Area partecipante' }}
+          {{ auth.isAdmin ? 'Gestione asta' : 'Area partecipante' }}
         </p>
 
         <!-- FIXME: rimuovere questa diagnostica quando il flusso auth sara stabile. -->
         <p class="home-debug">
-          Utente: {{ keycloak.getDebugInfo().username || 'n/d' }} -
-          Ruoli: {{ keycloak.getDebugInfo().roles.join(', ') || 'nessuno' }}
+          Utente: {{ auth.getDebugInfo().username || 'n/d' }} -
+          Ruoli: {{ auth.getDebugInfo().roles.join(', ') || 'nessuno' }}
         </p>
 
         <a
-          *ngIf="keycloak.isAdmin; else userHome"
+          *ngIf="auth.isAdmin; else userHome"
           mat-raised-button
           color="primary"
           routerLink="/admin"
@@ -64,5 +64,5 @@ import { KeycloakService } from '../../services/keycloak.service';
   `]
 })
 export class HomeComponent {
-  constructor(public keycloak: KeycloakService) {}
+  constructor(public auth: AuthService) {}
 }

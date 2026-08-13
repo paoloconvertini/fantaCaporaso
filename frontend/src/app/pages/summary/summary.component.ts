@@ -1,5 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import {UserApiService} from "../../services/user-api.service";
+import { Router } from '@angular/router';
 
 type RoleKey = 'PORTIERE' | 'DIFENSORE' | 'CENTROCAMPISTA' | 'ATTACCANTE';
 
@@ -9,6 +10,7 @@ type ParticipantSummary = {
     totalCredits: number;
     spentCredits: number;
     remainingCredits: number;
+    maxBid: number;
     roleCounts: {
         PORTIERE: number;
         DIFENSORE: number;
@@ -32,7 +34,7 @@ export class SummaryComponent implements OnInit {
     loading = true;
     error = '';
 
-    constructor(private api: UserApiService) {}
+    constructor(private api: UserApiService, private router: Router) {}
 
     ngOnInit(): void {
         this.load();
@@ -58,6 +60,7 @@ export class SummaryComponent implements OnInit {
                     totalCredits: p.totalCredits,
                     spentCredits: p.spentCredits,
                     remainingCredits: p.remainingCredits,
+                    maxBid: p.maxBid,
                     roleCounts: {
                         PORTIERE: p.roleCounts?.PORTIERE || 0,
                         DIFENSORE: p.roleCounts?.DIFENSORE || 0,
@@ -74,6 +77,10 @@ export class SummaryComponent implements OnInit {
 
     isSelf(p: ParticipantSummary): boolean {
         return this.selfId != null && p.id === this.selfId;
+    }
+
+    openRoster(p: ParticipantSummary): void {
+        this.router.navigate(['/rosa'], { queryParams: { participantId: p.id } });
     }
 
     abbrev(role: RoleKey): 'P' | 'D' | 'C' | 'A' {

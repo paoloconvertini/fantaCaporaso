@@ -3,36 +3,51 @@
   <mat-card class="list-card" *ngIf="participant">
     <h4>{{ participant.name }}</h4>
     <span class="summary-credits">
-      Residuo: {{ participant.remainingCredits }}/{{ participant.totalCredits }}
+      Residuo: {{ participant.remainingCredits }}/{{ participant.totalCredits }} · Max singolo: {{ participant.maxBid }}
     </span>
   </mat-card>
 
   <!-- Round corrente -->
   <mat-card class="list-card" *ngIf="round && !round.closed">
     <h3>Giocatore in asta</h3>
-    <div class="player-info">
-      <h2>{{ round.player }}</h2>
-      <h3>{{ round.playerTeam }}</h3>
+    <div class="round-timer" [class.urgent]="timeLeft !== null && timeLeft <= 5">
+      <mat-icon>timer</mat-icon><strong>{{ timeLeft ?? '—' }}</strong><span>secondi</span>
+    </div>
+    <div class="player-compact" aria-label="Calciatore in asta">
       <span class="role-tag">{{ round.playerRole | slice:0:1 }}</span>
+      <strong class="player-name">{{ round.player }}</strong>
+      <span class="player-team">{{ round.playerTeam }}</span>
+      <span class="player-value" [attr.aria-label]="'Quotazione ' + (round.value ?? 'non disponibile')">
+        <mat-icon aria-hidden="true">paid</mat-icon><strong>{{ round.value ?? '—' }}</strong>
+      </span>
+    </div>
+
+    <div class="market-numbers" aria-label="Situazione del ruolo corrente">
+      <span class="market-number" [attr.aria-label]="remainingCalls + ' chiamate ancora disponibili'">
+        <mat-icon aria-hidden="true">casino</mat-icon><strong>{{ remainingCalls }}</strong>
+      </span>
+      <span class="market-number" [attr.aria-label]="openSlots + ' posti rosa ancora vuoti'">
+        <mat-icon aria-hidden="true">group_add</mat-icon><strong>{{ openSlots }}</strong>
+      </span>
     </div>
 
     <div class="bid-section">
       <mat-form-field>
         <input
                 matInput
-                [disabled]="round?.allowedUsers?.length && !round.allowedUsers.includes(pid)"
+                [disabled]="!isBidAllowed()"
                 type="number"
                 placeholder="La tua offerta"
                 [(ngModel)]="amount"
                 [min]="round?.minimumBid || 1"
-                [max]="participant?.remainingCredits"
+                [max]="maxBidForCurrentRound"
         />
       </mat-form-field>
 
       <button
               mat-raised-button
               color="primary"
-              [disabled]="round?.allowedUsers?.length && !round.allowedUsers.includes(pid)"
+              [disabled]="!isBidAllowed()"
               (click)="send()"
       >
         Offri
@@ -47,20 +62,46 @@
     </div>
   </mat-card>
 
-  <!-- Attivi ora -->
+  <mat-card class="list-card result-card" *ngIf="round?.closed">
+    <h3>Risultato asta</h3>
+    <div class="player-info"><h2>{{ round.player }}</h2><h3>{{ round.playerTeam }}</h3></div>
+    <div class="winner-result" *ngIf="round.winner">
+      <mat-icon>emoji_events</mat-icon>
+      <div><span>Assegnato a</span><strong>{{ round.winner.user }}</strong><b>{{ round.winner.amount }} crediti</b></div>
+    </div>
+    <div class="automatic-minimum" *ngIf="automaticMinimumMessage">
+      <mat-icon>info</mat-icon><span>{{ automaticMinimumMessage }}</span>
+    </div>
+    <p class="personal-result" *ngIf="isWinner()">Hai vinto questa asta!</p>
+    <p class="muted" *ngIf="!round.winner && !round.tieUsers?.length">Nessuna assegnazione.</p>
+    <div class="tie-result" *ngIf="!round.winner && round.tieUsers?.length">
+      Spareggio tra: <strong>{{ round.tieUsers.join(', ') }}</strong>
+    </div>
+  </mat-card>
+
   <mat-card class="list-card" *ngIf="round && !round.closed">
     <h3>Chi sta puntando</h3>
     <div *ngFor="let user of activeUsers" class="list-row">
       <span class="list-user">{{ user }}</span>
     </div>
-    <div *ngIf="activeUsers.length === 0" class="muted">Nessuno</div>
+    <div *ngIf="activeUsers.length===0" class="muted">Nessuno ha ancora puntato.</div>
+    <div *ngIf="activeUsers.length>0" class="muted">Gli importi saranno mostrati alla chiusura.</div>
+  </mat-card>
+
+  <mat-card class="list-card bids-list" *ngIf="round?.closed">
+    <h3>Puntate finali</h3>
+    <div class="bid-row" *ngFor="let bid of sortedBids" [class.my-bid]="isMyBid(bid.user)">
+      <span>{{ bid.user }}<small *ngIf="isMyBid(bid.user)">la tua offerta</small></span>
+      <strong>{{ bid.amount }}</strong>
+    </div>
+    <div *ngIf="!sortedBids.length" class="muted">Nessuna offerta ricevuta.</div>
   </mat-card>
 
   <!-- Summary -->
   <app-summary
           class="main-panel"
           [selfId]="pid"
-          [roleFilter]="(round && !round.closed ? round.playerRole : currentRole) || null"
+          [roleFilter]="null"
   >
   </app-summary>
 </div>

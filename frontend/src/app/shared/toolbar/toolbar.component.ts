@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { EventEmitter, Output } from '@angular/core';
-import { KeycloakService } from '../../services/keycloak.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-toolbar',
@@ -11,13 +11,13 @@ export class ToolbarComponent implements OnInit {
   username: string = '';
   @Output() menuToggle = new EventEmitter<void>();
 
-  constructor(private kc: KeycloakService) {}
+  constructor(private auth: AuthService) {}
 
   ngOnInit(): void {
-    this.username = this.kc.getUsername();
+    this.username = this.auth.username;
   }
 
   logout(): void {
-    this.kc.logout();
+    this.auth.logout();
   }
 }

@@ -6,6 +6,7 @@ import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
+import io.quarkus.logging.Log;
 
 @Provider
 public class GlobalExceptionMapper implements ExceptionMapper<Throwable> {
@@ -31,11 +32,11 @@ public class GlobalExceptionMapper implements ExceptionMapper<Throwable> {
         }
 
         // fallback per eccezioni non gestite
-        error = new ErrorResponse("INTERNAL_ERROR", exception.getMessage());
+        Log.error("Unhandled request error", exception);
+        error = new ErrorResponse("INTERNAL_ERROR", "Errore interno");
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                 .entity(error)
                 .type(MediaType.APPLICATION_JSON)
                 .build();
     }
 }
-

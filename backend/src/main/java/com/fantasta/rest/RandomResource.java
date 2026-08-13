@@ -22,6 +22,9 @@ public class RandomResource {
     DbService db;
 
     @Inject
+    RosterService rosterService;
+
+    @Inject
     RoundSocket socket;
 
     /**
@@ -60,7 +63,8 @@ public class RandomResource {
                 Map.entry("role", role != null ? role : ""),
                 Map.entry("giroId", giro != null ? giro.id : -1L),
                 Map.entry("remaining", stats instanceof Map ? ((Map<?,?>) stats).get("remaining") : Map.of()),
-                Map.entry("skipped", stats instanceof Map ? ((Map<?,?>) stats).get("skipped") : Map.of())
+                Map.entry("skipped", stats instanceof Map ? ((Map<?,?>) stats).get("skipped") : Map.of()),
+                Map.entry("openSlots", rosterService.openSlotsByRole())
         );
     }
 

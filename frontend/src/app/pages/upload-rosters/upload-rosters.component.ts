@@ -22,11 +22,25 @@ export class UploadRostersComponent {
     if (!this.selectedFile) return;
 
     this.loading = true;
-    this.api.uploadRosterExcel(this.selectedFile).subscribe({
+    this.api.uploadRosterExcel(this.selectedFile, false).subscribe({
       next: res => {
         this.uploadResult = res;
         this.loading = false;
+      },
+      error: err => {
+        this.uploadResult = { error: err?.error?.error || 'File non valido' };
+        this.loading = false;
       }
+    });
+  }
+
+  confirmImport() {
+    if (!this.selectedFile || !this.uploadResult?.preview) return;
+    if (!window.confirm(`Importare ${this.uploadResult.teamsFound} squadre e ${this.uploadResult.inserted} calciatori?`)) return;
+    this.loading = true;
+    this.api.uploadRosterExcel(this.selectedFile, true).subscribe({
+      next: res => { this.uploadResult = res; this.loading = false; },
+      error: err => { this.uploadResult = { error: err?.error?.error || 'Importazione non riuscita' }; this.loading = false; }
     });
   }
 }

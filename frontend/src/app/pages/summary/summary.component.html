@@ -3,6 +3,12 @@
             class="list-card row-card"
             *ngFor="let p of participants"
             [class.is-self]="isSelf(p)"
+            role="link"
+            tabindex="0"
+            [attr.aria-label]="'Apri la rosa di ' + p.name"
+            (click)="openRoster(p)"
+            (keydown.enter)="openRoster(p)"
+            (keydown.space)="openRoster(p); $event.preventDefault()"
     >
         <!-- Nome + badge -->
         <div class="cell cell-name">
@@ -36,8 +42,10 @@
 
         <!-- Crediti residui -->
         <div class="cell cell-credits">
-            <span class="summary-credits">{{ p.remainingCredits }}</span>
+            <span class="summary-credits" title="Crediti residui">{{ p.remainingCredits }}</span>
+            <small class="max-bid" title="Massimo spendibile per un calciatore">Max {{ p.maxBid }}</small>
         </div>
+        <mat-icon class="roster-link-icon" aria-hidden="true">chevron_right</mat-icon>
     </mat-card>
 </div>
 

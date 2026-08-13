@@ -1,7 +1,6 @@
 package com.fantasta.dto;
 
-public class CreateKeycloakUserRequest {
+public class LoginRequest {
     public String username;
     public String password;
-    public Long participantId;
 }

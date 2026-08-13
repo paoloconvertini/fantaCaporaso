@@ -1,0 +1,108 @@
+<main class="login-page">
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <section class="login-shell" aria-label="Accesso FantaCaporaso">
+    <aside class="visual-panel">
+      <div class="visual-copy">
+        <span class="season-pill"><span class="live-dot"></span> STAGIONE 2026/27</span>
+        <h2>L'asta è pronta.<br><strong>Costruisci la tua rosa.</strong></h2>
+        <p>Quotazioni, chiamate e rose aggiornate in tempo reale per tutti i partecipanti.</p>
+      </div>
+      <img src="assets/home2.png" alt="Pallone, formazione e crediti del fantacalcio">
+      <div class="visual-shade"></div>
+    </aside>
+
+    <section class="form-panel">
+      <header class="brand">
+        <span class="brand-mark" aria-hidden="true">⚽</span>
+        <span><strong>Fanta</strong>Caporaso</span>
+      </header>
+
+      <div class="form-copy">
+        <span class="eyebrow">AREA PARTECIPANTI</span>
+        <h1>{{ mustChangePassword ? 'Crea la tua password' : 'Bentornato' }}</h1>
+        <p>{{ mustChangePassword
+          ? 'Scegli una password personale per completare il primo accesso.'
+          : 'Inserisci le credenziali ricevute dal gestore dell’asta.' }}</p>
+      </div>
+
+      <form *ngIf="!mustChangePassword" [formGroup]="form" (ngSubmit)="login()" novalidate>
+        <label class="field-group">
+          <span class="field-label">Username</span>
+          <span class="input-shell" [class.invalid]="form.get('username')?.touched && form.get('username')?.invalid">
+            <span class="field-icon" aria-hidden="true">@</span>
+            <input formControlName="username" autocomplete="username" placeholder="Il tuo username" autofocus>
+          </span>
+          <span class="field-message error" *ngIf="form.get('username')?.touched && form.get('username')?.hasError('required')">
+            Inserisci lo username
+          </span>
+        </label>
+
+        <label class="field-group">
+          <span class="field-label">Password</span>
+          <span class="input-shell" [class.invalid]="form.get('password')?.touched && form.get('password')?.invalid">
+            <span class="field-icon field-icon-lock" aria-hidden="true"></span>
+            <input [type]="hidePassword ? 'password' : 'text'" formControlName="password"
+                   autocomplete="current-password" placeholder="La tua password">
+            <button class="visibility-button" type="button" (click)="hidePassword = !hidePassword"
+                    [attr.aria-label]="hidePassword ? 'Mostra password' : 'Nascondi password'">
+              <span class="visibility-icon" aria-hidden="true">{{ hidePassword ? '○' : '●' }}</span>
+            </button>
+          </span>
+          <span class="field-message error" *ngIf="form.get('password')?.touched && form.get('password')?.hasError('required')">
+            Inserisci la password
+          </span>
+        </label>
+
+        <button class="submit-button" mat-flat-button type="submit" [disabled]="loading">
+          <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
+          <span>{{ loading ? 'Accesso in corso…' : 'Entra nell’asta' }}</span>
+          <span *ngIf="!loading" class="button-arrow" aria-hidden="true">→</span>
+        </button>
+      </form>
+
+      <form *ngIf="mustChangePassword" [formGroup]="passwordForm" (ngSubmit)="changePassword()" novalidate>
+        <label class="field-group">
+          <span class="field-label">Nuova password</span>
+          <span class="input-shell" [class.invalid]="passwordForm.get('password')?.touched && passwordForm.get('password')?.invalid">
+            <span class="field-icon field-icon-key" aria-hidden="true">◇</span>
+            <input [type]="hideNewPassword ? 'password' : 'text'" formControlName="password"
+                   autocomplete="new-password" placeholder="Scegli una password">
+            <button class="visibility-button" type="button" (click)="hideNewPassword = !hideNewPassword"
+                    [attr.aria-label]="hideNewPassword ? 'Mostra password' : 'Nascondi password'">
+              <span class="visibility-icon" aria-hidden="true">{{ hideNewPassword ? '○' : '●' }}</span>
+            </button>
+          </span>
+          <span class="field-message" [class.error]="passwordForm.get('password')?.touched && passwordForm.get('password')?.invalid">
+            Almeno 4 caratteri
+          </span>
+        </label>
+
+        <label class="field-group">
+          <span class="field-label">Conferma password</span>
+          <span class="input-shell" [class.invalid]="passwordForm.get('confirmPassword')?.touched && passwordForm.get('confirmPassword')?.invalid">
+            <span class="field-icon" aria-hidden="true">✓</span>
+            <input [type]="hideConfirmPassword ? 'password' : 'text'" formControlName="confirmPassword"
+                   autocomplete="new-password" placeholder="Ripeti la password">
+            <button class="visibility-button" type="button" (click)="hideConfirmPassword = !hideConfirmPassword"
+                    [attr.aria-label]="hideConfirmPassword ? 'Mostra password' : 'Nascondi password'">
+              <span class="visibility-icon" aria-hidden="true">{{ hideConfirmPassword ? '○' : '●' }}</span>
+            </button>
+          </span>
+          <span class="field-message error" *ngIf="passwordForm.get('confirmPassword')?.touched && passwordForm.get('confirmPassword')?.hasError('required')">
+            Conferma la password
+          </span>
+        </label>
+
+        <button class="submit-button" mat-flat-button type="submit" [disabled]="loading">
+          <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
+          <span>{{ loading ? 'Salvataggio…' : 'Salva e continua' }}</span>
+          <span *ngIf="!loading" class="button-arrow" aria-hidden="true">→</span>
+        </button>
+      </form>
+
+      <footer><span class="footer-shield" aria-hidden="true">◆</span> Accesso riservato ai partecipanti</footer>
+    </section>
+  </section>
+</main>
