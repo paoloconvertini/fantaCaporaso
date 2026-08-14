@@ -30,6 +30,7 @@ export class MobileComponent implements OnInit, OnDestroy {
     round: any = null;
     amount: number | null = null;
     status = '';
+    statusKind: 'success' | 'error' | '' = '';
     activeUsers: string[] = [];
     timeLeft: number | null = null;
     remainingCalls = 0;
@@ -213,6 +214,7 @@ export class MobileComponent implements OnInit, OnDestroy {
         // blocco client-side in caso di spareggio e non ammesso
         if (!this.isBidAllowed()) {
             this.status = 'Spareggio in corso: non sei tra gli ammessi a rilanciare';
+            this.statusKind = 'error';
             return;
         }
 
@@ -220,27 +222,32 @@ export class MobileComponent implements OnInit, OnDestroy {
         const minimumBid = Number(this.round?.minimumBid || 1);
         if (!Number.isFinite(v) || v < minimumBid) {
             this.status = `Offerta minima ${minimumBid}`;
+            this.statusKind = 'error';
             return;
         }
 
         if (v <= 0) {
             this.status = 'Inserisci un importo valido';
+            this.statusKind = 'error';
             return;
         }
         if (v > this.maxBidForCurrentRound) {
             this.status = `Offerta massima ${this.maxBidForCurrentRound}`;
+            this.statusKind = 'error';
             return;
         }
 
         this.api.sendBid(this.pid, v).subscribe({
             next: () => {
                 this.lastBidAmount = v;            // feedback immediato
-                this.status = `Offerta di ${v} inviata`;
+                this.status = '';
+                this.statusKind = '';
                 this.amount = null;                // pulisci input
                 this.loadParticipant();            // aggiorna crediti
             },
             error: (err) => {
                 this.status = (err?.error?.message || 'Errore nell’invio offerta');
+                this.statusKind = 'error';
             }
         });
     }

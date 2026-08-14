@@ -7,6 +7,8 @@ import com.fantasta.model.RoundState;
 import com.fantasta.service.AuctionService;
 import com.fantasta.ws.RoundSocket;
 import io.vertx.core.Vertx;
+import io.quarkus.security.identity.SecurityIdentity;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -14,10 +16,8 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.jboss.logging.Logger;
 
-import java.io.File;
 import java.util.Map;
 
 @Path("/api")
@@ -40,6 +40,16 @@ public class AuctionResource {
     @Inject
     RoundSocket socket;
 
+    @Inject
+    SecurityIdentity identity;
+
+    @PostConstruct
+    void recoverPersistedTimer() {
+        vertx.executeBlocking(() -> service.get())
+                .onSuccess(this::scheduleAutoClose)
+                .onFailure(t -> LOG.error("Impossibile recuperare il timer del round persistito", t));
+    }
+
     // --- USER/ADMIN ENDPOINTS ---
 
     @GET
@@ -55,8 +65,14 @@ public class AuctionResource {
     @RolesAllowed({"admin", "user"})
     public RoundDto bid(BidDto dto) {
         try {
-            RoundState after = service.bid(dto.participantId, dto.amount);
-            return RoundDto.toDto(after);
+            if (dto == null) throw new IllegalArgumentException("Offerta mancante");
+            Long participantId = identity.hasRole("admin")
+                    ? dto.participantId
+                    : identity.getAttribute("participant_id");
+            if (!identity.hasRole("admin") && participantId == null) {
+                throw new IllegalArgumentException("Utente non associato a una squadra");
+            }
+            return service.bidDto(participantId, dto.amount);
         } catch (IllegalArgumentException e) {
             throw new WebApplicationException(e.getMessage(), 400);
         } catch (IllegalStateException e) {
@@ -81,13 +97,17 @@ public class AuctionResource {
         );
         socket.broadcast("ROUND_STARTED", RoundDto.toDto(s));
 
-        // --- AUTO-CLOSE TIMER ---
+        scheduleAutoClose(s);
+        return RoundDto.toDto(s);
+    }
+
+    private synchronized void scheduleAutoClose(RoundState s) {
         if (autoCloseTimerId != null) {
             vertx.cancelTimer(autoCloseTimerId);
             autoCloseTimerId = null;
         }
 
-        if (s.endEpochMillis != null) {
+        if (s != null && !s.closed && s.endEpochMillis != null) {
             scheduledRoundId = s.roundId;
             String expectedRoundId = s.roundId;
             long delay = Math.max(0L, s.endEpochMillis - System.currentTimeMillis());
@@ -114,7 +134,6 @@ public class AuctionResource {
                 });
             });
         }
-        return RoundDto.toDto(s);
     }
 
     @POST
@@ -168,38 +187,4 @@ public class AuctionResource {
         return Response.ok().entity(Map.of("message", "Asta chiusa con successo")).build();
     }
 
-    /**
-     * 🔹 Svincola un calciatore da roster
-     */
-    @POST
-    @Path("/release/{rosterId}")
-    @Transactional
-    @RolesAllowed("admin")
-    public void release(@PathParam("rosterId") Long rosterId) {
-        if (rosterId == null) {
-            throw new BadRequestException("RosterId mancante");
-        }
-        service.releasePlayer(rosterId);
-    }
-
-    /**
-     * 🔹 Nuova sessione caricando rose da file
-     */
-    @POST
-    @Path("/new")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Transactional
-    @RolesAllowed("admin")
-    public void startNewAuction(@QueryParam("sessionId") Long sessionId,
-                                @FormParam("file") FileUpload fileUpload) {
-        if (sessionId == null) {
-            throw new BadRequestException("SessionId mancante");
-        }
-        if (fileUpload == null) {
-            throw new BadRequestException("File mancante");
-        }
-
-        File file = fileUpload.uploadedFile().toFile();
-        service.startNewAuctionFromFile(file, sessionId);
-    }
 }

@@ -7,9 +7,9 @@ import com.fantasta.model.*;
 import com.fantasta.ws.RoundSocket;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
-import java.io.File;
 import java.time.Instant;
 import java.util.*;
 
@@ -31,6 +31,9 @@ public class AuctionService {
 
     @Inject
     DbService dbService;
+
+    @Inject
+    EntityManager entityManager;
 
     @Transactional
     public synchronized RoundState get() {
@@ -72,6 +75,22 @@ public class AuctionService {
 
     @Transactional
     public synchronized RoundState bid(Long participantId, Double amount) {
+        applyBid(participantId, amount);
+        return state;
+    }
+
+    @Transactional
+    public synchronized RoundDto bidDto(Long participantId, Double amount) {
+        applyBid(participantId, amount);
+        RoundDto dto = RoundDto.toDto(state);
+        // Il monitor deve coprire anche l'UPDATE effettivo. Senza flush, il commit
+        // avverrebbe dopo il rilascio del monitor e richieste HTTP concorrenti
+        // potrebbero aggiornare la stessa riga di stato in parallelo.
+        entityManager.flush();
+        return dto;
+    }
+
+    private void applyBid(Long participantId, Double amount) {
         if (state == null || state.closed)
             throw new IllegalStateException("Round non attivo");
 
@@ -118,7 +137,6 @@ public class AuctionService {
         socket.broadcast("BID_ADDED", Map.of("user", p.name));
         persistCurrentState();
 
-        return state;
     }
 
     private Double minimumBidFor(Set<Long> allowedUsers, String role) {
@@ -290,31 +308,6 @@ public class AuctionService {
 
     }
 
-    /**
-     * Svincola un singolo giocatore
-     */
-    @Transactional
-    public void releasePlayer(Long rosterId) {
-        RosterEntity r = RosterEntity.findById(rosterId);
-        if (r == null) return;
-
-        ParticipantEntity p = r.participant;
-        PlayerEntity pl = r.player;
-
-        // restituisce i crediti del valore del player
-        p.totalCredits += pl.valore;
-        p.persist();
-
-        // libera il player
-        pl.assigned = false;
-        pl.persist();
-
-        // elimina dalla rosa
-        r.delete();
-        socket.broadcast("SUMMARY_UPDATED", Map.of("reason", "release"));
-
-    }
-
     private void persistCurrentState() {
         if (state == null) {
             clearCurrentState();
@@ -350,51 +343,6 @@ public class AuctionService {
 
     private void clearCurrentState() {
         AuctionRoundStateEntity.deleteById(CURRENT_ROUND_STATE_ID);
-    }
-
-    /**
-     * Avvia una nuova sessione di mercato caricando rose da file
-     */
-    @Transactional
-    public void startNewAuctionFromFile(File file, Long sessionId) {
-        // 1. consolidiamo history
-        closeAuction(sessionId);
-
-        // 2. svuotiamo roster corrente
-        RosterEntity.deleteAll();
-
-        // 3. parser file (stub)
-        Map<String, List<String>> newRosters = parseFile(file);
-
-        // 4. reinseriamo nuove rose
-        for (var entry : newRosters.entrySet()) {
-            String participantName = entry.getKey();
-            ParticipantEntity participant = ParticipantEntity.find("name", participantName).firstResult();
-            if (participant == null) continue;
-
-            for (String playerName : entry.getValue()) {
-                PlayerEntity player = PlayerEntity.find("name", playerName).firstResult();
-                if (player == null) continue;
-
-                RosterEntity r = new RosterEntity();
-                r.participant = participant;
-                r.player = player;
-                r.amount = player.valore;
-                r.persist();
-
-                player.assigned = true;
-                player.persist();
-            }
-        }
-        socket.broadcast("SUMMARY_UPDATED", Map.of("reason", "new_session_from_file"));
-
-    }
-
-    /**
-     * Parser del file Excel/CSV (da completare più avanti)
-     */
-    private Map<String, List<String>> parseFile(File file) {
-        return new HashMap<>();
     }
 
 }

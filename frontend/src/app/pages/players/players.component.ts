@@ -14,12 +14,6 @@ export class PlayersComponent implements OnInit {
 
     displayedColumns = ['name', 'team', 'role', 'valore'];
 
-    // === upload (solo admin) ===
-    isAdmin = true; // 🔑 per ora fisso, meglio check da login o localStorage
-    selectedFile: File | null = null;
-    uploadResult: any = null;
-    adminPin: string = '1234';
-
     constructor(private api: UserApiService) {}
 
     ngOnInit(): void {

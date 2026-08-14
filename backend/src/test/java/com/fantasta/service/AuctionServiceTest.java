@@ -209,6 +209,9 @@ class AuctionServiceTest {
 
         assertEquals(16, auctionService.get().bids.size());
         assertEquals(16D, auctionService.get().bids.get(String.valueOf(participantIds.get(15))));
+        auctionService.bid(participantIds.get(0), 21D);
+        assertEquals(16, auctionService.get().bids.size());
+        assertEquals(21D, auctionService.get().bids.get(String.valueOf(participantIds.get(0))));
 
         auctionService.reset();
         QuarkusTransaction.requiringNew().run(() -> {

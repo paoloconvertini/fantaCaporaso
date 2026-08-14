@@ -94,13 +94,13 @@ Lo stack espone per default il solo reverse proxy su `127.0.0.1:8088`. Per una p
 
 Nel selettore delle configurazioni Run sono disponibili:
 
-- `ASTA - AVVIA`: ferma PostgreSQL di sviluppo, avvia lo stack completo sul volume persistente `backend_pgdata`, crea il Quick Tunnel e stampa il link da condividere;
+- `ASTA - AVVIA`: ferma PostgreSQL di sviluppo, avvia rapidamente le immagini già verificate sul volume persistente `backend_pgdata`, crea un nuovo Quick Tunnel, ne verifica realmente l'HTTPS e stampa il link da condividere;
 - `ASTA - STATO`: ristampa link, container e controlli di raggiungibilità;
 - `ASTA - FERMA`: arresta lo stack senza `-v` e riavvia il solo PostgreSQL di sviluppo.
 
-Il link `trycloudflare.com` rimane invariato finché il container `cloudflared` resta attivo. Durante l'asta non riavviare Docker Desktop, non sospendere il Mac e non eseguire nuovamente `ASTA - AVVIA`. Conservare anche il link LAN mostrato in console come alternativa per i dispositivi collegati alla stessa rete.
+Il link `trycloudflare.com` rimane invariato finché il container `cloudflared` resta attivo. Ogni nuova esecuzione di `ASTA - AVVIA` ricrea deliberatamente il tunnel per non riutilizzare hostname scaduti; se Cloudflare restituisce un hostname non raggiungibile, lo script prova automaticamente fino a tre volte. Durante l'asta non riavviare Docker Desktop, non sospendere il Mac e non eseguire nuovamente `ASTA - AVVIA`. Conservare anche il link LAN mostrato in console come alternativa per i dispositivi collegati alla stessa rete.
 
-Il flusso non usa `CLOUDFLARE_TUNNEL_TOKEN`: si tratta deliberatamente di un Quick Tunnel temporaneo per la singola sessione d'asta. Il tunnel forza HTTP/2 su TCP per evitare le disconnessioni QUIC/UDP osservate sulla rete locale. Per l'avvio manuale usare `./scripts/start-auction.sh`; per il controllo `./scripts/status-auction.sh`.
+Il flusso non usa `CLOUDFLARE_TUNNEL_TOKEN`: si tratta deliberatamente di un Quick Tunnel temporaneo per la singola sessione d'asta. Il tunnel forza HTTP/2 su TCP per evitare le disconnessioni QUIC/UDP osservate sulla rete locale. Per l'avvio manuale usare `./scripts/start-auction.sh`; usare `./scripts/start-auction.sh --rebuild` soltanto dopo modifiche al codice; per il controllo usare `./scripts/status-auction.sh`.
 
 Il browser deve conoscere soltanto l'URL HTTPS pubblico. PostgreSQL e backend non pubblicano porte nello stack completo.
 
@@ -135,6 +135,8 @@ Il pulsante `Esporta rose FantaMaster` nella dashboard produce un file `.xlsx` c
 Il primo passaggio esegue soltanto l'anteprima: valida intestazioni, campi, ruoli, quotazioni e nomi duplicati senza modificare PostgreSQL. La successiva conferma sostituisce completamente il catalogo e azzera rose, storico rose, estrazioni, skip e stato dell'asta. Se la validazione fallisce non viene cancellato nulla.
 
 Il riavvio ordinario del backend non importa né cancella calciatori. Hibernate resta configurato con strategia `update`, che aggiorna lo schema senza ricreare il database; il volume PostgreSQL conserva i dati.
+
+Anche il round corrente e la sua scadenza sono persistiti: dopo un riavvio il backend riprogramma il tempo residuo oppure chiude il round se la scadenza è già trascorsa. Per gli account partecipante, l'identità dell'offerente viene sempre ricavata dalla sessione autenticata e non dai dati inviati dal browser.
 
 ## Partecipanti e primo accesso
 

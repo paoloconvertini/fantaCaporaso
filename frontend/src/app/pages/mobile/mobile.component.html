@@ -1,15 +1,13 @@
 <div class="mobile-container">
-  <!-- Dati partecipante -->
-  <mat-card class="list-card" *ngIf="participant">
-    <h4>{{ participant.name }}</h4>
-    <span class="summary-credits">
-      Residuo: {{ participant.remainingCredits }}/{{ participant.totalCredits }} · Max singolo: {{ participant.maxBid }}
-    </span>
-  </mat-card>
-
   <!-- Round corrente -->
-  <mat-card class="list-card" *ngIf="round && !round.closed">
-    <h3>Giocatore in asta</h3>
+  <mat-card class="list-card auction-console" *ngIf="round && !round.closed">
+    <div class="console-heading">
+      <div *ngIf="participant">
+        <strong>{{ participant.name }}</strong>
+        <small>{{ participant.remainingCredits }} crediti · Max {{ maxBidForCurrentRound }}</small>
+      </div>
+      <span>IN ASTA</span>
+    </div>
     <div class="round-timer" [class.urgent]="timeLeft !== null && timeLeft <= 5">
       <mat-icon>timer</mat-icon><strong>{{ timeLeft ?? '—' }}</strong><span>secondi</span>
     </div>
@@ -45,6 +43,7 @@
       </mat-form-field>
 
       <button
+              class="bid-button"
               mat-raised-button
               color="primary"
               [disabled]="!isBidAllowed()"
@@ -54,12 +53,22 @@
       </button>
     </div>
 
-    <div class="last-bid" *ngIf="lastBidAmount !== null">
-      La tua ultima offerta: <b>{{ lastBidAmount }}</b>
+    <div *ngIf="statusKind === 'error' && status" class="bid-feedback error" role="alert">
+      <mat-icon>error</mat-icon>
+      <span>{{ status }}</span>
+    </div>
+
+    <div class="last-bid" *ngIf="lastBidAmount !== null" role="status">
+      Offerta inviata: <b>{{ lastBidAmount }}</b>
     </div>
     <div class="last-bid" *ngIf="round?.minimumBid && round.minimumBid > 1">
       Offerta minima spareggio: <b>{{ round.minimumBid }}</b>
     </div>
+  </mat-card>
+
+  <mat-card class="list-card participant-card" *ngIf="participant && (!round || round.closed)">
+    <strong>{{ participant.name }}</strong>
+    <span class="summary-credits">{{ participant.remainingCredits }}/{{ participant.totalCredits }} crediti · Max {{ participant.maxBid }}</span>
   </mat-card>
 
   <mat-card class="list-card result-card" *ngIf="round?.closed">

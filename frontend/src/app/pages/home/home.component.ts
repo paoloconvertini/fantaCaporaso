@@ -12,12 +12,6 @@ import { AuthService } from '../../services/auth.service';
           {{ auth.isAdmin ? 'Gestione asta' : 'Area partecipante' }}
         </p>
 
-        <!-- FIXME: rimuovere questa diagnostica quando il flusso auth sara stabile. -->
-        <p class="home-debug">
-          Utente: {{ auth.getDebugInfo().username || 'n/d' }} -
-          Ruoli: {{ auth.getDebugInfo().roles.join(', ') || 'nessuno' }}
-        </p>
-
         <a
           *ngIf="auth.isAdmin; else userHome"
           mat-raised-button
@@ -56,11 +50,6 @@ import { AuthService } from '../../services/auth.service';
       color: rgba(0, 0, 0, 0.65);
     }
 
-    .home-debug {
-      margin: -12px 0 24px;
-      font-size: 13px;
-      color: rgba(0, 0, 0, 0.54);
-    }
   `]
 })
 export class HomeComponent {

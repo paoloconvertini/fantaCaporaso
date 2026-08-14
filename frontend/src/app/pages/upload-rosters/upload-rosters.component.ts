@@ -10,8 +10,6 @@ export class UploadRostersComponent {
   selectedFile: File | null = null;
   uploadResult: any = null;
   loading = false;
-  adminPin = '1234';
-
   constructor(private api: AdminApiService) {}
 
   onFileSelected(event: any) {

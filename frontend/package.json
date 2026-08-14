@@ -8,6 +8,7 @@
     "build:prod": "ng build --configuration production",
     "test": "ng test --watch=false --browsers=ChromeHeadless",
     "auction:start": "bash ../scripts/start-auction.sh",
+    "auction:rebuild": "bash ../scripts/start-auction.sh --rebuild",
     "auction:status": "bash ../scripts/status-auction.sh",
     "auction:stop": "bash ../scripts/stop-auction.sh"
   },
