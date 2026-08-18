@@ -6,8 +6,8 @@ import { AuthService } from '../../services/auth.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 interface Player {
-    id: number;
-    name: string;
+    playerId: number;
+    playerName: string;
     role: string;   // PORTIERE, DIFENSORE, CENTROCAMPISTA, ATTACCANTE
     amount: number;
     participantId: number;
@@ -92,15 +92,19 @@ export class RostersComponent implements OnInit {
             this.rosterByParticipantRole[p.participantId][role].push(p);
         });
 
-        // ordino ogni lista di giocatori per amount decrescente
+        // Mantengo i reparti separati e ordino alfabeticamente i giocatori.
         Object.values(groupedByRole).forEach(byTeam =>
             Object.values(byTeam).forEach(list =>
-                list.sort((a,b) => b.amount - a.amount)
+                list.sort((a, b) =>
+                    (a.playerName ?? '').localeCompare(b.playerName ?? '', 'it', { sensitivity: 'base' })
+                )
             )
         );
         Object.values(this.rosterByParticipantRole).forEach(byRole =>
             Object.values(byRole).forEach(list =>
-                list.sort((a,b) => b.amount - a.amount)
+                list.sort((a, b) =>
+                    (a.playerName ?? '').localeCompare(b.playerName ?? '', 'it', { sensitivity: 'base' })
+                )
             )
         );
 

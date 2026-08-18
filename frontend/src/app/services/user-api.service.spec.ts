@@ -26,4 +26,12 @@ describe('UserApiService', () => {
     expect(service.roleFilter$.value).toBe('DIFENSORE');
     expect(service.activeUsers$.value).toEqual(['Squadra']);
   });
+
+  it('withdraws the current authenticated participant bid', () => {
+    service.withdrawBid().subscribe();
+
+    const request = http.expectOne('/api/bids/withdraw');
+    expect(request.request.method).toBe('POST');
+    request.flush({ bidders: [] });
+  });
 });

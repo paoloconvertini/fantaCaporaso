@@ -29,7 +29,12 @@
       </span>
     </div>
 
-    <div class="bid-section">
+    <div class="observer-notice" *ngIf="isObserver">
+      <mat-icon>visibility</mat-icon>
+      <span>Stai seguendo l’asta in modalità sola lettura.</span>
+    </div>
+
+    <div class="bid-section" *ngIf="!isObserver">
       <mat-form-field>
         <input
                 matInput
@@ -51,17 +56,33 @@
       >
         Offri
       </button>
+
+      <button
+              *ngIf="hasActiveBid"
+              class="withdraw-button"
+              mat-stroked-button
+              color="warn"
+              [disabled]="withdrawing || !isBidAllowed()"
+              (click)="withdrawBid()"
+      >
+        <mat-icon>undo</mat-icon>
+        Ritira offerta
+      </button>
     </div>
 
     <div *ngIf="statusKind === 'error' && status" class="bid-feedback error" role="alert">
       <mat-icon>error</mat-icon>
       <span>{{ status }}</span>
     </div>
+    <div *ngIf="statusKind === 'success' && status" class="bid-feedback" role="status">
+      <mat-icon>check_circle</mat-icon>
+      <span>{{ status }}</span>
+    </div>
 
-    <div class="last-bid" *ngIf="lastBidAmount !== null" role="status">
+    <div class="last-bid" *ngIf="!isObserver && lastBidAmount !== null" role="status">
       Offerta inviata: <b>{{ lastBidAmount }}</b>
     </div>
-    <div class="last-bid" *ngIf="round?.minimumBid && round.minimumBid > 1">
+    <div class="last-bid" *ngIf="!isObserver && round?.minimumBid && round.minimumBid > 1">
       Offerta minima spareggio: <b>{{ round.minimumBid }}</b>
     </div>
   </mat-card>

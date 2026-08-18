@@ -32,10 +32,21 @@ describe('AppShellComponent', () => {
 
   it('shows the current auction entry to participants', () => {
     component.isAdmin = false;
+    component.isUser = true;
     component.isParticipant = true;
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Asta corrente');
+  });
+
+  it('shows the auction but hides the personal roster for observers', () => {
+    component.isAdmin = false;
+    component.isUser = true;
+    component.isParticipant = false;
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Asta corrente');
+    expect(fixture.nativeElement.textContent).not.toContain('Rosa');
   });
 
   it('keeps the permanent desktop menu open when navigating', () => {

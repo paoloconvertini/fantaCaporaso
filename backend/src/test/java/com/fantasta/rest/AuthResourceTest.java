@@ -129,6 +129,36 @@ class AuthResourceTest {
     }
 
     @Test
+    void adminCanCreateReadOnlyObserverWithoutParticipant() {
+        String adminCookie = given().contentType(ContentType.JSON)
+                .body("{\"username\":\"test-admin\",\"password\":\"test-password-strong\"}")
+                .when().post("/api/auth/login").then().statusCode(200)
+                .extract().cookie("FANTASTA_AUTH");
+
+        given().cookie("FANTASTA_AUTH", adminCookie).contentType(ContentType.JSON)
+                .body("{\"username\":\"observer-user\",\"password\":\"observe1\",\"permanentPassword\":true}")
+                .when().post("/api/admin/users").then().statusCode(201);
+
+        String observerCookie = given().contentType(ContentType.JSON)
+                .body("{\"username\":\"observer-user\",\"password\":\"observe1\"}")
+                .when().post("/api/auth/login").then().statusCode(200)
+                .body("participantId", nullValue())
+                .body("roles", hasItem("user"))
+                .extract().cookie("FANTASTA_AUTH");
+
+        given().cookie("FANTASTA_AUTH", observerCookie)
+                .when().get("/api/round")
+                .then().statusCode(anyOf(is(200), is(204)));
+
+        given().cookie("FANTASTA_AUTH", observerCookie)
+                .contentType(ContentType.JSON)
+                .body("{}")
+                .when().post("/api/bids/withdraw")
+                .then().statusCode(400)
+                .body("message", containsString("non associato"));
+    }
+
+    @Test
     void participantMustChangeTemporaryPasswordBeforeUsingApplication() {
         String adminCookie = given()
                 .contentType(ContentType.JSON)

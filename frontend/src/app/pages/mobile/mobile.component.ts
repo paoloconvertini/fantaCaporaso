@@ -3,6 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { Subscription } from 'rxjs';
 import {UserApiService} from "../../services/user-api.service";
+import { AuthService } from '../../services/auth.service';
 
 type RoleKey = 'PORTIERE' | 'DIFENSORE' | 'CENTROCAMPISTA' | 'ATTACCANTE';
 
@@ -50,15 +51,16 @@ export class MobileComponent implements OnInit, OnDestroy {
     // UX: mostra l’ultima offerta inviata da questo partecipante
     lastBidAmount: number | null = null;
 
-    constructor(private route: ActivatedRoute, private api: UserApiService) {}
+    withdrawing = false;
+
+    constructor(private route: ActivatedRoute, private api: UserApiService, private auth: AuthService) {}
 
     ngOnInit(): void {
-        this.pid = Number(this.route.snapshot.queryParamMap.get('pid'));
+        this.pid = Number(this.route.snapshot.queryParamMap.get('pid')) || this.auth.user?.participantId || null;
         if (this.pid) {
             this.loadParticipant();
             this.loadRound();
         } else {
-            this.loadCurrentParticipant();
             this.loadRound();
         }
 
@@ -120,7 +122,9 @@ export class MobileComponent implements OnInit, OnDestroy {
             next: (res: any) => {
                 this.round = res || null;
                 this.configureTimer();
-                this.activeUsers = Object.keys(this.round?.bids || {});
+                this.activeUsers = this.round?.closed
+                    ? Object.keys(this.round?.bids || {})
+                    : [...(this.round?.bidders || [])];
                 // se round nuovo è partito, resetta l’ultima offerta mostrata
                 if (this.round && this.round.closed === false) {
                     this.lastBidAmount = null;
@@ -158,6 +162,14 @@ export class MobileComponent implements OnInit, OnDestroy {
             return allowed.map((id: unknown) => Number(id)).includes(Number(this.pid));
         }
         return true; // round normale: tutti ammessi
+    }
+
+    get isObserver(): boolean {
+        return !this.pid;
+    }
+
+    get hasActiveBid(): boolean {
+        return !!this.participant?.name && this.activeUsers.includes(this.participant.name);
     }
 
     get sortedBids(): { user: string; amount: number }[] {
@@ -247,6 +259,27 @@ export class MobileComponent implements OnInit, OnDestroy {
             },
             error: (err) => {
                 this.status = (err?.error?.message || 'Errore nell’invio offerta');
+                this.statusKind = 'error';
+            }
+        });
+    }
+
+    withdrawBid(): void {
+        if (!this.hasActiveBid || !this.isBidAllowed() || this.withdrawing) return;
+
+        this.withdrawing = true;
+        this.api.withdrawBid().subscribe({
+            next: (round: any) => {
+                this.withdrawing = false;
+                this.lastBidAmount = null;
+                this.status = 'Offerta ritirata';
+                this.statusKind = 'success';
+                this.round = round;
+                this.activeUsers = [...(round?.bidders || [])];
+            },
+            error: (err: any) => {
+                this.withdrawing = false;
+                this.status = err?.error?.message || 'Errore nel ritiro dell’offerta';
                 this.statusKind = 'error';
             }
         });

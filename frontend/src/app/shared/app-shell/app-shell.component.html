@@ -13,10 +13,10 @@
 
         <mat-nav-list>
             <a *ngIf="isAdmin" mat-list-item routerLink="/admin" (click)="closeMenuOnMobile()"><mat-icon>home</mat-icon> Dashboard asta</a>
-            <a *ngIf="isParticipant" mat-list-item routerLink="/mobile" (click)="closeMenuOnMobile()"><mat-icon>gavel</mat-icon> Asta corrente</a>
+            <a *ngIf="isUser" mat-list-item routerLink="/mobile" (click)="closeMenuOnMobile()"><mat-icon>gavel</mat-icon> Asta corrente</a>
             <a mat-list-item routerLink="/players" (click)="closeMenuOnMobile()"><mat-icon>sports_soccer</mat-icon> Svincolati</a>
             <a mat-list-item routerLink="/rosters" (click)="closeMenuOnMobile()"><mat-icon>groups_2</mat-icon> Rose</a>
-            <a mat-list-item routerLink="/rosa" (click)="closeMenuOnMobile()">
+            <a *ngIf="isAdmin || isParticipant" mat-list-item routerLink="/rosa" (click)="closeMenuOnMobile()">
                 <mat-icon>list_alt</mat-icon>
                 {{ isAdmin ? 'Gestione rose' : 'Rosa' }}
             </a>

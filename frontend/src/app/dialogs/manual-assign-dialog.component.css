@@ -11,3 +11,9 @@ mat-dialog-content p {
 mat-form-field {
     margin-top: 12px;
 }
+
+.current-owner {
+    padding: 10px;
+    border-radius: 6px;
+    background: #fff4d6;
+}

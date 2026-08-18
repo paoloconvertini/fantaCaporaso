@@ -128,6 +128,48 @@ class AuctionTimerResourceTest {
     }
 
     @Test
+    void authenticatedParticipantCanWithdrawBidThroughHttp() {
+        auctionService.reset();
+        Long participantId = QuarkusTransaction.requiringNew().call(() -> {
+            ParticipantEntity participant = participant("Squadra ritiro HTTP");
+            PlayerEntity player = new PlayerEntity();
+            player.name = "Difensore ritiro HTTP";
+            player.team = "Team ritiro HTTP";
+            player.role = Role.DIFENSORE;
+            player.valore = 5D;
+            player.active = true;
+            player.persist();
+            return participant.id;
+        });
+
+        try {
+            auctionService.start("Difensore ritiro HTTP", "Team ritiro HTTP", "DIFENSORE", 30, "NONE", 5, null);
+            String userCookie = jwtService.createToken("utente-ritiro", "user", participantId);
+
+            given().cookie("FANTASTA_AUTH", userCookie)
+                    .contentType(ContentType.JSON)
+                    .body(Map.of("participantId", participantId, "amount", 7))
+                    .when().post("/api/bids")
+                    .then().statusCode(200)
+                    .body("bidders", org.hamcrest.Matchers.contains("Squadra ritiro HTTP"));
+
+            given().cookie("FANTASTA_AUTH", userCookie)
+                    .contentType(ContentType.JSON)
+                    .body("{}")
+                    .when().post("/api/bids/withdraw")
+                    .then().statusCode(200)
+                    .body("bidders", org.hamcrest.Matchers.empty());
+            assertEquals(0, auctionService.get().bids.size());
+        } finally {
+            auctionService.reset();
+            QuarkusTransaction.requiringNew().run(() -> {
+                PlayerEntity.delete("team", "Team ritiro HTTP");
+                ParticipantEntity.deleteById(participantId);
+            });
+        }
+    }
+
+    @Test
     void countdownClosesRoundAndAssignsGoalkeeperPackage() throws Exception {
         auctionService.reset();
         Long participantId = QuarkusTransaction.requiringNew().call(() -> {

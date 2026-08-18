@@ -90,6 +90,29 @@ public class AuctionService {
         return dto;
     }
 
+    @Transactional
+    public synchronized RoundDto withdrawBidDto(Long participantId) {
+        if (state == null || state.closed) {
+            throw new IllegalStateException("Round non attivo");
+        }
+        if (participantId == null) {
+            throw new IllegalArgumentException("Partecipante mancante");
+        }
+
+        ParticipantEntity participant = ParticipantEntity.findById(participantId);
+        if (participant == null) {
+            throw new IllegalArgumentException("Partecipante non trovato: " + participantId);
+        }
+        if (state.bids.remove(String.valueOf(participantId)) == null) {
+            throw new IllegalArgumentException("Nessuna offerta da ritirare");
+        }
+
+        persistCurrentState();
+        entityManager.flush();
+        socket.broadcast("BID_WITHDRAWN", Map.of("user", participant.name));
+        return RoundDto.toDto(state);
+    }
+
     private void applyBid(Long participantId, Double amount) {
         if (state == null || state.closed)
             throw new IllegalStateException("Round non attivo");
@@ -291,6 +314,105 @@ public class AuctionService {
         // 🔔 NOTIFICA SUMMARY
         socket.broadcast("SUMMARY_UPDATED", Map.of("reason", "manual_assign"));
         return state;
+    }
+
+    /**
+     * Assegna un giocatore fuori turno oppure corregge proprietario e prezzo di
+     * un acquisto esistente. La spesa e il rimborso derivano sempre dalle righe rosa.
+     */
+    @Transactional
+    public synchronized void adminAssign(Long playerId, Long participantId, Double amount) {
+        if (playerId == null || participantId == null || amount == null || amount <= 0) {
+            throw new IllegalArgumentException("Giocatore, partecipante e importo sono obbligatori");
+        }
+        PlayerEntity player = PlayerEntity.findById(playerId);
+        ParticipantEntity participant = ParticipantEntity.findById(participantId);
+        if (player == null || !player.active) throw new IllegalArgumentException("Giocatore non trovato o non attivo");
+        if (participant == null) throw new IllegalArgumentException("Partecipante non trovato");
+
+        RosterEntity currentEntry = RosterEntity.find("player", player).firstResult();
+        if (currentEntry == null) {
+            validateNewAssignment(participant, player, amount);
+            dbService.assignPurchasedPlayer(player, participant.id, amount);
+        } else {
+            correctAssignment(participant, player, currentEntry, amount);
+        }
+
+        if (state == null) {
+            state = loadCurrentState();
+        }
+        if (state != null && Objects.equals(state.player, player.name)
+                && Objects.equals(state.playerTeam, player.team)) {
+            state.winner = new Winner(participant.id, participant.name, amount);
+            state.closed = true;
+            state.tieUsers = null;
+            state.allowedUsers = null;
+            persistCurrentState();
+            socket.broadcast("ROUND_CLOSED", RoundDto.toDto(state));
+        }
+        socket.broadcast("SUMMARY_UPDATED", Map.of("reason", "admin_assignment_corrected"));
+    }
+
+    private void validateNewAssignment(ParticipantEntity participant, PlayerEntity player, double amount) {
+        int purchaseSize = dbService.purchaseSize(player);
+        int current = participantService.roleCounts(participant.id).getOrDefault(player.role, 0);
+        if (current + purchaseSize > rosterService.max(player.role)) {
+            throw new IllegalArgumentException("Quota piena per ruolo " + player.role);
+        }
+        int remaining = participantService.remainingCreditsById(participant.id, participant.totalCredits);
+        if (amount > remaining) throw new IllegalArgumentException("Importo supera il credito residuo");
+        int maxBid = rosterService.maxBid(participant.id, participant.totalCredits, purchaseSize);
+        if (amount > maxBid) {
+            throw new IllegalArgumentException("Importo massimo " + maxBid + ": conserva almeno 1 credito per ogni posto libero");
+        }
+        if (player.role == Role.PORTIERE && amount < 3D) {
+            throw new IllegalArgumentException("Offerta minima per la porta: 3 crediti");
+        }
+    }
+
+    private void correctAssignment(ParticipantEntity participant, PlayerEntity player,
+                                   RosterEntity currentEntry, double amount) {
+        ParticipantEntity previousOwner = currentEntry.participant;
+        List<RosterEntity> entries = player.role == Role.PORTIERE
+                ? RosterEntity.list("participant = ?1 and player.role = ?2 and lower(player.team) = ?3",
+                        previousOwner, Role.PORTIERE, player.team.toLowerCase(Locale.ROOT))
+                : List.of(currentEntry);
+        int purchaseSize = entries.size();
+        double oldAmount = entries.stream().mapToDouble(row -> row.amount).sum();
+
+        if (!Objects.equals(previousOwner.id, participant.id)) {
+            int current = participantService.roleCounts(participant.id).getOrDefault(player.role, 0);
+            if (current + purchaseSize > rosterService.max(player.role)) {
+                throw new IllegalArgumentException("Quota piena per ruolo " + player.role);
+            }
+            int remaining = participantService.remainingCreditsById(participant.id, participant.totalCredits);
+            if (amount > remaining) throw new IllegalArgumentException("Importo supera il credito residuo");
+            int maxBid = rosterService.maxBid(participant.id, participant.totalCredits, purchaseSize);
+            if (amount > maxBid) {
+                throw new IllegalArgumentException("Importo massimo " + maxBid + ": conserva almeno 1 credito per ogni posto libero");
+            }
+        } else {
+            int remaining = participantService.remainingCreditsById(participant.id, participant.totalCredits);
+            int reserved = rosterService.reservedCreditsForCurrentOpenSlots(
+                    participantService.roleCounts(participant.id));
+            double maxCorrectedAmount = remaining + oldAmount - reserved;
+            if (amount > maxCorrectedAmount) {
+                throw new IllegalArgumentException("Importo massimo " + formatAmount(maxCorrectedAmount)
+                        + ": conserva almeno 1 credito per ogni posto libero");
+            }
+        }
+        if (player.role == Role.PORTIERE && amount < purchaseSize) {
+            throw new IllegalArgumentException("Importo insufficiente per il pacchetto portieri");
+        }
+
+        for (int i = 0; i < entries.size(); i++) {
+            RosterEntity entry = entries.get(i);
+            entry.participant = participant;
+            entry.amount = player.role == Role.PORTIERE
+                    ? (i == 0 ? amount - (entries.size() - 1) : 1D)
+                    : amount;
+            entry.player.assigned = true;
+        }
     }
 
     @Transactional

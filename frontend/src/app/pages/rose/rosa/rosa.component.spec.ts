@@ -44,4 +44,18 @@ describe('RosaComponent', () => {
     component.isAdmin = false;
     expect(component.displayedColumns).toEqual(['team', 'player', 'amount']);
   });
+
+  it('sorts roster players alphabetically by name', () => {
+    const rosterService = TestBed.inject(RosterService) as jasmine.SpyObj<RosterService>;
+    spyOn(rosterService, 'getMyRoster').and.returnValue(of([
+      { playerName: 'Zortea' },
+      { playerName: 'Buongiorno' },
+      { playerName: 'gabbia' }
+    ] as any));
+
+    component.selectedParticipantId = 1;
+    component.loadRoster();
+
+    expect(component.roster.map(player => player.playerName)).toEqual(['Buongiorno', 'gabbia', 'Zortea']);
+  });
 });

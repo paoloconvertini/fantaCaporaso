@@ -15,7 +15,8 @@ describe('MobileComponent', () => {
         openSlots: { DIFENSORE: 27 }
       })
     } as any;
-    return new MobileComponent(route, api);
+    const auth = { user: { participantId: 7 } } as any;
+    return new MobileComponent(route, api, auth);
   }
 
   it('allows a normal active round once the participant is known', () => {
@@ -24,6 +25,23 @@ describe('MobileComponent', () => {
     page.round = { closed: false, allowedUsers: [] };
 
     expect(page.isBidAllowed()).toBeTrue();
+  });
+
+  it('keeps an account without participant in read-only mode', () => {
+    const page = component();
+    page.pid = null;
+    page.round = { closed: false, allowedUsers: [] };
+
+    expect(page.isObserver).toBeTrue();
+    expect(page.isBidAllowed()).toBeFalse();
+  });
+
+  it('detects whether the participant has an active bid to withdraw', () => {
+    const page = component();
+    page.participant = { name: 'Mia squadra' };
+    page.activeUsers = ['Altra', 'Mia squadra'];
+
+    expect(page.hasActiveBid).toBeTrue();
   });
 
   it('normalizes participant ids received for a tie break', () => {

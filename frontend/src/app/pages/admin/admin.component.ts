@@ -122,6 +122,11 @@ export class AdminComponent implements OnInit, OnDestroy {
                 }
             }
 
+            if (data.type === 'BID_WITHDRAWN' && data.payload?.user) {
+                this.activeUsers = this.activeUsers.filter(user => user !== data.payload.user);
+                this.load();
+            }
+
             if (data.type === 'ROUND_UPDATED') {
                 this.load();
                 this.refreshRemaining();
@@ -387,21 +392,18 @@ export class AdminComponent implements OnInit, OnDestroy {
 
     openManualAssign() {
         const dialogRef = this.dialog.open(ManualAssignDialogComponent, {
-            width: '400px',
+            width: '560px',
             data: { player: this.player, team: this.team, role: this.prole, value: this.value }
         });
 
         dialogRef.afterClosed().subscribe(result => {
             if (result) {
                 this.loadingAssign = true;
-                this.adminApi.manualAssign({
-                    participantId: result.participantId,
-                    player: this.player,
-                    team: this.team,
-                    role: this.prole,
-                    value: this.value,
-                    amount: result.amount
-                }).subscribe(() => {
+                this.adminApi.updateAssignment(
+                    result.playerId,
+                    result.participantId,
+                    result.amount
+                ).subscribe(() => {
                     this.load();
                     this.refreshRemaining();
                     this.loadingAssign = false;

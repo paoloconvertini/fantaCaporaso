@@ -101,7 +101,9 @@ export class RosaComponent implements OnInit {
         this.loading = true;
         this.rosterService.getMyRoster(this.selectedParticipantId).subscribe({
             next: (res) => {
-                this.roster = [...res].sort((a, b) => (b.amount ?? 0) - (a.amount ?? 0));
+                this.roster = [...res].sort((a, b) =>
+                    (a.playerName ?? '').localeCompare(b.playerName ?? '', 'it', { sensitivity: 'base' })
+                );
                 this.selectedRole = 'PORTIERE';
                 this.filterByRole(this.selectedRole);
                 this.residui = res?.length ? res[0].residui ?? 0 : 0;

@@ -2,6 +2,7 @@ package com.fantasta.rest;
 
 import com.fantasta.dto.BidDto;
 import com.fantasta.dto.ManualAssignDto;
+import com.fantasta.dto.AdminAssignmentDto;
 import com.fantasta.dto.RoundDto;
 import com.fantasta.model.RoundState;
 import com.fantasta.service.AuctionService;
@@ -73,6 +74,24 @@ public class AuctionResource {
                 throw new IllegalArgumentException("Utente non associato a una squadra");
             }
             return service.bidDto(participantId, dto.amount);
+        } catch (IllegalArgumentException e) {
+            throw new WebApplicationException(e.getMessage(), 400);
+        } catch (IllegalStateException e) {
+            throw new WebApplicationException(e.getMessage(), 409);
+        }
+    }
+
+    @POST
+    @Path("/bids/withdraw")
+    @Transactional
+    @RolesAllowed("user")
+    public RoundDto withdrawBid() {
+        try {
+            Long participantId = identity.getAttribute("participant_id");
+            if (participantId == null) {
+                throw new IllegalArgumentException("Utente non associato a una squadra");
+            }
+            return service.withdrawBidDto(participantId);
         } catch (IllegalArgumentException e) {
             throw new WebApplicationException(e.getMessage(), 400);
         } catch (IllegalStateException e) {
@@ -173,6 +192,14 @@ public class AuctionResource {
         RoundDto roundDto = RoundDto.toDto(s);
         socket.broadcast("ROUND_CLOSED", roundDto);
         return roundDto;
+    }
+
+    @PUT
+    @Path("/admin/assignments/{playerId}")
+    @RolesAllowed("admin")
+    public Response adminAssign(@PathParam("playerId") Long playerId, AdminAssignmentDto dto) {
+        service.adminAssign(playerId, dto.participantId, dto.amount);
+        return Response.ok(Map.of("message", "Assegnazione aggiornata")).build();
     }
 
     @POST

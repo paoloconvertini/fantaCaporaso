@@ -9,7 +9,7 @@ module.exports = function (config) {
       require('karma-coverage'),
       require('@angular-devkit/build-angular/plugins/karma')
     ],
-    client: { clearContext: false },
+    client: { clearContext: true },
     jasmineHtmlReporter: { suppressAll: true },
     coverageReporter: {
       dir: require('path').join(__dirname, './coverage/fantasta-fe'),

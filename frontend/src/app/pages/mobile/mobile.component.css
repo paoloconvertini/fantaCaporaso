@@ -129,7 +129,8 @@
 
 /* Bid section */
 .bid-section {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: 8px;
     margin-top: 12px;
@@ -137,7 +138,21 @@
 .bid-section mat-form-field { flex: 1 1 auto; min-width: 0; }
 .bid-section input { color: #fff; caret-color: #8ff0c3; }
 .bid-section input::placeholder { color: rgba(255, 255, 255, .68); opacity: 1; }
+
+.observer-notice {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin: .75rem 0;
+    color: #dbeafe;
+}
 .bid-button { min-width: 104px; height: 52px; font-weight: 800; font-size: 1rem; }
+.withdraw-button {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
+    white-space: normal;
+}
 .bid-feedback { display: flex; align-items: center; gap: 7px; margin-top: 8px; padding: 8px 10px; border-radius: 8px; font-size: .86rem; background: rgba(255,255,255,.08); }
 .bid-feedback mat-icon { width: 19px; height: 19px; font-size: 19px; }
 .bid-feedback.success { color: #8ff0c3; background: rgba(95,223,170,.12); }

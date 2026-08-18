@@ -17,7 +17,6 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -26,12 +25,19 @@ import java.io.InputStream;
 import java.io.ByteArrayOutputStream;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.chrono.ChronoLocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class RosterService {
+
+    private static final String FANTAMASTER_ROSTERS_TEMPLATE =
+            "fantamaster/rose_lega_1590336.xlsx";
+    private static final DateTimeFormatter FANTAMASTER_TIMESTAMP =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @Inject
     SecurityIdentity identity;
@@ -71,12 +77,26 @@ public class RosterService {
     public int maxBid(Long participantId, int totalCredits, int purchaseSize) {
         int remainingCredits = participantService.remainingCreditsById(participantId, totalCredits);
         Map<Role, Integer> counts = participantService.roleCounts(participantId);
+        int reservedCredits = reservedCreditsForBid(counts, purchaseSize);
+        return Math.max(0, remainingCredits - reservedCredits);
+    }
+
+    int reservedCreditsForBid(Map<Role, Integer> counts, int purchaseSize) {
+        return Math.max(0, reservedCreditsForCurrentOpenSlots(counts) - Math.max(1, purchaseSize));
+    }
+
+    int reservedCreditsForCurrentOpenSlots(Map<Role, Integer> counts) {
         int remainingSlots = 0;
         for (Role role : Role.values()) {
-            remainingSlots += Math.max(0, max(role) - counts.getOrDefault(role, 0));
+            int count = counts.getOrDefault(role, 0);
+            // La porta viene acquistata come pacchetto: se almeno un portiere e'
+            // presente, eventuali record mancanti non sono acquisti da finanziare.
+            if (role == Role.PORTIERE && count > 0) {
+                count = max(role);
+            }
+            remainingSlots += Math.max(0, max(role) - count);
         }
-        int reservedCredits = Math.max(0, remainingSlots - Math.max(1, purchaseSize));
-        return Math.max(0, remainingCredits - reservedCredits);
+        return remainingSlots;
     }
 
     /** Posti rosa ancora vuoti, sommati su tutti i partecipanti e divisi per ruolo. */
@@ -165,30 +185,53 @@ public class RosterService {
 
     @Transactional
     public byte[] exportFantaMaster() {
-        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+        InputStream template = Thread.currentThread().getContextClassLoader()
+                .getResourceAsStream(FANTAMASTER_ROSTERS_TEMPLATE);
+        if (template == null) {
+            throw new IllegalStateException("Template rose FantaMaster non trovato");
+        }
+
+        try (template; Workbook workbook = WorkbookFactory.create(template); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             List<ParticipantEntity> participants = ParticipantEntity.list("order by name");
-            for (ParticipantEntity participant : participants) {
-                Sheet sheet = workbook.createSheet(safeSheetName(participant.name, workbook));
-                Row title = sheet.createRow(0);
-                title.createCell(0).setCellValue(participant.name);
-                Row header = sheet.createRow(1);
-                header.createCell(0).setCellValue("Nome");
-                header.createCell(1).setCellValue("Squadra");
-                header.createCell(2).setCellValue("Ruolo");
-                header.createCell(3).setCellValue("Costo");
+            Map<String, ParticipantEntity> participantsByName = participants.stream()
+                    .collect(Collectors.toMap(p -> normalizeTeamName(p.name), p -> p));
+            Set<String> templateTeams = new LinkedHashSet<>();
+
+            for (Sheet sheet : workbook) {
+                String teamName = cellText(sheet.getRow(0), 0);
+                String normalizedTeamName = normalizeTeamName(teamName);
+                templateTeams.add(normalizedTeamName);
+                ParticipantEntity participant = participantsByName.get(normalizedTeamName);
+                if (participant == null) {
+                    throw new IllegalStateException("Il template FantaMaster contiene una squadra non presente: " + teamName);
+                }
+
+                int footerStart = findFantaMasterFooter(sheet);
                 List<RosterEntity> roster = RosterEntity.list("participant = ?1 order by player.role, player.name", participant);
+                if (!roster.isEmpty()) {
+                    sheet.shiftRows(footerStart, sheet.getLastRowNum(), roster.size(), true, false);
+                }
                 int rowIndex = 2;
                 for (RosterEntity entry : roster) {
                     Row row = sheet.createRow(rowIndex++);
                     row.createCell(0).setCellValue(entry.player.name);
                     row.createCell(1).setCellValue(entry.player.team);
-                    row.createCell(2).setCellValue(entry.player.role.name());
+                    row.createCell(2).setCellValue(fantaMasterRole(entry.player.role));
                     row.createCell(3).setCellValue(entry.amount == null ? 0 : entry.amount);
                 }
-                sheet.setColumnWidth(0, 28 * 256);
-                sheet.setColumnWidth(1, 18 * 256);
-                sheet.setColumnWidth(2, 18 * 256);
-                sheet.setColumnWidth(3, 12 * 256);
+
+                Row updatedAt = sheet.getRow(footerStart + roster.size());
+                updatedAt.getCell(0).setCellValue("Ultimo aggiornamento: "
+                        + LocalDateTime.now(ZoneId.of("Europe/Rome")).format(FANTAMASTER_TIMESTAMP));
+            }
+
+            List<String> missingTeams = participants.stream()
+                    .filter(p -> !templateTeams.contains(normalizeTeamName(p.name)))
+                    .map(p -> p.name)
+                    .toList();
+            if (!missingTeams.isEmpty()) {
+                throw new IllegalStateException("Squadre senza foglio nel template FantaMaster: "
+                        + String.join(", ", missingTeams));
             }
             workbook.write(out);
             return out.toByteArray();
@@ -197,16 +240,26 @@ public class RosterService {
         }
     }
 
-    private String safeSheetName(String name, Workbook workbook) {
-        String base = org.apache.poi.ss.util.WorkbookUtil.createSafeSheetName(name);
-        base = base.substring(0, Math.min(31, base.length()));
-        String candidate = base;
-        int suffix = 2;
-        while (workbook.getSheet(candidate) != null) {
-            String end = " " + suffix++;
-            candidate = base.substring(0, Math.min(base.length(), 31 - end.length())) + end;
+    private int findFantaMasterFooter(Sheet sheet) {
+        for (int rowIndex = 2; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
+            if (cellText(sheet.getRow(rowIndex), 0).startsWith("Ultimo aggiornamento:")) {
+                return rowIndex;
+            }
         }
-        return candidate;
+        throw new IllegalStateException("Footer FantaMaster non trovato nel foglio " + sheet.getSheetName());
+    }
+
+    private String normalizeTeamName(String name) {
+        return name == null ? "" : name.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private String fantaMasterRole(Role role) {
+        return switch (role) {
+            case PORTIERE -> "P";
+            case DIFENSORE -> "D";
+            case CENTROCAMPISTA -> "C";
+            case ATTACCANTE -> "A";
+        };
     }
 
     private String cellText(Row row, int index) {

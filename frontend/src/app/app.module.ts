@@ -42,6 +42,7 @@ import {RosaComponent} from "./pages/rose/rosa/rosa.component";
 import { MercatoComponent } from './pages/mercato/mercato.component';
 import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatSnackBarModule} from "@angular/material/snack-bar";
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ConfirmDialogComponent } from './dialogs/confirm/confirm-dialog.component';
 import { HomeComponent } from './pages/home/home.component';
 import { AdminUsersComponent } from './pages/admin-users/admin-users.component';
@@ -98,6 +99,7 @@ export function initializeAuth(auth: AuthService) {
         MatSlideToggleModule,
         ReactiveFormsModule,
         MatSnackBarModule,
+        MatCheckboxModule,
     ],
     providers: [
         { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },

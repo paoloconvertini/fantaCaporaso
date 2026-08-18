@@ -88,7 +88,15 @@ export class AdminApiService {
     return this.http.post(`${this.base}/api/assign`, payload);
   }
 
-  createUser(payload: { username: string; password: string; participantId: number; role?: string }): Observable<any> {
+  searchPlayers(query: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.base}/api/admin/players/search`, { params: { q: query } });
+  }
+
+  updateAssignment(playerId: number, participantId: number, amount: number): Observable<any> {
+    return this.http.put(`${this.base}/api/admin/assignments/${playerId}`, { participantId, amount });
+  }
+
+  createUser(payload: { username: string; password: string; participantId?: number | null; participantName?: string | null; role?: string }): Observable<any> {
     return this.http.post(`${this.base}/api/admin/users`, payload);
   }
 

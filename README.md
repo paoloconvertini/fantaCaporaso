@@ -86,7 +86,7 @@ curl --fail http://localhost:8088/api/auth/me
 
 La seconda verifica deve rispondere `401`: dimostra che proxy e backend sono raggiungibili e l'endpoint e' protetto.
 
-Lo stack espone per default il solo reverse proxy su `127.0.0.1:8088`. Per una prova diretta dalla LAN impostare temporaneamente `PUBLIC_BIND_ADDRESS=0.0.0.0`.
+Lo stack espone per default il reverse proxy su `127.0.0.1:8088` e PostgreSQL su `127.0.0.1:5433` per gli strumenti di sviluppo locali. Per una prova diretta dalla LAN impostare temporaneamente `PUBLIC_BIND_ADDRESS=0.0.0.0`; PostgreSQL resta comunque limitato al Mac.
 
 ## Accesso pubblico con Cloudflare
 
@@ -102,7 +102,7 @@ Il link `trycloudflare.com` rimane invariato finché il container `cloudflared` 
 
 Il flusso non usa `CLOUDFLARE_TUNNEL_TOKEN`: si tratta deliberatamente di un Quick Tunnel temporaneo per la singola sessione d'asta. Il tunnel forza HTTP/2 su TCP per evitare le disconnessioni QUIC/UDP osservate sulla rete locale. Per l'avvio manuale usare `./scripts/start-auction.sh`; usare `./scripts/start-auction.sh --rebuild` soltanto dopo modifiche al codice; per il controllo usare `./scripts/status-auction.sh`.
 
-Il browser deve conoscere soltanto l'URL HTTPS pubblico. PostgreSQL e backend non pubblicano porte nello stack completo.
+Il browser deve conoscere soltanto l'URL HTTPS pubblico. Il backend non pubblica porte nello stack completo; PostgreSQL pubblica soltanto `127.0.0.1:5433`, non raggiungibile dalla LAN o da Internet. La configurazione IntelliJ `fantasta@localhost` usa `jdbc:postgresql://localhost:5433/fantasta` e continua a funzionare dopo la ricreazione del container perché non dipende dal suo IP interno. Utente e password provengono da `backend/.env`; salvare la password nello storage sicuro di IntelliJ.
 
 ## Backup e ripristino
 
@@ -130,7 +130,7 @@ Prima di cambiare stagione creare sempre un backup. Dalla pagina admin `Importa 
 
 La gestione utenti mostra username, squadra associata e stato dell'account, oltre alle squadre ancora prive di accesso. Le pagine delle rose riportano lo username sotto il nome della squadra per rendere immediata la verifica delle associazioni.
 
-Il pulsante `Esporta rose FantaMaster` nella dashboard produce un file `.xlsx` con un foglio per partecipante e le colonne `Nome`, `Squadra`, `Ruolo`, `Costo`, reimportabile dallo stesso flusso.
+Il pulsante `Esporta rose FantaMaster` nella dashboard produce un file `.xlsx` basato sul template ufficiale della lega 1590336. L'export conserva nomi e identificativi dei fogli, celle unite, stili, footer e collegamento FantaMaster, popolando le colonne `Nome`, `Squadra`, `Ruolo`, `Costo`. Se le squadre configurate non corrispondono al template, l'export viene bloccato per evitare un file parziale non importabile.
 
 Il primo passaggio esegue soltanto l'anteprima: valida intestazioni, campi, ruoli, quotazioni e nomi duplicati senza modificare PostgreSQL. La successiva conferma sostituisce completamente il catalogo e azzera rose, storico rose, estrazioni, skip e stato dell'asta. Se la validazione fallisce non viene cancellato nulla.
 
@@ -140,7 +140,7 @@ Anche il round corrente e la sua scadenza sono persistiti: dopo un riavvio il ba
 
 ## Partecipanti e primo accesso
 
-L'admin usa `Gestione utenti` (`/admin/users`) per collegare un account a una squadra esistente oppure creare contestualmente un nuovo partecipante indicando nome squadra e crediti iniziali.
+L'admin usa `Gestione utenti` (`/admin/users`) per collegare un account a una squadra esistente, creare contestualmente un nuovo partecipante indicando nome squadra e crediti iniziali, oppure creare un osservatore senza squadra. L'osservatore può seguire l'asta corrente e consultare svincolati, rose e riepiloghi, ma non può offrire, ritirare offerte o eseguire operazioni legate a una squadra.
 
 La password consegnata dall'admin è temporanea e deve avere almeno 4 caratteri. Al primo login l'account riceve una sessione limitata e deve scegliere una password diversa prima di poter accedere ad asta, rose e calciatori. I crediti iniziali sono configurabili esclusivamente dall'admin.
 
@@ -148,11 +148,13 @@ La password consegnata dall'admin è temporanea e deve avere almeno 4 caratteri.
 
 La dashboard guida l'admin nella sequenza operativa: configurazione partecipanti, scelta del ruolo, estrazione, avvio delle offerte e chiusura. Il round termina alla scadenza del timer oppure quando l'admin usa la chiusura manuale; in entrambi i casi vince l'offerta più alta. In caso di parità il round successivo è riservato ai soli partecipanti a pari merito e parte da un credito oltre l'offerta precedente. L'assegnazione manuale rimane sempre disponibile.
 
-I partecipanti raggiungono sempre il round attivo dalla voce `Asta corrente` del menu. La pagina recupera lo stato persistito anche dopo una navigazione o una riconnessione WebSocket, senza richiedere un aggiornamento manuale. Durante il countdown admin e partecipanti vedono i nomi di chi ha puntato, deduplicati, ma mai gli importi. Alla chiusura, tutti vedono contemporaneamente la graduatoria completa, il vincitore e l'importo. Durante l'asta la rosa è consultabile, ma lo svincolo dei calciatori è riservato all'admin.
+Partecipanti e osservatori raggiungono sempre il round attivo dalla voce `Asta corrente` del menu. La pagina recupera lo stato persistito anche dopo una navigazione o una riconnessione WebSocket, senza richiedere un aggiornamento manuale. Durante il countdown tutti vedono i nomi di chi ha puntato, deduplicati, ma mai gli importi. Alla chiusura, tutti vedono contemporaneamente la graduatoria completa, il vincitore e l'importo. Un partecipante può ritirare la propria offerta in qualsiasi momento prima della chiusura, anche quando è la più alta; il ritiro viene notificato in tempo reale. Le offerte a zero restano non valide. Durante l'asta la rosa è consultabile, ma lo svincolo dei calciatori è riservato all'admin.
 
-Il riepilogo mostra sempre i conteggi P/D/C/A, i crediti residui e il massimo spendibile per un singolo calciatore. Il massimo conserva obbligatoriamente almeno 1 credito per ogni altro posto ancora libero; per la porta il limite considera il numero effettivo di portieri acquistati insieme.
+Il riepilogo mostra sempre i conteggi P/D/C/A, i crediti residui e il massimo spendibile per un singolo calciatore. Il massimo conserva obbligatoriamente almeno 1 credito per ogni altro posto ancora libero. La porta viene acquistata come pacchetto: quando una squadra possiede almeno un portiere, eventuali record mancanti nel pacchetto non riducono il massimo spendibile.
 
-La dashboard admin mostra, per il ruolo selezionato, sia le chiamate ancora disponibili sia i posti rosa complessivamente vuoti su tutte le squadre. Per i portieri i posti sono conteggiati singolarmente, anche se una porta può riempirne più di uno con una sola asta.
+La dashboard admin mostra, per il ruolo selezionato, sia le chiamate ancora disponibili sia i posti rosa complessivamente vuoti su tutte le squadre. Per i portieri i posti sono conteggiati singolarmente, anche se una porta può riempirne più di uno con una sola asta. Il comando di assegnazione manuale apre una ricerca per nome del calciatore o squadra ed e' indipendente dal turno corrente: un giocatore libero può essere assegnato direttamente indicando partecipante e prezzo. Se il giocatore e' già assegnato, la stessa finestra mostra proprietario e costo correnti e consente di correggerli; il vecchio proprietario viene rimborsato automaticamente e quote ruolo, crediti e massimo spendibile vengono nuovamente validati.
+
+Nelle viste delle rose i reparti restano separati nell'ordine P/D/C/A e i calciatori sono ordinati alfabeticamente all'interno di ogni reparto, sia su desktop sia su mobile.
 
 Durante un round la pagina mobile riporta gli stessi due valori in forma compatta e non interattiva: icona Material `casino` per le chiamate disponibili e `group_add` per i posti rosa vuoti.
 

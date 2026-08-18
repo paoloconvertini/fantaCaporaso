@@ -20,7 +20,12 @@ export class MobileRostersComponent implements OnInit {
     loadRosters(): void {
         this.api.getRosters(this.selectedParticipant || undefined).subscribe({
             next: data => {
-                this.rosters = data;
+                const roleOrder = ['PORTIERE', 'DIFENSORE', 'CENTROCAMPISTA', 'ATTACCANTE'];
+                this.rosters = [...data].sort((a: any, b: any) =>
+                    (a.participant ?? '').localeCompare(b.participant ?? '', 'it', { sensitivity: 'base' })
+                    || roleOrder.indexOf((a.role ?? '').toUpperCase()) - roleOrder.indexOf((b.role ?? '').toUpperCase())
+                    || (a.playerName ?? '').localeCompare(b.playerName ?? '', 'it', { sensitivity: 'base' })
+                );
                 this.participants = Array.from<string>(new Set(data.map((r: any) => r.participant))).sort();
             }
         });

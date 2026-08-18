@@ -5,6 +5,7 @@ frontend/dist/
 /backend/target
 *.iml
 *.xlsx
+!backend/src/main/resources/fantamaster/rose_lega_1590336.xlsx
 /backend/.env
 /backend/.env.prod
 /backups/

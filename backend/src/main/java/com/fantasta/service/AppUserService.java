@@ -127,10 +127,7 @@ public class AppUserService {
         if (request.password.length() < 4) {
             throw new BadRequestException("La password deve contenere almeno 4 caratteri");
         }
-        String role = normalizeRole(request.role);
-        if (!"admin".equals(role) && request.participantId == null && isBlank(request.participantName)) {
-            throw new BadRequestException("Nome squadra obbligatorio");
-        }
+        normalizeRole(request.role);
     }
 
     private String normalizeUsername(String username) {

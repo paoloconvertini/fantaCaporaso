@@ -42,6 +42,7 @@ export class AdminUsersComponent implements OnInit {
       username: ['', [Validators.required, Validators.minLength(3)]],
       password: ['fanta2026', [Validators.required, Validators.minLength(4)]],
       permanentPassword: [true],
+      observer: [false],
       participantId: [null],
       participantName: [''],
       totalCredits: [500, [Validators.required, Validators.min(1)]]
@@ -52,18 +53,22 @@ export class AdminUsersComponent implements OnInit {
   }
 
   createUser(): void {
-    if (this.form.invalid || (!this.form.value.participantId && !this.form.value.participantName?.trim())) {
+    const observer = !!this.form.value.observer;
+    if (this.form.invalid || (!observer && !this.form.value.participantId && !this.form.value.participantName?.trim())) {
       this.form.markAllAsTouched();
       this.snackBar.open('Compila tutti i campi richiesti', 'Chiudi', { duration: 3000 });
       return;
     }
 
     this.saving = true;
-    this.adminApi.createUser(this.form.value).subscribe({
+    const payload = observer
+      ? { ...this.form.value, participantId: null, participantName: null, totalCredits: null }
+      : this.form.value;
+    this.adminApi.createUser(payload).subscribe({
       next: () => {
         this.snackBar.open('Utente creato', 'Chiudi', { duration: 2500 });
         this.form.reset();
-        this.form.patchValue({ totalCredits: 500, password: 'fanta2026', permanentPassword: true });
+        this.form.patchValue({ totalCredits: 500, password: 'fanta2026', permanentPassword: true, observer: false });
         this.loadParticipants();
         this.loadUsers();
         this.saving = false;

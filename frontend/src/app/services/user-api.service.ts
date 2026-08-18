@@ -85,6 +85,10 @@ export class UserApiService {
     return this.http.post(`${this.base}/api/bids`, { participantId, amount });
   }
 
+  withdrawBid(): Observable<any> {
+    return this.http.post(`${this.base}/api/bids/withdraw`, {});
+  }
+
   // 🔹 WEBSOCKET
   connectWebSocket(): WebSocket {
     if (this.socket && this.socket.readyState !== WebSocket.CLOSED) {
@@ -110,6 +114,11 @@ export class UserApiService {
                   if (!users.includes(payload.user)) {
                       this.activeUsers$.next([...users, payload.user]);
                   }
+              }
+
+              if (t === 'BID_WITHDRAWN' && payload?.user) {
+                  this.activeUsers$.next(this.activeUsers$.value.filter(user => user !== payload.user));
+                  this.refreshRound();
               }
 
               if (t === 'ROLE_CHANGED' && payload?.role) {

@@ -1,23 +1,48 @@
-<h2 mat-dialog-title>Assegna manualmente</h2>
+<h2 mat-dialog-title>Gestisci assegnazione</h2>
 <mat-dialog-content>
-    <p>Giocatore: <b>{{data.player}}</b> ({{data.role}} - {{data.team}})</p>
-    <p>Valore di mercato: {{data.value}}</p>
-    <p *ngIf="data.role === 'PORTIERE'"><b>Porta completa:</b> offerta minima 3 crediti.</p>
-
     <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Partecipante</mat-label>
-        <mat-select [(value)]="selectedParticipantId">
-            <mat-option *ngFor="let p of participants" [value]="p.id">{{ p.name }}</mat-option>
+        <mat-label>Cerca per giocatore o squadra</mat-label>
+        <input matInput [(ngModel)]="query" (ngModelChange)="search($event)" autocomplete="off"/>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width" *ngIf="players.length">
+        <mat-label>Calciatore</mat-label>
+        <mat-select [value]="selectedPlayer?.id" (selectionChange)="selectPlayer($event.value)">
+            <mat-option *ngFor="let player of players" [value]="player.id">
+                {{ player.name }} — {{ player.team }} ({{ player.role }})
+                <span *ngIf="player.assigned"> · {{ player.ownerParticipantName }} / {{ player.amount }}</span>
+            </mat-option>
         </mat-select>
     </mat-form-field>
 
-    <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Crediti</mat-label>
-        <input matInput type="number" [(ngModel)]="amount" [min]="minimumAmount"/>
-    </mat-form-field>
+    <p *ngIf="searching">Ricerca in corso...</p>
+    <p *ngIf="query.length >= 2 && !searching && !players.length">Nessun calciatore trovato.</p>
+
+    <ng-container *ngIf="selectedPlayer">
+        <p>Giocatore: <b>{{selectedPlayer.name}}</b> ({{selectedPlayer.role}} - {{selectedPlayer.team}})</p>
+        <p>Valore di mercato: {{selectedPlayer.valore}}</p>
+        <p *ngIf="selectedPlayer.assigned" class="current-owner">
+            Assegnazione attuale: <b>{{selectedPlayer.ownerParticipantName}}</b>, {{selectedPlayer.amount}} crediti.
+        </p>
+        <p *ngIf="selectedPlayer.role === 'PORTIERE'"><b>Porta completa:</b> offerta minima 3 crediti.</p>
+
+        <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Partecipante</mat-label>
+            <mat-select [(value)]="selectedParticipantId">
+                <mat-option *ngFor="let p of participants" [value]="p.id">{{ p.name }}</mat-option>
+            </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Crediti</mat-label>
+            <input matInput type="number" [(ngModel)]="amount" [min]="minimumAmount"/>
+        </mat-form-field>
+    </ng-container>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
     <button mat-button (click)="cancel()">Annulla</button>
-    <button mat-raised-button color="primary" (click)="save()">Salva</button>
+    <button mat-raised-button color="primary" [disabled]="!selectedPlayer || !selectedParticipantId || amount < minimumAmount" (click)="save()">
+        {{ selectedPlayer?.assigned ? 'Correggi assegnazione' : 'Assegna' }}
+    </button>
 </mat-dialog-actions>

@@ -26,6 +26,78 @@ class AuctionServiceTest {
     @Inject
     RosterService rosterService;
 
+    @Inject
+    PlayerQueryService playerQueryService;
+
+    @Inject
+    ParticipantService participantService;
+
+    @Test
+    @TestTransaction
+    void adminCanAssignAFreePlayerOutsideTheCurrentRound() {
+        cleanAuctionData();
+        ParticipantEntity participant = participant("Assegnazione fuori turno", 500);
+        PlayerEntity player = player("Ricerca Libera", "Parma", Role.ATTACCANTE, 12);
+
+        auctionService.adminAssign(player.id, participant.id, 7D);
+
+        RosterEntity roster = RosterEntity.find("player", player).firstResult();
+        assertNotNull(roster);
+        assertEquals(participant.id, roster.participant.id);
+        assertEquals(7D, roster.amount);
+        assertTrue(player.assigned);
+        assertNull(auctionService.get());
+    }
+
+    @Test
+    @TestTransaction
+    void adminCorrectionTransfersThePlayerAndRefundsThePreviousOwner() {
+        cleanAuctionData();
+        ParticipantEntity previous = participant("Proprietario precedente", 500);
+        ParticipantEntity corrected = participant("Vincitore corretto", 500);
+        PlayerEntity player = player("Correzione Vincitore", "Roma", Role.DIFENSORE, 8);
+        auctionService.adminAssign(player.id, previous.id, 18D);
+
+        auctionService.adminAssign(player.id, corrected.id, 35D);
+
+        RosterEntity roster = RosterEntity.find("player", player).firstResult();
+        assertEquals(corrected.id, roster.participant.id);
+        assertEquals(35D, roster.amount);
+        assertEquals(500, participantService.remainingCreditsById(previous.id, previous.totalCredits));
+        assertEquals(465, participantService.remainingCreditsById(corrected.id, corrected.totalCredits));
+    }
+
+    @Test
+    @TestTransaction
+    void adminCanCorrectOnlyThePriceAndSearchAssignedPlayers() {
+        cleanAuctionData();
+        ParticipantEntity participant = participant("Prezzo corretto", 500);
+        PlayerEntity player = player("Nome Ricercabile", "Como", Role.CENTROCAMPISTA, 9);
+        auctionService.adminAssign(player.id, participant.id, 10D);
+
+        auctionService.adminAssign(player.id, participant.id, 22D);
+
+        RosterEntity roster = RosterEntity.find("player", player).firstResult();
+        assertEquals(22D, roster.amount);
+        var results = playerQueryService.searchAdminPlayers("ricercabile");
+        assertEquals(1, results.size());
+        assertTrue(results.get(0).assigned);
+        assertEquals(participant.id, results.get(0).ownerParticipantId);
+        assertEquals(22D, results.get(0).amount);
+    }
+
+    @Test
+    @TestTransaction
+    void adminCorrectionStillReservesCreditsForOpenRosterSlots() {
+        cleanAuctionData();
+        ParticipantEntity participant = participant("Budget correzione", 30);
+        PlayerEntity player = player("Prezzo protetto", "Como", Role.CENTROCAMPISTA, 9);
+        auctionService.adminAssign(player.id, participant.id, 1D);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> auctionService.adminAssign(player.id, participant.id, 7D));
+    }
+
     @Test
     @TestTransaction
     void tieBreakIsRestrictedToTiedParticipantsAndStartsAboveThePreviousBid() {
@@ -102,6 +174,36 @@ class AuctionServiceTest {
         assertEquals(participant.id, auctionService.close().winner.participantId);
         RosterEntity roster = RosterEntity.find("player.name", "Centrocampista").firstResult();
         assertEquals(1D, roster.amount);
+    }
+
+    @Test
+    @TestTransaction
+    void participantCanWithdrawTheCurrentBidBeforeClose() {
+        cleanAuctionData();
+        ParticipantEntity participant = participant("Ritirata", 500);
+        player("Offerta ritirata", "Roma", Role.DIFENSORE, 10);
+
+        auctionService.start("Offerta ritirata", "Roma", "DIFENSORE", 30, "NONE", 10, null);
+        auctionService.bid(participant.id, 20D);
+        auctionService.withdrawBidDto(participant.id);
+        RoundState updated = auctionService.get();
+
+        assertNotNull(updated);
+        assertTrue(updated.bids.isEmpty());
+        assertNull(auctionService.close().winner);
+    }
+
+    @Test
+    @TestTransaction
+    void withdrawalRequiresAnExistingBidInAnOpenRound() {
+        cleanAuctionData();
+        ParticipantEntity participant = participant("Senza offerta", 500);
+        player("Nessuna offerta", "Roma", Role.DIFENSORE, 10);
+
+        auctionService.start("Nessuna offerta", "Roma", "DIFENSORE", 30, "NONE", 10, null);
+        assertThrows(IllegalArgumentException.class, () -> auctionService.withdrawBidDto(participant.id));
+        auctionService.close();
+        assertThrows(IllegalStateException.class, () -> auctionService.withdrawBidDto(participant.id));
     }
 
     @Test

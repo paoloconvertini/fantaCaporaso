@@ -12,6 +12,7 @@ export class AppShellComponent implements OnInit {
 
   summaryOpen = false;
   isAdmin = false;
+  isUser = false;
   isParticipant = false;
   menuOpened = window.innerWidth >= 1024;
   menuMode: 'side' | 'over' = this.menuOpened ? 'side' : 'over';
@@ -21,7 +22,8 @@ export class AppShellComponent implements OnInit {
   async ngOnInit() {
     const roles = this.auth.roles;
     this.isAdmin = roles.includes('admin');
-    this.isParticipant = roles.includes('user');
+    this.isUser = roles.includes('user');
+    this.isParticipant = this.isUser && this.auth.user?.participantId != null;
   }
 
   toggleMenu() {

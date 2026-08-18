@@ -1,6 +1,7 @@
 package com.fantasta.service;
 
 import com.fantasta.model.ParticipantEntity;
+import com.fantasta.model.AppUserEntity;
 import com.fantasta.model.PlayerEntity;
 import com.fantasta.model.Role;
 import com.fantasta.model.RosterEntity;
@@ -8,6 +9,7 @@ import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
@@ -44,10 +46,10 @@ class RosterFantaMasterServiceTest {
     @Test
     @TestTransaction
     void exportsAndReimportsTheFantaMasterRosterFormat() throws Exception {
-        ParticipantEntity participant = new ParticipantEntity();
-        participant.name = "Squadra round trip";
-        participant.totalCredits = 500;
-        participant.persist();
+        removeAuthenticationTestParticipants();
+        createLeagueParticipants();
+        ParticipantEntity participant = ParticipantEntity.find("name", "Corto Muso").firstResult();
+        assertNotNull(participant);
         PlayerEntity player = new PlayerEntity();
         player.name = "Giocatore round trip";
         player.team = "Roma";
@@ -64,11 +66,23 @@ class RosterFantaMasterServiceTest {
 
         byte[] exported = service.exportFantaMaster();
         try (var workbook = WorkbookFactory.create(new ByteArrayInputStream(exported))) {
-            var sheet = workbook.getSheet("Squadra round trip");
+            assertEquals(16, workbook.getNumberOfSheets());
+            var sheet = workbook.getSheet("Corto Muso 7300515");
             assertNotNull(sheet);
+            assertEquals("Corto Muso", sheet.getRow(0).getCell(0).getStringCellValue());
             assertEquals("Nome", sheet.getRow(1).getCell(0).getStringCellValue());
-            assertEquals("Giocatore round trip", sheet.getRow(2).getCell(0).getStringCellValue());
-            assertEquals(17D, sheet.getRow(2).getCell(3).getNumericCellValue());
+            assertTrue(sheet.getMergedRegions().contains(new CellRangeAddress(0, 0, 0, 3)));
+
+            int playerRow = findRow(sheet, "Giocatore round trip");
+            assertTrue(playerRow >= 2);
+            assertEquals("D", sheet.getRow(playerRow).getCell(2).getStringCellValue());
+            assertEquals(17D, sheet.getRow(playerRow).getCell(3).getNumericCellValue());
+
+            int updatedAtRow = findRowStartingWith(sheet, "Ultimo aggiornamento:");
+            assertTrue(updatedAtRow > playerRow);
+            assertEquals("Scarica FantaMaster", sheet.getRow(updatedAtRow + 1).getCell(0).getStringCellValue());
+            assertEquals("https://www.fantamaster.it",
+                    sheet.getRow(updatedAtRow + 1).getCell(0).getHyperlink().getAddress());
         }
 
         RosterEntity.delete("participant", participant);
@@ -78,6 +92,46 @@ class RosterFantaMasterServiceTest {
         RosterEntity restored = RosterEntity.find("participant = ?1 and player = ?2", participant, player).firstResult();
         assertNotNull(restored);
         assertEquals(17D, restored.amount);
+    }
+
+    private void createLeagueParticipants() {
+        for (String name : new String[]{
+                "34 e 1 Gazzosa", "ASTON BIRRA", "Atletico ma non troppo", "Corto Muso",
+                "DanPao Salisburgo FC", "Em Fallet", "GenSim e 2 Monelli", "HAVANA AMIGOS",
+                "KECAVOLI", "MessiMale", "Ruverpool", "S.S. 30Lance", "SOLO LEVELING",
+                "VIKING 84", "YOUNG BOYS UNITED", "johnsons oil"
+        }) {
+            ParticipantEntity participant = new ParticipantEntity();
+            participant.name = name;
+            participant.totalCredits = 500;
+            participant.persist();
+        }
+    }
+
+    private void removeAuthenticationTestParticipants() {
+        for (String name : new String[]{"Nuova Squadra", "Permanent Team"}) {
+            ParticipantEntity participant = ParticipantEntity.find("name", name).firstResult();
+            if (participant == null) continue;
+            AppUserEntity.update("participant = null where participant = ?1", participant);
+            RosterEntity.delete("participant", participant);
+            participant.delete();
+        }
+    }
+
+    private int findRow(org.apache.poi.ss.usermodel.Sheet sheet, String value) {
+        for (int i = 0; i <= sheet.getLastRowNum(); i++) {
+            if (sheet.getRow(i) != null && sheet.getRow(i).getCell(0) != null
+                    && value.equals(sheet.getRow(i).getCell(0).getStringCellValue())) return i;
+        }
+        return -1;
+    }
+
+    private int findRowStartingWith(org.apache.poi.ss.usermodel.Sheet sheet, String value) {
+        for (int i = 0; i <= sheet.getLastRowNum(); i++) {
+            if (sheet.getRow(i) != null && sheet.getRow(i).getCell(0) != null
+                    && sheet.getRow(i).getCell(0).getStringCellValue().startsWith(value)) return i;
+        }
+        return -1;
     }
 
     private byte[] workbook(String participant, String player, String team, String role, double cost) throws Exception {

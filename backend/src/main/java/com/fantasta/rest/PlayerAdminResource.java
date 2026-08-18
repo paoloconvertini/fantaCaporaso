@@ -1,7 +1,9 @@
 package com.fantasta.rest;
 
 import com.fantasta.dto.PlayerImportResult;
+import com.fantasta.dto.AdminPlayerDto;
 import com.fantasta.service.DbService;
+import com.fantasta.service.PlayerQueryService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -11,6 +13,7 @@ import jakarta.ws.rs.core.Response;
 import org.jboss.resteasy.reactive.RestForm;
 
 import java.io.InputStream;
+import java.util.List;
 
 @Path("/api/admin/players")
 @Produces(MediaType.APPLICATION_JSON)
@@ -18,6 +21,16 @@ public class PlayerAdminResource {
 
     @Inject
     DbService dbService;
+
+    @Inject
+    PlayerQueryService playerQueryService;
+
+    @GET
+    @Path("/search")
+    @RolesAllowed("admin")
+    public List<AdminPlayerDto> search(@QueryParam("q") String query) {
+        return playerQueryService.searchAdminPlayers(query);
+    }
 
     /**
      * Upload Excel dal browser → aggiorna il catalogo giocatori
