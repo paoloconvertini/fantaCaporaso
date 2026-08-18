@@ -24,10 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ByteArrayOutputStream;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.chrono.ChronoLocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -36,9 +33,6 @@ public class RosterService {
 
     private static final String FANTAMASTER_ROSTERS_TEMPLATE =
             "fantamaster/rose_lega_1590336.xlsx";
-    private static final DateTimeFormatter FANTAMASTER_TIMESTAMP =
-            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-
     @Inject
     SecurityIdentity identity;
 
@@ -128,7 +122,7 @@ public class RosterService {
             Set<Long> resetParticipants = new HashSet<>();
 
             for (Sheet sheet : workbook) {
-                String participantName = cellText(sheet.getRow(0), 0);
+                String participantName = templateTeamName(cellText(sheet.getRow(0), 0));
                 if (participantName.isBlank()) {
                     errors.add("Foglio senza nome squadra: " + sheet.getSheetName());
                     continue;
@@ -198,7 +192,7 @@ public class RosterService {
             Set<String> templateTeams = new LinkedHashSet<>();
 
             for (Sheet sheet : workbook) {
-                String teamName = cellText(sheet.getRow(0), 0);
+                String teamName = templateTeamName(cellText(sheet.getRow(0), 0));
                 String normalizedTeamName = normalizeTeamName(teamName);
                 templateTeams.add(normalizedTeamName);
                 ParticipantEntity participant = participantsByName.get(normalizedTeamName);
@@ -206,11 +200,7 @@ public class RosterService {
                     throw new IllegalStateException("Il template FantaMaster contiene una squadra non presente: " + teamName);
                 }
 
-                int footerStart = findFantaMasterFooter(sheet);
                 List<RosterEntity> roster = RosterEntity.list("participant = ?1 order by player.role, player.name", participant);
-                if (!roster.isEmpty()) {
-                    sheet.shiftRows(footerStart, sheet.getLastRowNum(), roster.size(), true, false);
-                }
                 int rowIndex = 2;
                 for (RosterEntity entry : roster) {
                     Row row = sheet.createRow(rowIndex++);
@@ -219,10 +209,6 @@ public class RosterService {
                     row.createCell(2).setCellValue(fantaMasterRole(entry.player.role));
                     row.createCell(3).setCellValue(entry.amount == null ? 0 : entry.amount);
                 }
-
-                Row updatedAt = sheet.getRow(footerStart + roster.size());
-                updatedAt.getCell(0).setCellValue("Ultimo aggiornamento: "
-                        + LocalDateTime.now(ZoneId.of("Europe/Rome")).format(FANTAMASTER_TIMESTAMP));
             }
 
             List<String> missingTeams = participants.stream()
@@ -240,13 +226,9 @@ public class RosterService {
         }
     }
 
-    private int findFantaMasterFooter(Sheet sheet) {
-        for (int rowIndex = 2; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
-            if (cellText(sheet.getRow(rowIndex), 0).startsWith("Ultimo aggiornamento:")) {
-                return rowIndex;
-            }
-        }
-        throw new IllegalStateException("Footer FantaMaster non trovato nel foglio " + sheet.getSheetName());
+    private String templateTeamName(String value) {
+        if (value == null) return "";
+        return value.replaceFirst("(?i)\\s*\\(\\d+\\s+MILIONI\\)\\s*$", "").trim();
     }
 
     private String normalizeTeamName(String name) {
@@ -368,7 +350,8 @@ public class RosterService {
                         r.player.name,
                         r.player.team,
                         r.player.role.name(),
-                        r.amount
+                        r.amount,
+                        r.player.valore
                 ))
                 .collect(Collectors.toList());
     }
@@ -417,7 +400,8 @@ public class RosterService {
                 r.player.name,
                 r.player.team,
                 r.player.role.toString(),
-                r.amount
+                r.amount,
+                r.player.valore
         );
     }
 
@@ -442,6 +426,7 @@ public class RosterService {
                         r.player.team,
                         r.player.role != null ? r.player.role.name() : null,
                         r.amount,
+                        r.player.valore,
                         residui // 👈 calcolato
                 ))
                 .collect(Collectors.toList());

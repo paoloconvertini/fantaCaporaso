@@ -15,6 +15,9 @@ import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -64,25 +67,44 @@ class RosterFantaMasterServiceTest {
         roster.amount = 17D;
         roster.persist();
 
+        List<String> originalSheetNames;
+        short originalHeaderStyle;
+        List<CellRangeAddress> originalMergedRegions;
+        try (InputStream template = getClass().getClassLoader()
+                .getResourceAsStream("fantamaster/rose_lega_1590336.xlsx");
+             var original = WorkbookFactory.create(template)) {
+            originalSheetNames = new ArrayList<>();
+            for (int i = 0; i < original.getNumberOfSheets(); i++) {
+                originalSheetNames.add(original.getSheetName(i));
+            }
+            var originalSheet = original.getSheetAt(3);
+            originalHeaderStyle = originalSheet.getRow(1).getCell(0).getCellStyle().getIndex();
+            originalMergedRegions = new ArrayList<>(originalSheet.getMergedRegions());
+        }
+
         byte[] exported = service.exportFantaMaster();
         try (var workbook = WorkbookFactory.create(new ByteArrayInputStream(exported))) {
             assertEquals(16, workbook.getNumberOfSheets());
-            var sheet = workbook.getSheet("Corto Muso 7300515");
+            List<String> exportedSheetNames = new ArrayList<>();
+            for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
+                exportedSheetNames.add(workbook.getSheetName(i));
+            }
+            assertEquals(originalSheetNames, exportedSheetNames);
+
+            var sheet = workbook.getSheet("4. Corto Muso");
             assertNotNull(sheet);
-            assertEquals("Corto Muso", sheet.getRow(0).getCell(0).getStringCellValue());
+            assertEquals("Corto Muso (500 MILIONI)", sheet.getRow(0).getCell(0).getStringCellValue());
             assertEquals("Nome", sheet.getRow(1).getCell(0).getStringCellValue());
             assertTrue(sheet.getMergedRegions().contains(new CellRangeAddress(0, 0, 0, 3)));
+            assertEquals(originalMergedRegions, sheet.getMergedRegions());
+            assertEquals(originalHeaderStyle, sheet.getRow(1).getCell(0).getCellStyle().getIndex());
 
             int playerRow = findRow(sheet, "Giocatore round trip");
             assertTrue(playerRow >= 2);
             assertEquals("D", sheet.getRow(playerRow).getCell(2).getStringCellValue());
             assertEquals(17D, sheet.getRow(playerRow).getCell(3).getNumericCellValue());
-
-            int updatedAtRow = findRowStartingWith(sheet, "Ultimo aggiornamento:");
-            assertTrue(updatedAtRow > playerRow);
-            assertEquals("Scarica FantaMaster", sheet.getRow(updatedAtRow + 1).getCell(0).getStringCellValue());
-            assertEquals("https://www.fantamaster.it",
-                    sheet.getRow(updatedAtRow + 1).getCell(0).getHyperlink().getAddress());
+            assertEquals(2, playerRow);
+            assertEquals(2, sheet.getLastRowNum());
         }
 
         RosterEntity.delete("participant", participant);
@@ -122,14 +144,6 @@ class RosterFantaMasterServiceTest {
         for (int i = 0; i <= sheet.getLastRowNum(); i++) {
             if (sheet.getRow(i) != null && sheet.getRow(i).getCell(0) != null
                     && value.equals(sheet.getRow(i).getCell(0).getStringCellValue())) return i;
-        }
-        return -1;
-    }
-
-    private int findRowStartingWith(org.apache.poi.ss.usermodel.Sheet sheet, String value) {
-        for (int i = 0; i <= sheet.getLastRowNum(); i++) {
-            if (sheet.getRow(i) != null && sheet.getRow(i).getCell(0) != null
-                    && sheet.getRow(i).getCell(0).getStringCellValue().startsWith(value)) return i;
         }
         return -1;
     }

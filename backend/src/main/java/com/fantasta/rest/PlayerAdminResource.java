@@ -2,6 +2,7 @@ package com.fantasta.rest;
 
 import com.fantasta.dto.PlayerImportResult;
 import com.fantasta.dto.AdminPlayerDto;
+import com.fantasta.dto.AdminEligibleParticipantDto;
 import com.fantasta.service.DbService;
 import com.fantasta.service.PlayerQueryService;
 import jakarta.annotation.security.RolesAllowed;
@@ -30,6 +31,13 @@ public class PlayerAdminResource {
     @RolesAllowed("admin")
     public List<AdminPlayerDto> search(@QueryParam("q") String query) {
         return playerQueryService.searchAdminPlayers(query);
+    }
+
+    @GET
+    @Path("/{playerId}/eligible-participants")
+    @RolesAllowed("admin")
+    public List<AdminEligibleParticipantDto> eligibleParticipants(@PathParam("playerId") Long playerId) {
+        return playerQueryService.eligibleParticipants(playerId);
     }
 
     /**

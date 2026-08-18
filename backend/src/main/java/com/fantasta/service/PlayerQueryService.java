@@ -1,11 +1,15 @@
 package com.fantasta.service;
 
-import com.fantasta.dto.PlayerDto;
 import com.fantasta.dto.AdminPlayerDto;
+import com.fantasta.dto.AdminEligibleParticipantDto;
+import com.fantasta.dto.PlayerDto;
+import com.fantasta.model.ParticipantEntity;
 import com.fantasta.model.PlayerEntity;
 import com.fantasta.model.Role;
 import com.fantasta.model.RosterEntity;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.NotFoundException;
 
 import java.util.List;
 import java.util.Locale;
@@ -13,6 +17,15 @@ import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class PlayerQueryService {
+
+    @Inject
+    DbService dbService;
+
+    @Inject
+    ParticipantService participantService;
+
+    @Inject
+    RosterService rosterService;
 
     public List<PlayerDto> getFreePlayers(String role) {
         if (role != null) {
@@ -48,6 +61,37 @@ public class PlayerQueryService {
                 .list().stream()
                 .map(this::toAdminDto)
                 .toList();
+    }
+
+    public List<AdminEligibleParticipantDto> eligibleParticipants(Long playerId) {
+        PlayerEntity player = PlayerEntity.findById(playerId);
+        if (player == null || !player.active) {
+            throw new NotFoundException("Giocatore non trovato o non attivo");
+        }
+
+        RosterEntity currentEntry = RosterEntity.find("player", player).firstResult();
+        Long currentOwnerId = currentEntry == null ? null : currentEntry.participant.id;
+        int purchaseSize = currentEntry == null
+                ? dbService.purchaseSize(player)
+                : assignedPurchaseSize(player, currentEntry.participant);
+
+        return ParticipantEntity.<ParticipantEntity>list("order by name").stream()
+                .filter(participant -> participant.id.equals(currentOwnerId)
+                        || hasCapacity(participant, player.role, purchaseSize))
+                .map(participant -> new AdminEligibleParticipantDto(participant.id, participant.name))
+                .toList();
+    }
+
+    private int assignedPurchaseSize(PlayerEntity player, ParticipantEntity owner) {
+        if (player.role != Role.PORTIERE) return 1;
+        return Math.toIntExact(RosterEntity.count(
+                "participant = ?1 and player.role = ?2 and lower(player.team) = ?3",
+                owner, Role.PORTIERE, player.team.toLowerCase(Locale.ROOT)));
+    }
+
+    private boolean hasCapacity(ParticipantEntity participant, Role role, int purchaseSize) {
+        int current = participantService.roleCounts(participant.id).getOrDefault(role, 0);
+        return current + purchaseSize <= rosterService.max(role);
     }
 
     private AdminPlayerDto toAdminDto(PlayerEntity player) {

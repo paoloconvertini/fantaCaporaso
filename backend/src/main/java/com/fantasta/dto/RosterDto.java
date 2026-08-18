@@ -8,12 +8,13 @@ public class RosterDto {
     public String team;
     public String role;
     public Double amount;
+    public Double valore;
     public Double residui;
 
 
     public RosterDto(Long participantId, String participantName,
                      Long playerId, String playerName, String team,
-                     String role, Double amount) {
+                     String role, Double amount, Double valore) {
         this.participantId = participantId;
         this.participantName = participantName;
         this.playerId = playerId;
@@ -21,12 +22,13 @@ public class RosterDto {
         this.team = team;
         this.role = role;
         this.amount = amount;
+        this.valore = valore != null ? valore : 0D;
     }
 
     public RosterDto(Long participantId, String participantName,
                      Long playerId, String playerName, String team,
-                     String role, Double amount, Double residui) {
-        this(participantId, participantName, playerId, playerName, team, role, amount);
+                     String role, Double amount, Double valore, Double residui) {
+        this(participantId, participantName, playerId, playerName, team, role, amount, valore);
         this.residui = residui;
     }
 }

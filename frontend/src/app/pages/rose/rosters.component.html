@@ -21,7 +21,15 @@
             <th *ngFor="let p of participants" class="team-head">
                 <span>{{ p.name }}</span>
                 <small class="team-username">{{ p.username ? '@' + p.username : 'account non configurato' }}</small>
-                <small>{{ totalSpent(p.id) }} crediti</small>
+                <div class="team-summary">
+                    <small>Residui <strong>{{ p.remainingCredits }}</strong></small>
+                    <small>Valore rosa <strong>{{ totalMarketValue(p.id) }}</strong></small>
+                </div>
+                <div class="cell-headings" aria-hidden="true">
+                    <span>Giocatore</span>
+                    <span>Costo</span>
+                    <span>Quota</span>
+                </div>
             </th>
         </tr>
         </thead>
@@ -40,10 +48,15 @@
                         <ng-container *ngIf="row.players[p.id] as player">
                             <span *ngIf="row.index !== 'TOT'" class="player-pill">
                                 <span class="player-name">{{ player.playerName }}</span>
-                                <small>{{ player.amount }}</small>
+                                <small class="cost-value" title="Costo d'acquisto">{{ player.amount }}</small>
+                                <small class="market-value" title="Quotazione">{{ player.valore || 0 }}</small>
                             </span>
 
-                            <strong *ngIf="row.index === 'TOT'" class="total-amount">{{ player.amount }}</strong>
+                            <span *ngIf="row.index === 'TOT'" class="total-values player-pill">
+                                <span aria-hidden="true"></span>
+                                <strong class="total-amount">{{ player.amount }}</strong>
+                                <strong class="total-amount market-value">{{ player.valore }}</strong>
+                            </span>
                         </ng-container>
                     </td>
                 </tr>
@@ -63,20 +76,38 @@
     <div class="mobile-rosters" *ngIf="participants.length">
         <article class="team-card" *ngFor="let participant of participants">
             <header>
-                <h3>{{ participant.name }}</h3>
-                <small class="team-username">{{ participant.username ? '@' + participant.username : 'account non configurato' }}</small>
-                <span>{{ totalSpent(participant.id) }} crediti</span>
+                <div>
+                    <h3>{{ participant.name }}</h3>
+                    <small class="team-username">{{ participant.username ? '@' + participant.username : 'account non configurato' }}</small>
+                </div>
+                <div class="mobile-team-summary">
+                    <span>Residui <strong>{{ participant.remainingCredits }}</strong></span>
+                    <span>Valore rosa <strong>{{ totalMarketValue(participant.id) }}</strong></span>
+                </div>
             </header>
 
             <section class="role-block" *ngFor="let role of rolesOrder" [ngClass]="'role-' + role.toLowerCase()">
                 <div class="role-title">
                     <strong>{{ role }}</strong>
-                    <span>{{ playersFor(participant.id, role).length }} giocatori · {{ totalFor(participant.id, role) }} crediti</span>
+                    <span>{{ playersFor(participant.id, role).length }} giocatori</span>
+                </div>
+
+                <div class="mobile-cell-headings">
+                    <span>Giocatore</span>
+                    <span>Costo</span>
+                    <span>Quota</span>
                 </div>
 
                 <div class="mobile-player" *ngFor="let player of playersFor(participant.id, role)">
                     <span>{{ player.playerName }}</span>
-                    <b>{{ player.amount }}</b>
+                    <b title="Costo d'acquisto">{{ player.amount }}</b>
+                    <b class="market-value" title="Quotazione">{{ player.valore || 0 }}</b>
+                </div>
+
+                <div class="mobile-role-totals" *ngIf="playersFor(participant.id, role).length">
+                    <strong>Totale</strong>
+                    <b>{{ totalFor(participant.id, role) }}</b>
+                    <b>{{ marketValueFor(participant.id, role) }}</b>
                 </div>
 
                 <div class="role-empty" *ngIf="!playersFor(participant.id, role).length">

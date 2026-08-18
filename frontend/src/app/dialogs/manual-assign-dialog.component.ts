@@ -1,6 +1,5 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import {UserApiService} from "../services/user-api.service";
 import {AdminApiService} from "../services/admin-api.service";
 
 @Component({
@@ -14,17 +13,16 @@ export class ManualAssignDialogComponent {
     selectedPlayer: any | null = null;
     query = '';
     searching = false;
+    loadingParticipants = false;
     selectedParticipantId: number | null = null;
     amount: number;
 
     constructor(
-        private api: UserApiService,
         private adminApi: AdminApiService,
         private dialogRef: MatDialogRef<ManualAssignDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data: any
     ) {
         this.amount = data?.role === 'PORTIERE' ? 3 : 1;
-        this.api.getParticipants().subscribe(res => this.participants = res);
         if (data?.player) {
             this.query = data.player;
             this.search(this.query, true);
@@ -63,9 +61,25 @@ export class ManualAssignDialogComponent {
 
     selectPlayer(playerId: number) {
         this.selectedPlayer = this.players.find(player => player.id === playerId) || null;
+        this.participants = [];
+        this.selectedParticipantId = null;
         if (!this.selectedPlayer) return;
-        this.selectedParticipantId = this.selectedPlayer.ownerParticipantId ?? null;
         this.amount = this.selectedPlayer.amount ?? (this.selectedPlayer.role === 'PORTIERE' ? 3 : 1);
+        this.loadingParticipants = true;
+        const selectedPlayerId = this.selectedPlayer.id;
+        this.adminApi.getEligibleParticipants(selectedPlayerId).subscribe({
+            next: participants => {
+                if (this.selectedPlayer?.id !== selectedPlayerId) return;
+                this.participants = participants;
+                this.selectedParticipantId = this.selectedPlayer?.ownerParticipantId ?? null;
+                this.loadingParticipants = false;
+            },
+            error: () => {
+                if (this.selectedPlayer?.id !== selectedPlayerId) return;
+                this.participants = [];
+                this.loadingParticipants = false;
+            }
+        });
     }
 
     save() {

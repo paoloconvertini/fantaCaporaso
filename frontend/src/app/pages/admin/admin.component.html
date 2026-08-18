@@ -110,7 +110,7 @@
 
         <!-- Skip a DESTRA -->
         <button mat-icon-button class="nav-btn skip-btn"
-                (click)="skip()" matTooltip="Salta">
+                (click)="skip()" [disabled]="skipDisabled" [matTooltip]="skipTooltip">
           <mat-icon>skip_next</mat-icon>
         </button>
 

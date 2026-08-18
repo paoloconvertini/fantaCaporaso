@@ -10,6 +10,7 @@ interface Player {
     playerName: string;
     role: string;   // PORTIERE, DIFENSORE, CENTROCAMPISTA, ATTACCANTE
     amount: number;
+    valore: number;
     participantId: number;
     participantName: string;
 }
@@ -23,7 +24,7 @@ export class RostersComponent implements OnInit {
     loading = false;
     isAdmin = false;
 
-    participants: { id: number, name: string, username?: string }[] = [];
+    participants: { id: number, name: string, username?: string, remainingCredits?: number }[] = [];
     table: any[] = []; // righe della tabella pivotata
     rosterByParticipantRole: { [participantId: number]: { [role: string]: Player[] } } = {};
 
@@ -71,12 +72,17 @@ export class RostersComponent implements OnInit {
         });
     }
 
-    private buildTable(rosters: Player[], participants: { id: number; name: string; username?: string }[]) {
+    private buildTable(rosters: Player[], participants: { id: number; name: string; username?: string; remainingCredits?: number }[]) {
         this.rosterByParticipantRole = {};
 
         // 1. mostro sempre tutti i partecipanti, anche senza giocatori assegnati.
         this.participants = [...participants]
-            .map(p => ({ id: p.id, name: p.name, username: p.username }))
+            .map(p => ({
+                id: p.id,
+                name: p.name,
+                username: p.username,
+                remainingCredits: p.remainingCredits ?? 0
+            }))
             .sort((a, b) => a.name.localeCompare(b.name));
 
         // 2. raggruppo per ruolo → lista di giocatori ordinati per partecipante
@@ -124,12 +130,14 @@ export class RostersComponent implements OnInit {
                 this.table.push(row);
             }
 
-            // riga totale crediti per ruolo
+            // riga totale crediti e quotazioni per ruolo
             const totals: any = { role, index: 'TOT', players: {} };
             this.participants.forEach(p => {
                 const total = (groupedByRole[role]?.[p.id] || [])
                     .reduce((sum,pl) => sum + (pl.amount||0), 0);
-                totals.players[p.id] = { name: '', amount: total };
+                const valore = (groupedByRole[role]?.[p.id] || [])
+                    .reduce((sum, pl) => sum + (pl.valore || 0), 0);
+                totals.players[p.id] = { name: '', amount: total, valore };
             });
             this.table.push(totals);
         });
@@ -151,6 +159,16 @@ export class RostersComponent implements OnInit {
     totalSpent(participantId: number): number {
         return this.rolesOrder
             .reduce((sum, role) => sum + this.totalFor(participantId, role), 0);
+    }
+
+    marketValueFor(participantId: number, role: string): number {
+        return this.playersFor(participantId, role)
+            .reduce((sum, player) => sum + (player.valore || 0), 0);
+    }
+
+    totalMarketValue(participantId: number): number {
+        return this.rolesOrder
+            .reduce((sum, role) => sum + this.marketValueFor(participantId, role), 0);
     }
 
 }

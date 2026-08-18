@@ -25,6 +25,9 @@ public class RandomResource {
     RosterService rosterService;
 
     @Inject
+    AuctionService auctionService;
+
+    @Inject
     RoundSocket socket;
 
     /**
@@ -99,6 +102,10 @@ public class RandomResource {
     @Path("/skip")
     @RolesAllowed("admin")
     public Response skip(Map<String, String> body) {
+        RoundState round = auctionService.get();
+        if (round != null && !round.closed) {
+            throw new WebApplicationException("Usare lo skip sicuro del round attivo", 409);
+        }
         var giro = db.ensureCurrentGiro();
         String name = body != null ? body.get("name") : null;
         String team = body != null ? body.get("team") : null;

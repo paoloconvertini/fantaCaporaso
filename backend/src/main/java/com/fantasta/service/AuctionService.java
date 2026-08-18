@@ -272,6 +272,18 @@ public class AuctionService {
     }
 
     @Transactional
+    public synchronized void resetForSkip() {
+        if (state == null) {
+            state = loadCurrentState();
+        }
+        if (state != null && !state.closed && state.bids != null && !state.bids.isEmpty()) {
+            throw new IllegalStateException("Skip non disponibile: sono presenti offerte");
+        }
+        state = null;
+        clearCurrentState();
+    }
+
+    @Transactional
     public synchronized RoundState manualAssign(Long participantId, String playerName, String team, Double amount) {
         if (participantId == null || playerName == null) {
             throw new IllegalArgumentException("Dati mancanti per assegnazione manuale");

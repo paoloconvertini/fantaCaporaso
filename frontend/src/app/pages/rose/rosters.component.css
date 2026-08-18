@@ -40,7 +40,7 @@
 /* tabella */
 .rosters-table {
     width: 100%;
-    min-width: 2200px;
+    min-width: 3400px;
     border-collapse: separate;
     border-spacing: 4px 0;
     background: #111827;
@@ -73,7 +73,8 @@
 }
 
 .team-head {
-    min-width: 140px;
+    width: 210px;
+    min-width: 210px;
     border-left: 2px solid rgba(255,255,255,0.16);
 }
 
@@ -82,6 +83,49 @@
     color: #a7f3d0;
     font-size: 12px;
     font-weight: 500;
+}
+
+.team-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin: 9px 0 10px;
+}
+
+.team-summary small {
+    margin: 0;
+    padding: 5px 4px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #cbd5e1;
+    line-height: 1.25;
+}
+
+.team-summary strong {
+    display: block;
+    margin-top: 2px;
+    color: #a7f3d0;
+    font-size: 14px;
+}
+
+.cell-headings,
+.player-pill {
+    display: grid;
+    grid-template-columns: minmax(116px, 1fr) 38px 38px;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+}
+
+.cell-headings {
+    color: #94a3b8;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.cell-headings span:first-child {
+    text-align: left;
 }
 
 /* celle */
@@ -109,8 +153,7 @@
 
 /* celle giocatore */
 .player-cell {
-    min-width: 140px;
-    white-space: nowrap;
+    min-width: 210px;
     color: #111827;
     border-left: 2px solid rgba(255,255,255,0.55);
     border-right: 2px solid rgba(0,0,0,0.18);
@@ -118,34 +161,39 @@
 
 /* nome + valore */
 .player-pill {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 8px;
     min-height: 24px;
-    width: 100%;
 }
 
 .player-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-align: center;
-    justify-self: center;
-    max-width: 100%;
+    text-align: left;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.15;
     font-size: 14px;
     font-weight: 600;
 }
 
 .player-pill small,
 .total-amount {
-    flex: 0 0 auto;
-    min-width: 24px;
+    min-width: 0;
     padding: 1px 5px;
     border-radius: 999px;
     background: rgba(17, 24, 39, 0.82);
     color: #fff;
     font-size: 12px;
     font-weight: 700;
+}
+
+.player-pill .market-value,
+.total-values .market-value,
+.mobile-player .market-value {
+    background: #065f46;
+    color: #ecfdf5;
+}
+
+.total-values {
+    padding-top: 7px;
+    border-top: 1px solid rgba(17, 24, 39, 0.24);
 }
 
 /* riga totale */
@@ -186,6 +234,22 @@
     background: #1f2937;
 }
 
+.mobile-team-summary {
+    display: grid;
+    gap: 3px;
+    flex: 0 0 auto;
+    text-align: right;
+}
+
+.mobile-team-summary span {
+    color: #cbd5e1;
+    font-size: 12px;
+}
+
+.mobile-team-summary strong {
+    color: #a7f3d0;
+}
+
 .team-card h3 {
     margin: 0;
     font-size: 1rem;
@@ -195,6 +259,7 @@
     color: #a7f3d0;
     font-weight: 700;
     white-space: nowrap;
+    text-align: right;
 }
 
 .role-block {
@@ -216,12 +281,40 @@
 }
 
 .mobile-player {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 48px 48px;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
     padding: 8px 0;
     border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.mobile-cell-headings,
+.mobile-role-totals {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 48px 48px;
+    gap: 8px;
+    align-items: center;
+}
+
+.mobile-cell-headings {
+    padding-bottom: 4px;
+    color: #94a3b8;
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+.mobile-cell-headings span:not(:first-child),
+.mobile-role-totals b {
+    text-align: center;
+}
+
+.mobile-role-totals {
+    padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.16);
+    color: #cbd5e1;
+    font-size: 12px;
 }
 
 .mobile-player b {

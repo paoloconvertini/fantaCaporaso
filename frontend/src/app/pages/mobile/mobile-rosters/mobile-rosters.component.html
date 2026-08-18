@@ -9,10 +9,10 @@
     </mat-card>
 
     <mat-card class="list-card" *ngFor="let row of rosters">
-        <h4>{{row.participant}}</h4>
+        <h4>{{row.participant}} · Valore rosa {{ totalMarketValue(row.participant) }}</h4>
         <div class="list-row">
             <span>{{row.playerName}}</span>
-            <span class="summary-right">{{row.role}} - {{row.amount}}</span>
+            <span class="summary-right">{{row.role}} · C {{row.amount}} · Q {{row.valore || 0}}</span>
         </div>
     </mat-card>
 </div>

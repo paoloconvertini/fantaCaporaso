@@ -43,3 +43,96 @@ table {
     color: #fff !important;
     font-weight: 500;
 }
+
+/* Il pannello Material vive fuori dall'albero del componente: il tema della
+   modale di assegnazione va quindi applicato all'overlay globale dedicato. */
+.manual-assign-dialog-panel .mat-dialog-container {
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid rgba(122, 232, 181, .2);
+    border-radius: 22px;
+    color: #e8f3ef;
+    background: #0d1b18;
+    box-shadow: 0 30px 90px rgba(0,0,0,.58);
+}
+
+.manual-assign-dialog-panel .mat-form-field-label,
+.manual-assign-dialog-panel .mat-select-value,
+.manual-assign-dialog-panel .mat-input-element,
+.manual-assign-dialog-panel .mat-select-arrow {
+    color: #e5f1ed !important;
+}
+
+.manual-assign-dialog-panel .mat-form-field.mat-focused .mat-form-field-label,
+.manual-assign-dialog-panel .mat-form-field.mat-focused .mat-select-arrow {
+    color: #6fe4ad !important;
+}
+
+.manual-assign-dialog-panel .mat-form-field-flex {
+    color: #e5f1ed;
+    background: rgba(255,255,255,.065) !important;
+    border-radius: 12px 12px 0 0 !important;
+    padding-right: 12px !important;
+    padding-left: 12px !important;
+}
+
+.manual-assign-dialog-panel .mat-form-field-infix {
+    padding-top: 10px !important;
+    padding-bottom: 11px !important;
+}
+
+.manual-assign-dialog-panel input.mat-input-element {
+    color: #f2faf7 !important;
+    caret-color: #72f0b6 !important;
+}
+
+.manual-assign-dialog-panel input.mat-input-element::selection {
+    color: #071b14;
+    background: #72e7b1;
+}
+
+.manual-assign-dialog-panel .mat-form-field-underline::before {
+    background: rgba(218,239,231,.28) !important;
+}
+
+.manual-assign-dialog-panel .mat-form-field-ripple {
+    background: #6fe4ad !important;
+}
+
+/* Il pannello mat-select e' montato direttamente nel CDK overlay e non dentro
+   la modale: panelClass permette di tematizzare soltanto queste due tendine. */
+.manual-assign-select-panel.mat-select-panel {
+    padding: 6px !important;
+    border: 1px solid rgba(116, 231, 178, .24);
+    border-radius: 12px !important;
+    color: #e8f3ef;
+    background: #13241f !important;
+    box-shadow: 0 18px 48px rgba(0,0,0,.55) !important;
+}
+
+.manual-assign-select-panel .mat-option {
+    min-height: 44px;
+    margin: 2px 0;
+    border-radius: 8px;
+    color: #e4f0ec !important;
+    line-height: 1.35;
+}
+
+.manual-assign-select-panel .mat-option:hover,
+.manual-assign-select-panel .mat-option.mat-active {
+    color: #fff !important;
+    background: rgba(105, 230, 173, .14) !important;
+}
+
+.manual-assign-select-panel .mat-option.mat-selected:not(.mat-option-disabled) {
+    color: #8cf2c1 !important;
+    background: rgba(105, 230, 173, .2) !important;
+}
+
+.manual-assign-select-panel .mat-option.mat-selected:not(.mat-option-multiple)::after {
+    color: #75e9b5;
+}
+
+@media (max-width: 600px) {
+    .manual-assign-dialog-panel .mat-dialog-container { border-radius: 18px; }
+}

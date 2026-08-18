@@ -53,7 +53,7 @@ export class AdminApiService {
   }
 
   randomSkip(name: string, team: string): Observable<any> {
-    return this.http.post(`${this.base}/api/random/skip`, { name, team });
+    return this.http.post(`${this.base}/api/round/skip`, { name, team });
   }
 
   randomResetSkip(): Observable<any> {
@@ -90,6 +90,10 @@ export class AdminApiService {
 
   searchPlayers(query: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.base}/api/admin/players/search`, { params: { q: query } });
+  }
+
+  getEligibleParticipants(playerId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.base}/api/admin/players/${playerId}/eligible-participants`);
   }
 
   updateAssignment(playerId: number, participantId: number, amount: number): Observable<any> {

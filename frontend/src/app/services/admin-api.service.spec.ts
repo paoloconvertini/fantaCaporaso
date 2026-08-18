@@ -31,4 +31,19 @@ describe('AdminApiService', () => {
     expect(request.request.body).toEqual({ participantId: 2, amount: 35 });
     request.flush({});
   });
+
+  it('loads participants eligible for the selected player', () => {
+    service.getEligibleParticipants(10).subscribe();
+    const request = http.expectOne('/api/admin/players/10/eligible-participants');
+    expect(request.request.method).toBe('GET');
+    request.flush([]);
+  });
+
+  it('uses the safe round endpoint to skip a player', () => {
+    service.randomSkip('Giocatore', 'Roma').subscribe();
+    const request = http.expectOne('/api/round/skip');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ name: 'Giocatore', team: 'Roma' });
+    request.flush({});
+  });
 });

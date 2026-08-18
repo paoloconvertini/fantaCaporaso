@@ -6,6 +6,7 @@ import com.fantasta.dto.AdminAssignmentDto;
 import com.fantasta.dto.RoundDto;
 import com.fantasta.model.RoundState;
 import com.fantasta.service.AuctionService;
+import com.fantasta.service.DbService;
 import com.fantasta.ws.RoundSocket;
 import io.vertx.core.Vertx;
 import io.quarkus.security.identity.SecurityIdentity;
@@ -37,6 +38,9 @@ public class AuctionResource {
 
     @Inject
     AuctionService service;
+
+    @Inject
+    DbService dbService;
 
     @Inject
     RoundSocket socket;
@@ -181,6 +185,39 @@ public class AuctionResource {
 
         service.reset();
         socket.broadcast("ROUND_RESET", null);
+    }
+
+    @POST
+    @Path("/round/skip")
+    @RolesAllowed("admin")
+    public Response skipRound(Map<String, String> body) {
+        String name = body != null ? body.get("name") : null;
+        String team = body != null ? body.get("team") : null;
+        if (name == null || name.isBlank()) {
+            throw new BadRequestException("name mancante");
+        }
+
+        try {
+            // Il controllo delle offerte e il reset dello stato sono sincronizzati
+            // con la chiusura automatica dentro AuctionService.
+            service.resetForSkip();
+        } catch (IllegalStateException e) {
+            throw new WebApplicationException(e.getMessage(), 409);
+        }
+
+        if (autoCloseTimerId != null) {
+            vertx.cancelTimer(autoCloseTimerId);
+            autoCloseTimerId = null;
+        }
+        scheduledRoundId = null;
+
+        var giro = dbService.ensureCurrentGiro();
+        var player = dbService.findByNameTeam(name, team);
+        if (player != null) {
+            dbService.skip(giro.id, player);
+        }
+        socket.broadcast("ROUND_RESET", null);
+        return Response.noContent().build();
     }
 
     @POST

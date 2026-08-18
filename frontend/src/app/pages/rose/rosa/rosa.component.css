@@ -110,6 +110,9 @@ button[mat-icon-button]:hover mat-icon {
 }
 
 .crediti-container {
+    display: flex;
+    justify-content: flex-end;
+    gap: 18px;
     color: #fff;
     text-align: right;
     margin-bottom: 10px;
@@ -137,6 +140,8 @@ button[mat-icon-button]:hover mat-icon {
     }
 
     .crediti-container {
+        flex-wrap: wrap;
+        gap: 6px 14px;
         text-align: left;
         font-size: 14px;
     }

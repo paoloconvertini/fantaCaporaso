@@ -26,7 +26,11 @@ export class RosaComponent implements OnInit {
     loading = false;
 
     get displayedColumns(): string[] {
-        return this.isAdmin ? ['team', 'player', 'amount', 'actions'] : ['team', 'player', 'amount'];
+        return this.isAdmin ? ['team', 'player', 'amount', 'valore', 'actions'] : ['team', 'player', 'amount', 'valore'];
+    }
+
+    get totalMarketValue(): number {
+        return this.roster.reduce((sum, player) => sum + (player.valore || 0), 0);
     }
 
     roles = [

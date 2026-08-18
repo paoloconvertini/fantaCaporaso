@@ -88,6 +88,29 @@ class AuctionServiceTest {
 
     @Test
     @TestTransaction
+    void eligibleParticipantsExcludeFullRoleButKeepCurrentOwner() {
+        cleanAuctionData();
+        ParticipantEntity full = participant("Attacco completo", 500);
+        ParticipantEntity available = participant("Attacco disponibile", 500);
+        ParticipantEntity owner = participant("Proprietario corrente", 500);
+
+        for (int i = 0; i < rosterService.max(Role.ATTACCANTE); i++) {
+            PlayerEntity assigned = player("Attaccante pieno " + i, "Squadra " + i,
+                    Role.ATTACCANTE, 1);
+            auctionService.adminAssign(assigned.id, full.id, 1D);
+        }
+        PlayerEntity target = player("Attaccante da correggere", "Roma", Role.ATTACCANTE, 10);
+        auctionService.adminAssign(target.id, owner.id, 5D);
+
+        var eligible = playerQueryService.eligibleParticipants(target.id);
+
+        assertFalse(eligible.stream().anyMatch(participant -> participant.id.equals(full.id)));
+        assertTrue(eligible.stream().anyMatch(participant -> participant.id.equals(available.id)));
+        assertTrue(eligible.stream().anyMatch(participant -> participant.id.equals(owner.id)));
+    }
+
+    @Test
+    @TestTransaction
     void adminCorrectionStillReservesCreditsForOpenRosterSlots() {
         cleanAuctionData();
         ParticipantEntity participant = participant("Budget correzione", 30);
@@ -96,6 +119,35 @@ class AuctionServiceTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> auctionService.adminAssign(player.id, participant.id, 7D));
+    }
+
+    @Test
+    @TestTransaction
+    void skipResetClearsAnActiveRoundWithoutBids() {
+        cleanAuctionData();
+        player("Giocatore da saltare", "Roma", Role.DIFENSORE, 8);
+        auctionService.start("Giocatore da saltare", "Roma", "DIFENSORE", 30, "NONE", 8, null);
+
+        auctionService.resetForSkip();
+
+        assertNull(auctionService.get());
+    }
+
+    @Test
+    @TestTransaction
+    void skipResetRejectsAnActiveRoundWithBids() {
+        cleanAuctionData();
+        ParticipantEntity participant = participant("Offerente skip", 500);
+        player("Giocatore conteso", "Roma", Role.DIFENSORE, 8);
+        auctionService.start("Giocatore conteso", "Roma", "DIFENSORE", 30, "NONE", 8, null);
+        auctionService.bid(participant.id, 5D);
+
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+                auctionService::resetForSkip);
+
+        assertEquals("Skip non disponibile: sono presenti offerte", error.getMessage());
+        assertNotNull(auctionService.get());
+        assertFalse(auctionService.get().bids.isEmpty());
     }
 
     @Test

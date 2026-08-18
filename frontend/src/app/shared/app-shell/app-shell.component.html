@@ -34,7 +34,11 @@
     <!-- 🔹 Sidenav destro (summary per admin) -->
     <mat-sidenav position="end" class="summary-sidenav" *ngIf="isAdmin" [(opened)]="summaryOpen" mode="side">
         <div class="sidenav-header">
-            <span class="sidenav-title">Summary</span>
+            <span class="summary-heading-icon"><mat-icon>groups</mat-icon></span>
+            <span class="sidenav-title">
+                <strong>Riepilogo squadre</strong>
+                <small>Crediti, reparti e massimo spendibile</small>
+            </span>
             <button mat-icon-button (click)="summaryOpen = false" aria-label="Chiudi summary">
                 <mat-icon>chevron_right</mat-icon>
             </button>

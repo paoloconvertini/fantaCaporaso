@@ -28,6 +28,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     remainingCount = 0;
     value = 0;
     loadingAssign = false;
+    skipping = false;
     participantCount = 0;
     availablePlayers = 0;
     openSlotsCount = 0;
@@ -287,16 +288,30 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
 
     skip() {
-        if (!this.player) return;
+        if (!this.player || this.skipDisabled) return;
+        this.skipping = true;
         this.adminApi.randomSkip(this.player, this.team).subscribe({
             next: () => {
+                this.round = null;
+                this.activeUsers = [];
+                this.skipping = false;
                 this.next();
                 this.refreshRemaining();
             },
             error: (err) => {
+                this.skipping = false;
                 this.showError('Errore skip giocatore', err);
             }
         });
+    }
+
+    get skipDisabled(): boolean {
+        return this.skipping || (!!this.round && !this.round.closed && this.activeUsers.length > 0);
+    }
+
+    get skipTooltip(): string {
+        if (this.skipping) return 'Skip in corso';
+        return this.skipDisabled ? 'Skip non disponibile: sono presenti offerte' : 'Salta';
     }
 
     resetSkip() {
@@ -393,6 +408,8 @@ export class AdminComponent implements OnInit, OnDestroy {
     openManualAssign() {
         const dialogRef = this.dialog.open(ManualAssignDialogComponent, {
             width: '560px',
+            maxWidth: 'calc(100vw - 24px)',
+            panelClass: 'manual-assign-dialog-panel',
             data: { player: this.player, team: this.team, role: this.prole, value: this.value }
         });
 

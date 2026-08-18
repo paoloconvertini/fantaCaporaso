@@ -6,6 +6,7 @@ export interface RosterDto {
     team: string;
     role: string;
     amount: number;
+    valore: number;
     residui: number;
 
 }

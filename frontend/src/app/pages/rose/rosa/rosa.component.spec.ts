@@ -42,7 +42,18 @@ describe('RosaComponent', () => {
 
   it('does not expose the release column to participants', () => {
     component.isAdmin = false;
-    expect(component.displayedColumns).toEqual(['team', 'player', 'amount']);
+    expect(component.displayedColumns).toEqual(['team', 'player', 'amount', 'valore']);
+    expect(component.displayedColumns).not.toContain('actions');
+  });
+
+  it('calculates the roster market value treating missing quotations as zero', () => {
+    component.roster = [
+      { valore: 12 },
+      { valore: 8 },
+      { valore: undefined }
+    ] as any;
+
+    expect(component.totalMarketValue).toBe(20);
   });
 
   it('sorts roster players alphabetically by name', () => {

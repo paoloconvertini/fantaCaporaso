@@ -11,6 +11,12 @@ export class MobileRostersComponent implements OnInit {
     participants: string[] = [];
     selectedParticipant: string | null = null;
 
+    totalMarketValue(participant: string): number {
+        return this.rosters
+            .filter(row => row.participant === participant)
+            .reduce((sum, row) => sum + (row.valore || 0), 0);
+    }
+
     constructor(private api: UserApiService) {}
 
     ngOnInit(): void {
