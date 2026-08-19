@@ -14,20 +14,24 @@ elif [[ $# -gt 0 ]]; then
   exit 2
 fi
 
-# Lo stesso volume PostgreSQL non deve essere aperto da due server contemporaneamente.
-docker compose --env-file "$AUCTION_DB_ENV" -f "$AUCTION_ROOT/backend/docker-compose.yml" stop postgres >/dev/null 2>&1 || true
-
-export POSTGRES_VOLUME_NAME="backend_pgdata"
+export POSTGRES_VOLUME_NAME="$AUCTION_POSTGRES_VOLUME"
 export PUBLIC_BIND_ADDRESS="0.0.0.0"
 export PUBLIC_HTTP_PORT="8088"
 
+# Lo stesso volume PostgreSQL non deve essere aperto da due server contemporaneamente.
+docker compose --env-file "$AUCTION_DB_ENV" -f "$AUCTION_ROOT/backend/docker-compose.yml" stop postgres >/dev/null 2>&1 || true
+
+if [[ -z "$(auction_postgres_container)" ]]; then
+  echo "Avvio il database persistente; i deploy successivi non lo toccheranno..."
+  auction_compose up -d postgres
+fi
+auction_assert_database
+
 if [[ "$rebuild" == true ]]; then
-  echo "Ricostruisco backend e frontend..."
-  auction_compose build backend frontend
+  "$AUCTION_ROOT/scripts/deploy-auction.sh" --rebuild
 fi
 
-# Il Quick Tunnel viene ricreato più sotto: un hostname precedente può essere scaduto.
-auction_compose up -d postgres backend frontend reverse-proxy
+auction_compose up -d --no-deps backend frontend reverse-proxy
 
 echo "Attendo frontend, backend e database..."
 ready=false
@@ -46,42 +50,23 @@ if [[ "$ready" != true ]]; then
 fi
 
 public_ready=false
-public_url=""
-for tunnel_attempt in 1 2 3; do
-  echo "Genero Quick Tunnel Cloudflare (tentativo $tunnel_attempt/3)..."
-  auction_compose up -d --force-recreate --no-deps cloudflared
+public_url="$(auction_public_url)"
+echo "Avvio Named Tunnel Cloudflare su $public_url..."
+auction_compose up -d --force-recreate --no-deps cloudflared
 
-  public_url=""
-  for _ in $(seq 1 45); do
-    public_url="$(auction_public_url)"
-    [[ -n "$public_url" ]] && break
-    sleep 2
-  done
-
-  if [[ -z "$public_url" ]]; then
-    echo "Cloudflare non ha ancora generato un hostname." >&2
-    continue
-  fi
-
-  for _ in $(seq 1 30); do
-    if curl --fail --silent --max-time 5 "$public_url/" >/dev/null 2>&1; then
-      public_ready=true
-      break
-    fi
-    sleep 2
-  done
-
-  if [[ "$public_ready" == true ]]; then
+for _ in $(seq 1 90); do
+  if curl --fail --silent --max-time 5 "$public_url/" >/dev/null 2>&1; then
+    public_ready=true
     break
   fi
-  echo "Hostname non raggiungibile: $public_url. Lo rigenero." >&2
+  sleep 2
 done
 
 auction_print_links
 auction_compose ps
 
 if [[ "$public_ready" != true ]]; then
-  echo "Cloudflare non ha prodotto un link HTTPS raggiungibile dopo 3 tentativi." >&2
+  echo "Named Tunnel non raggiungibile su $public_url." >&2
   auction_compose logs --tail=100 cloudflared
   exit 1
 fi

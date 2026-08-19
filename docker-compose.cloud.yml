@@ -1,11 +1,13 @@
-# Overlay dello stack locale: aggiunge un Quick Tunnel pubblico per la durata dell'asta.
+# Overlay dello stack locale: collega il Named Tunnel pubblico dell'asta.
 # Usare sempre insieme a docker-compose.prod.yml.
 services:
   cloudflared:
     image: cloudflare/cloudflared:latest
     restart: unless-stopped
     # HTTP/2 usa TCP e risulta piu' affidabile sulle reti che interrompono QUIC/UDP.
-    command: tunnel --no-autoupdate --protocol http2 --url http://reverse-proxy:80
+    command: tunnel --no-autoupdate --protocol http2 run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
     depends_on:
       reverse-proxy:
         condition: service_healthy

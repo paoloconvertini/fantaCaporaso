@@ -14,7 +14,7 @@ partecipanti -> Cloudflare Tunnel -> Nginx -> frontend
 ```
 
 Cloudflare Tunnel usa una connessione in uscita e non richiede IP pubblico, port forwarding o database remoto. Neon non fa parte del percorso operativo.
-La configurazione di produzione autorizza gli origin generati da `trycloudflare.com`, oltre a localhost e agli indirizzi LAN privati sulla porta 8088.
+La configurazione di produzione autorizza l'origin stabile `https://asta.fantacaporaso.it`, oltre a localhost e agli indirizzi LAN privati sulla porta 8088.
 
 ## Requisiti
 
@@ -90,17 +90,21 @@ Lo stack espone per default il reverse proxy su `127.0.0.1:8088` e PostgreSQL su
 
 ## Accesso pubblico con Cloudflare
 
+La pagina istituzionale statica si trova in `landing-page/` ed e' destinata a Cloudflare Pages sul dominio principale `fantacaporaso.it`. Non dipende dai container locali e mostra lo stato di mercato chiuso anche quando il Mac e' spento. Il sottodominio `asta.fantacaporaso.it` resta riservato all'applicazione d'asta pubblicata tramite Cloudflare Tunnel.
+
 ### Avvio asta da IntelliJ
 
 Nel selettore delle configurazioni Run sono disponibili:
 
 - `ASTA - AVVIA`: ferma PostgreSQL di sviluppo, avvia rapidamente le immagini già verificate sul volume persistente `backend_pgdata`, crea un nuovo Quick Tunnel, ne verifica realmente l'HTTPS e stampa il link da condividere;
 - `ASTA - STATO`: ristampa link, container e controlli di raggiungibilità;
-- `ASTA - FERMA`: arresta lo stack senza `-v` e riavvia il solo PostgreSQL di sviluppo.
+- `ASTA - FERMA`: arresta soltanto i servizi applicativi; PostgreSQL resta attivo sul volume persistente.
 
-Il link `trycloudflare.com` rimane invariato finché il container `cloudflared` resta attivo. Ogni nuova esecuzione di `ASTA - AVVIA` ricrea deliberatamente il tunnel per non riutilizzare hostname scaduti; se Cloudflare restituisce un hostname non raggiungibile, lo script prova automaticamente fino a tre volte. Durante l'asta non riavviare Docker Desktop, non sospendere il Mac e non eseguire nuovamente `ASTA - AVVIA`. Conservare anche il link LAN mostrato in console come alternativa per i dispositivi collegati alla stessa rete.
+L'applicazione usa il Named Tunnel Cloudflare `fantacaporaso-asta` e l'indirizzo stabile `https://asta.fantacaporaso.it`. Il token del tunnel e' salvato soltanto in `config/application-cloud.env`, escluso da Git. Durante l'asta non riavviare Docker Desktop, non sospendere il Mac e non eseguire nuovamente `ASTA - AVVIA`. Conservare anche il link LAN mostrato in console come alternativa per i dispositivi collegati alla stessa rete.
 
-Il flusso non usa `CLOUDFLARE_TUNNEL_TOKEN`: si tratta deliberatamente di un Quick Tunnel temporaneo per la singola sessione d'asta. Il tunnel forza HTTP/2 su TCP per evitare le disconnessioni QUIC/UDP osservate sulla rete locale. Per l'avvio manuale usare `./scripts/start-auction.sh`; usare `./scripts/start-auction.sh --rebuild` soltanto dopo modifiche al codice; per il controllo usare `./scripts/status-auction.sh`.
+Il tunnel forza HTTP/2 su TCP per evitare le disconnessioni QUIC/UDP osservate sulla rete locale. Per l'avvio manuale usare `./scripts/start-auction.sh`; per un deploy usare `./scripts/deploy-auction.sh --rebuild`; per il controllo usare `./scripts/status-auction.sh`.
+
+Il volume `backend_pgdata` e' dichiarato esterno: Compose lo utilizza ma non ne gestisce il ciclo di vita. Il deploy applicativo non include mai PostgreSQL e ricrea soltanto backend, frontend e reverse proxy con `--no-deps`. Prima di procedere verifica il volume, controlla che il database non sia vuoto, blocca l'operazione con mercato o round attivo e crea un dump validato in `backups/`. Lo script confronta inoltre i conteggi di partecipanti, calciatori e righe rosa prima e dopo il deploy. Non eliminare manualmente `backend_pgdata` e non avviare un secondo PostgreSQL sullo stesso volume.
 
 Il browser deve conoscere soltanto l'URL HTTPS pubblico. Il backend non pubblica porte nello stack completo; PostgreSQL pubblica soltanto `127.0.0.1:5433`, non raggiungibile dalla LAN o da Internet. La configurazione IntelliJ `fantasta@localhost` usa `jdbc:postgresql://localhost:5433/fantasta` e continua a funzionare dopo la ricreazione del container perché non dipende dal suo IP interno. Utente e password provengono da `backend/.env`; salvare la password nello storage sicuro di IntelliJ.
 
