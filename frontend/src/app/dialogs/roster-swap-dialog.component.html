@@ -1,0 +1,41 @@
+<div class="swap-dialog">
+  <h2 mat-dialog-title>Scambia giocatori</h2>
+  <mat-dialog-content>
+    <div class="team-grid">
+      <section>
+        <h3>{{ data.sourceParticipantName }}</h3>
+        <div class="role-tabs"><button mat-button *ngFor="let role of roles" [class.active]="sourceRole === role.code" (click)="sourceRole = role.code">{{ role.label }}</button></div>
+        <div class="players">
+          <mat-checkbox *ngFor="let player of sourceVisible" [checked]="sourceSelected.has(player.playerId)" (change)="toggle(player, 'source')">{{ playerLabel(player) }}</mat-checkbox>
+          <span *ngIf="!sourceVisible.length" class="empty">Nessun calciatore nel reparto.</span>
+        </div>
+      </section>
+
+      <section>
+        <mat-form-field appearance="outline">
+          <mat-label>Squadra controparte</mat-label>
+          <mat-select [(value)]="destinationParticipantId" (selectionChange)="selectDestination()">
+            <mat-option *ngFor="let participant of destinations" [value]="participant.id">{{ participant.name }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <div class="role-tabs" *ngIf="destinationParticipantId"><button mat-button *ngFor="let role of roles" [class.active]="destinationRole === role.code" (click)="destinationRole = role.code">{{ role.label }}</button></div>
+        <div class="players" *ngIf="destinationParticipantId && !loadingDestination">
+          <mat-checkbox *ngFor="let player of destinationVisible" [checked]="destinationSelected.has(player.playerId)" (change)="toggle(player, 'destination')">{{ playerLabel(player) }}</mat-checkbox>
+          <span *ngIf="!destinationVisible.length" class="empty">Nessun calciatore nel reparto.</span>
+        </div>
+        <mat-spinner *ngIf="loadingDestination" diameter="30"></mat-spinner>
+      </section>
+    </div>
+
+    <div class="selection-summary" [class.ready]="balanced">
+      <span>In uscita: <b>{{ sourceSelected.size }}</b></span>
+      <mat-icon>{{ balanced ? 'swap_horiz' : 'warning' }}</mat-icon>
+      <span>In ingresso: <b>{{ destinationSelected.size }}</b></span>
+    </div>
+    <p class="hint">Lo scambio richiede lo stesso numero di calciatori. Se selezioni un portiere viene selezionato automaticamente tutto il pacchetto.</p>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button mat-button [mat-dialog-close]="false" [disabled]="saving">Annulla</button>
+    <button mat-raised-button color="accent" [disabled]="!destinationParticipantId || !balanced || saving" (click)="confirm()">Conferma scambio</button>
+  </mat-dialog-actions>
+</div>

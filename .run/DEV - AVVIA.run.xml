@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="DEV - AVVIA" type="CompoundRunConfigurationType">
+    <toRun name="DEV · Database (interno)" type="js.build_tools.npm" />
+    <toRun name="DEV · Backend (interno)" type="QuarkusRunConfigurationType" />
+    <toRun name="DEV · Frontend (interno)" type="js.build_tools.npm" />
+    <method v="2" />
+  </configuration>
+</component>

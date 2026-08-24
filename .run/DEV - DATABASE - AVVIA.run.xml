@@ -1,9 +1,9 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="PROD - AVVIA" type="js.build_tools.npm" factoryName="npm">
+  <configuration default="false" name="DEV · Database (interno)" type="js.build_tools.npm" factoryName="npm" folderName="Componenti DEV">
     <package-json value="$PROJECT_DIR$/frontend/package.json" />
     <command value="run" />
     <scripts>
-      <script value="auction:start" />
+      <script value="dev:database:start" />
     </scripts>
     <node-interpreter value="project" />
     <envs />

@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Backend - Quarkus Dev" type="QuarkusRunConfigurationType" factoryName="Quarkus">
+  <configuration default="false" name="DEV · Backend (interno)" type="QuarkusRunConfigurationType" factoryName="Quarkus" folderName="Componenti DEV">
     <module name="backend" />
     <QsMavenRunConfiguration>
       <MavenSettings>

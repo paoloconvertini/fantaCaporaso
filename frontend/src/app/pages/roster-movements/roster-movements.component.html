@@ -1,0 +1,29 @@
+<div class="movements-page">
+  <header>
+    <div><span class="eyebrow">MERCATO</span><h2>Movimenti rose</h2></div>
+    <span>{{ activeMovementCount }} movimenti validi<span *ngIf="showReverted && revertedMovementCount"> · {{ revertedMovementCount }} annullati</span></span>
+  </header>
+
+  <section class="filters">
+    <label><span>Calciatore</span><input type="search" [(ngModel)]="query" (input)="onSearch()" placeholder="Cerca per nome..." /></label>
+    <label><span>Tipo</span><select [(ngModel)]="type" (change)="load()"><option value="">Tutti</option><option value="EXCHANGE">Trasferimenti</option><option value="RELEASE">Svincoli</option><option value="DEPARTED">Partiti</option></select></label>
+    <label><span>Fantasquadra</span><select [(ngModel)]="participantId" (change)="load()"><option [ngValue]="null">Tutte</option><option *ngFor="let p of participants" [ngValue]="p.id">{{ p.name }}</option></select></label>
+    <mat-slide-toggle class="reverted-toggle" [(ngModel)]="showReverted" (change)="load()">Mostra annullati</mat-slide-toggle>
+  </section>
+
+  <div class="loading" *ngIf="loading"><mat-spinner diameter="34"></mat-spinner></div>
+  <div class="empty" *ngIf="!loading && !movements.length">Nessun movimento registrato.</div>
+
+  <div class="movement-list" *ngIf="!loading && movements.length">
+    <article *ngFor="let row of movements" [class]="'movement ' + row.type.toLowerCase()" [class.reverted-movement]="row.revertedAt">
+      <div class="movement-main">
+        <span class="type-badge">{{ typeLabel(row.type) }}</span>
+        <strong>{{ row.playerName }}</strong><small>{{ row.playerTeam }}</small>
+      </div>
+      <div class="route" *ngIf="row.type === 'EXCHANGE'"><span>{{ row.sourceParticipant }}</span><mat-icon>arrow_forward</mat-icon><span>{{ row.destinationParticipant || 'Destinazione non disponibile' }}</span></div>
+      <div class="route" *ngIf="row.type !== 'EXCHANGE'"><span>Uscita da {{ row.sourceParticipant }}</span></div>
+      <div class="amounts"><span>Quota <b>{{ row.currentValue }}</b></span><span>Costo precedente <b>{{ row.previousRosterAmount }}</b></span><span *ngIf="row.refundedAmount">Rimborso <b>{{ row.refundedAmount }}</b></span></div>
+      <div class="movement-actions"><time>{{ row.createdAt | date:'dd/MM/yyyy HH:mm' }}</time><span *ngIf="row.revertedAt" class="reverted">Annullato</span><button *ngIf="!row.revertedAt" mat-stroked-button color="warn" [disabled]="!row.canRevert" (click)="revert(row)"><mat-icon>undo</mat-icon> Revert</button></div>
+    </article>
+  </div>
+</div>

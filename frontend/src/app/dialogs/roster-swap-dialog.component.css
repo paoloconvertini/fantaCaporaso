@@ -1,0 +1,16 @@
+.swap-dialog { color: #edf7f3; }
+h2, h3 { color: #fff; } h3 { margin: 0 0 12px; }
+mat-dialog-content { min-width: min(820px, 76vw); max-height: 70vh; padding: 10px 24px 18px; }
+.team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+section { min-width: 0; padding: 15px; border: 1px solid rgba(218,239,231,.18); border-radius: 12px; background: rgba(255,255,255,.035); }
+mat-form-field { width: 100%; }
+.role-tabs { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; margin-bottom: 10px; padding: 3px; border-radius: 8px; background: rgba(255,255,255,.06); }
+.role-tabs button { min-width: 0; color: #b8cbc4; }
+.role-tabs button.active { color: #092117; background: #69e6ad; }
+.players { display: flex; min-height: 170px; max-height: 260px; overflow-y: auto; flex-direction: column; gap: 5px; padding: 4px; }
+mat-checkbox { padding: 6px; border-radius: 7px; background: rgba(255,255,255,.035); }
+.empty, .hint { color: #91a69f; }
+.selection-summary { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 16px; padding: 11px; border: 1px solid rgba(255,190,100,.35); border-radius: 10px; color: #ffd09a; background: rgba(112,62,13,.18); }
+.selection-summary.ready { border-color: rgba(105,230,173,.4); color: #91efc2; background: rgba(22,105,70,.18); }
+.hint { margin: 8px 0 0; text-align: center; font-size: 12px; }
+@media (max-width: 760px) { mat-dialog-content { min-width: 0; padding: 8px 12px 14px; } .team-grid { grid-template-columns: 1fr; } .players { min-height: 120px; } }

@@ -1,0 +1,22 @@
+FROM maven:3.9-eclipse-temurin-21 AS build
+WORKDIR /workspace/backend
+
+COPY backend/pom.xml .
+COPY backend/src ./src
+RUN mvn compile quarkus:build -DskipTests
+
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl nodejs npm \
+    && npm install -g wrangler@4.124.0 \
+    && rm -rf /var/lib/apt/lists/* /root/.npm
+
+COPY --from=build /workspace/backend/target/quarkus-app/ ./
+COPY landing-page ./landing-page
+
+EXPOSE 8080
+HEALTHCHECK --interval=10s --timeout=3s --start-period=30s --retries=5 \
+  CMD curl --fail --silent http://localhost:8080/q/health/ready || exit 1
+CMD ["java", "-jar", "quarkus-run.jar"]

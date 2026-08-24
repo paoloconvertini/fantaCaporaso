@@ -4,6 +4,36 @@ Gestore dell'asta Fantacalcio con backend Quarkus, frontend Angular, PostgreSQL 
 
 L'autenticazione e' interna all'applicazione: utenti, ruoli e hash password sono salvati in PostgreSQL; il backend emette un JWT in cookie `HttpOnly`. Keycloak non e' piu' necessario.
 
+## Quale configurazione IntelliJ devo usare?
+
+Nel normale utilizzo servono soltanto questi quattro comandi:
+
+| Obiettivo | Configurazione | Risultato |
+| --- | --- | --- |
+| Sviluppare o provare modifiche senza toccare i dati reali | `DEV - AVVIA` | Avvia database DEV separato, backend Quarkus e frontend Angular su `http://localhost:4200` |
+| Usare l'applicazione reale per asta, mercato o pubblicazione Gazzetta | `PROD - AVVIA` | Avvia le immagini verificate, il proxy e il tunnel senza ricreare PostgreSQL |
+| Controllare se PROD e' gia' pronto | `PROD - STATO` | Verifica container, volume, database, pagina locale e link pubblico |
+| Spegnere i servizi applicativi PROD | `PROD - FERMA` | Ferma applicazione e tunnel conservando PostgreSQL e il volume `backend_pgdata` |
+
+Le configurazioni nella cartella IntelliJ `Componenti DEV` sono dettagli interni usati da
+`DEV - AVVIA`: non vanno lanciate singolarmente nell'uso ordinario. La cartella
+`Manutenzione DEV` contiene soltanto i controlli del database di sviluppo.
+
+### Pubblicare la Gazzetta
+
+La preparazione editoriale non usa il database, ma la consegna a Cloudflare e' consentita
+soltanto dal backend PROD:
+
+1. eseguire `PROD - STATO`;
+2. se PROD e' fermo, eseguire una sola volta `PROD - AVVIA`;
+3. aprire `http://localhost:8088/admin/gazzetta` ed effettuare il login admin;
+4. caricare l'export FantaMaster, generare l'anteprima e modificare testi e immagine;
+5. premere `Pubblica` soltanto dopo il controllo finale;
+6. verificare `https://gazzetta.fantacaporaso.it`.
+
+Non avviare DEV per pubblicare: in DEV il pulsante Cloudflare e' intenzionalmente disabilitato.
+Se PROD e' gia' attivo non occorre riavviarlo e non va eseguito alcun rebuild.
+
 ## Architettura operativa
 
 Lo scenario previsto per l'asta usa un solo Mac:
@@ -99,15 +129,15 @@ La pubblicazione e' separata per ambiente: DEV deve mantenere `APP_ENVIRONMENT=d
 
 Le credenziali Pages si configurano esclusivamente con `bash scripts/configure-cloudflare-pages.sh`: il token viene richiesto con input nascosto e salvato nel file PROD `config/application-cloud.env`, escluso da Git. Il token deve avere soltanto il permesso account `Pages Write`; non riutilizzare mai il token del Tunnel. Il deploy statico usa Wrangler nel container PROD e viene eseguito soltanto dopo la conclusione della sessione.
 
-### Avvio asta da IntelliJ
+### Avvio servizi PROD da IntelliJ
 
 Nel selettore delle configurazioni Run sono disponibili:
 
-- `PROD - ASTA - AVVIA`: avvia rapidamente le immagini già verificate sul volume persistente `backend_pgdata`, attiva il Named Tunnel, ne verifica realmente l'HTTPS e stampa il link da condividere;
-- `PROD - ASTA - STATO`: ristampa link, container e controlli di raggiungibilità;
-- `PROD - ASTA - FERMA`: arresta soltanto i servizi applicativi; PostgreSQL di produzione resta attivo sul volume persistente.
+- `PROD - AVVIA`: avvia rapidamente le immagini già verificate sul volume persistente `backend_pgdata`, attiva il Named Tunnel, ne verifica realmente l'HTTPS e stampa il link da condividere;
+- `PROD - STATO`: ristampa link, container e controlli di raggiungibilità;
+- `PROD - FERMA`: arresta soltanto i servizi applicativi; PostgreSQL di produzione resta attivo sul volume persistente.
 
-L'applicazione usa il Named Tunnel Cloudflare `fantacaporaso-asta` e l'indirizzo stabile `https://asta.fantacaporaso.it`. Il token del tunnel e' salvato soltanto in `config/application-cloud.env`, escluso da Git. Durante l'asta non riavviare Docker Desktop, non sospendere il Mac e non eseguire nuovamente `PROD - ASTA - AVVIA`. Conservare anche il link LAN mostrato in console come alternativa per i dispositivi collegati alla stessa rete.
+L'applicazione usa il Named Tunnel Cloudflare `fantacaporaso-asta` e l'indirizzo stabile `https://asta.fantacaporaso.it`. Il token del tunnel e' salvato soltanto in `config/application-cloud.env`, escluso da Git. Durante l'asta non riavviare Docker Desktop, non sospendere il Mac e non eseguire nuovamente `PROD - AVVIA`. Conservare anche il link LAN mostrato in console come alternativa per i dispositivi collegati alla stessa rete.
 
 Il tunnel forza HTTP/2 su TCP per evitare le disconnessioni QUIC/UDP osservate sulla rete locale. Per l'avvio manuale usare `./scripts/start-auction.sh`; per un deploy usare `./scripts/deploy-auction.sh --rebuild`; per il controllo usare `./scripts/status-auction.sh`.
 

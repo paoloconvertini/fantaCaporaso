@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07120f">
+  <meta name="description" content="Storico pubblico delle puntate FantaCaporaso.">
+  <title>Storico puntate | FantaCaporaso</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #07120f; color: #effaf5; font: 16px system-ui, sans-serif; }
+    main { width: min(1100px, 100%); margin: auto; padding: 32px 18px 64px; }
+    a { color: #83e6b7; }
+    h1 { margin: 28px 0 8px; font-size: clamp(2rem, 6vw, 3.5rem); }
+    h2 { margin-bottom: 4px; }
+    .muted { color: #9eb8ad; }
+    .filters { display: flex; flex-wrap: wrap; gap: 10px; margin: 28px 0; }
+    input, select { min-height: 46px; background: #10231d; color: #fff; border: 1px solid #315448; border-radius: 10px; padding: 11px 13px; }
+    input { flex: 1 1 280px; }
+    select { flex: 0 1 260px; }
+    .session { margin: 26px 0; }
+    .card { background: #10231d; border: 1px solid #29483d; border-radius: 12px; padding: 14px; margin: 10px 0; }
+    .bids { display: flex; gap: 8px; flex-wrap: wrap; }
+    .bid { background: #18352b; border-radius: 20px; padding: 6px 10px; }
+    .empty { margin-top: 28px; padding: 28px; text-align: center; background: #10231d; border: 1px solid #29483d; border-radius: 14px; }
+  </style>
+</head>
+<body>
+<main>
+  <a href="/">← FantaCaporaso</a>
+  <h1>Storico delle puntate</h1>
+  <p class="muted">Aste competitive concluse, divise per sessione di mercato.</p>
+  <div class="filters">
+    <input id="q" type="search" placeholder="Cerca calciatore" autocomplete="off" aria-label="Cerca calciatore">
+    <select id="session" aria-label="Filtra per mercato"><option value="">Tutti i mercati</option></select>
+  </div>
+  <div id="content" aria-live="polite"><p class="empty">Nessuna sessione pubblicata.</p></div>
+</main>
+<script>
+  const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[char]);
+  const query = document.querySelector('#q');
+  const sessionFilter = document.querySelector('#session');
+  const content = document.querySelector('#content');
+  let sessions = [];
+
+  function render() {
+    const term = query.value.trim().toLowerCase();
+    const selectedSession = sessionFilter.value;
+    const html = sessions
+      .filter(session => !selectedSession || session.code === selectedSession)
+      .map(session => {
+        const rounds = session.rounds.filter(round => !term || round.player.toLowerCase().includes(term));
+        if (!rounds.length) return '';
+        return `<section class="session"><h2>${escapeHtml(session.label)}</h2>` +
+          `<p class="muted">Conclusa il ${new Date(session.closedAt).toLocaleString('it-IT')}</p>` +
+          rounds.map(round => `<article class="card"><strong>${escapeHtml(round.player)} · ${escapeHtml(round.team)}</strong>` +
+            `<p>Assegnato a ${escapeHtml(round.winner)} per <b>${round.price}</b></p><div class="bids">` +
+            round.bids.map(bid => `<span class="bid">${escapeHtml(bid.participant)}: ${bid.amount}</span>`).join('') +
+            '</div></article>').join('') + '</section>';
+      }).join('');
+    content.innerHTML = html || `<p class="empty">${term ? 'Nessun calciatore trovato.' : 'Nessuna sessione pubblicata.'}</p>`;
+  }
+
+  fetch('data.json', { cache: 'no-store' }).then(response => response.json()).then(data => {
+    sessions = data.sessions || [];
+    sessions.forEach(session => sessionFilter.insertAdjacentHTML('beforeend',
+      `<option value="${escapeHtml(session.code)}">${escapeHtml(session.label)}</option>`));
+    render();
+  }).catch(() => content.innerHTML = '<p class="empty">Storico temporaneamente non disponibile.</p>');
+  query.addEventListener('input', render);
+  sessionFilter.addEventListener('change', render);
+</script>
+</body>
+</html>

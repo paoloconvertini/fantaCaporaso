@@ -1,0 +1,19 @@
+<div class="history-page">
+  <header><div><span>ASTA</span><h2>Storico puntate</h2></div><b>{{ total }} aste competitive</b></header>
+  <section class="filters">
+    <input type="search" [(ngModel)]="query" (input)="search()" placeholder="Calciatore o vincitore..." />
+    <select [(ngModel)]="role" (change)="page=0; load()"><option value="">Tutti i ruoli</option><option value="PORTIERE">Portieri</option><option value="DIFENSORE">Difensori</option><option value="CENTROCAMPISTA">Centrocampisti</option><option value="ATTACCANTE">Attaccanti</option></select>
+    <select [(ngModel)]="sort" (change)="page=0; load()"><option value="date">Più recenti</option><option value="value">Quotazione più alta</option><option value="price">Prezzo più alto</option><option value="bidders">Più offerenti</option></select>
+  </section>
+  <div class="loading" *ngIf="loading"><mat-spinner diameter="34"></mat-spinner></div>
+  <div class="empty" *ngIf="!loading && !items.length">Nessuna asta competitiva registrata.</div>
+  <section class="history-list" *ngIf="!loading">
+    <article *ngFor="let item of items">
+      <div class="player"><span>{{ item.playerRole | slice:0:1 }}</span><div><strong>{{ item.playerName }}</strong><small>{{ item.playerTeam }} · quotazione {{ item.playerValue ?? '—' }}</small></div></div>
+      <div class="winner"><small>Assegnato a</small><strong>{{ item.winnerName }}</strong><b>{{ item.winningAmount }} crediti</b></div>
+      <div class="bids"><span *ngFor="let bid of item.bids"><em>{{ bid.participantName }}</em><b>{{ bid.amount }}</b></span></div>
+      <time>{{ item.closedAt | date:'dd/MM/yyyy HH:mm' }} · {{ item.bidderCount }} offerenti</time>
+    </article>
+  </section>
+  <nav *ngIf="total > size"><button mat-stroked-button (click)="previous()" [disabled]="page===0">Precedenti</button><span>Pagina {{ page + 1 }}</span><button mat-stroked-button (click)="next()" [disabled]="(page+1)*size>=total">Successivi</button></nav>
+</div>

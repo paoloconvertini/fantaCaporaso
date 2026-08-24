@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Frontend - Angular Dev" type="js.build_tools.npm" factoryName="npm">
+  <configuration default="false" name="DEV · Frontend (interno)" type="js.build_tools.npm" factoryName="npm" folderName="Componenti DEV">
     <package-json value="$PROJECT_DIR$/frontend/package.json" />
     <command value="run" />
     <scripts>

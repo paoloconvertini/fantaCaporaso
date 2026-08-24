@@ -1,0 +1,126 @@
+<div class="newspaper-admin">
+  <section class="import-panel">
+    <div>
+      <span class="eyebrow">LABORATORIO · SOLO ANTEPRIMA DEV</span>
+      <h1>La Gazzetta di FantaCaporaso</h1>
+      <p>Carica l’export della giornata. Il file viene soltanto analizzato: non salviamo dati e non pubblichiamo nulla.</p>
+    </div>
+    <div class="import-actions">
+      <input type="file" accept=".xlsx,.xls" (change)="selectFile($event)">
+      <button mat-flat-button color="primary" (click)="analyze()" [disabled]="!file || loading">
+        <mat-icon>preview</mat-icon> Analizza file
+      </button>
+      <button mat-stroked-button (click)="showDemo()"><mat-icon>newspaper</mat-icon> Mostra demo</button>
+      <mat-spinner *ngIf="loading" diameter="28"></mat-spinner>
+    </div>
+  </section>
+
+  <div class="import-status" *ngIf="preview" [class.ready]="preview.calculated">
+    <mat-icon>{{ preview.calculated ? 'check_circle' : 'schedule' }}</mat-icon>
+    <div><strong>{{ preview.message }}</strong><span>{{ preview.teamsFound }} squadre · {{ preview.matches.length }} incontri · {{ preview.competition }}</span></div>
+  </div>
+
+  <section class="editor-panel" *ngIf="demo || preview">
+    <div class="editor-heading">
+      <div><span class="eyebrow">PASSAGGIO 2</span><h2>Componi la prima pagina</h2></div>
+      <button mat-flat-button color="primary" (click)="generatePreview()" [disabled]="!demo && !preview?.calculated">
+        <mat-icon>auto_awesome</mat-icon> Genera anteprima
+      </button>
+    </div>
+
+    <div class="editor-grid" *ngIf="generated">
+      <label>Giornata<input [(ngModel)]="matchday" maxlength="40"></label>
+      <label class="wide">Occhiello<input [(ngModel)]="kicker" maxlength="160"></label>
+      <label class="wide">Titolo principale<textarea [(ngModel)]="headline" rows="2" maxlength="160"></textarea></label>
+      <label class="wide">Sottotitolo<textarea [(ngModel)]="standfirst" rows="2" maxlength="500"></textarea></label>
+      <label>Titolo articolo<input [(ngModel)]="leadTitle" maxlength="160"></label>
+      <label class="wide">Articolo principale<textarea [(ngModel)]="leadText" rows="3" maxlength="1200"></textarea></label>
+      <label>Titolo FantaSfiga<input [(ngModel)]="fantasfigaTitle" maxlength="160"></label>
+      <label class="wide">Testo FantaSfiga<textarea [(ngModel)]="fantasfigaText" rows="3" maxlength="1200"></textarea></label>
+      <ng-container *ngFor="let brief of briefs; let index = index">
+        <label>Titolo breve {{ index + 1 }}<input [(ngModel)]="brief.title" maxlength="120"></label>
+        <label class="wide">Testo breve {{ index + 1 }}<textarea [(ngModel)]="brief.text" rows="2" maxlength="500"></textarea></label>
+      </ng-container>
+      <label class="wide image-picker">Immagine di copertina
+        <input type="file" accept="image/jpeg,image/png,image/webp" (change)="selectImage($event)">
+        <small>JPG, PNG o WebP · massimo 5 MB</small>
+      </label>
+    </div>
+
+    <div class="publish-row" *ngIf="generated">
+      <span><mat-icon>{{ publishStatus?.enabled ? 'cloud_done' : 'cloud_off' }}</mat-icon>{{ publishStatus?.message }}</span>
+      <button mat-flat-button color="accent" (click)="publish()"
+              [disabled]="!publishStatus?.enabled || !imageFile || publishing">
+        <mat-icon>publish</mat-icon> Pubblica
+      </button>
+    </div>
+  </section>
+
+  <article class="front-page" *ngIf="generated" [class.pending]="!demo && !preview?.calculated">
+    <header class="masthead">
+      <div class="edition">ANNO I · N. 1</div>
+      <div>
+        <span>LA GAZZETTA DI</span>
+        <h2>FantaCaporaso</h2>
+      </div>
+      <div class="edition right">{{ matchday }}<br>{{ demo ? 'EDIZIONE DEMO' : 'ANTEPRIMA' }}</div>
+    </header>
+
+    <div class="rule"></div>
+    <section class="lead">
+      <p class="kicker">{{ kicker }}</p>
+      <h3>{{ headline }}</h3>
+      <p class="standfirst">{{ standfirst }}</p>
+    </section>
+
+    <section class="fantasfiga-box">
+      <span>FANTASFIGA</span>
+      <h4>{{ fantasfigaTitle }}</h4>
+      <p>{{ fantasfigaText }}</p>
+    </section>
+
+    <div class="paper-grid">
+      <section class="story-column">
+        <img *ngIf="imageUrl" class="cover-image" [src]="imageUrl" alt="Immagine di copertina">
+        <div *ngIf="!imageUrl" class="hero-art" aria-label="Spazio per la copertina illustrata">
+          <span class="ball">⚽</span>
+          <strong>QUI NASCERÀ<br>L’IMMAGINE<br>DI COPERTINA</strong>
+        </div>
+        <h4>{{ leadTitle }}</h4>
+        <p>{{ leadText }}</p>
+      </section>
+
+      <section class="scores-column">
+        <div class="section-title">Tutti i risultati</div>
+        <div class="score" *ngFor="let match of matches">
+          <div><span>{{ match.home }}</span><span>{{ match.away }}</span></div>
+          <div class="magic"><span>{{ match.result || '–' }}</span><b>{{ match.goals || '–' }}</b></div>
+        </div>
+        <p class="legend">Magic punti · risultato in gol</p>
+
+        <ng-container *ngIf="demo; else importedStanding">
+          <div class="section-title standing-title">La classifica</div>
+          <div class="standing" *ngFor="let row of demoStanding">
+            <b>{{ row[0] }}</b><span>{{ row[1] }}</span><strong>{{ row[2] }}</strong>
+          </div>
+        </ng-container>
+        <ng-template #importedStanding>
+          <div class="section-title standing-title">La classifica importata</div>
+          <div class="standing" *ngFor="let row of preview?.standings | slice:0:8">
+            <b>{{ row.position }}</b><span>{{ row.team }}</span><strong>{{ row.points || '0' }}</strong>
+          </div>
+        </ng-template>
+      </section>
+
+      <aside class="briefs-column">
+        <div class="section-title">Brevi dal campo</div>
+        <ng-container *ngFor="let brief of briefs; let last = last">
+          <h4>{{ brief.title }}</h4>
+          <p *ngIf="!last">{{ brief.text }}</p>
+          <blockquote *ngIf="last">“{{ brief.text }}”</blockquote>
+        </ng-container>
+      </aside>
+    </div>
+    <footer>{{ demo ? 'EDIZIONE DIMOSTRATIVA · DATI NON REALI · NON PUBBLICABILE' : 'ANTEPRIMA REDAZIONALE · NON ANCORA PUBBLICATA' }}</footer>
+  </article>
+</div>
