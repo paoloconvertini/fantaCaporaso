@@ -1,0 +1,18 @@
+:host {
+    display: block;
+    color: #e8f3ef;
+}
+
+:host ::ng-deep .mat-dialog-title,
+:host ::ng-deep .mat-dialog-content {
+    color: #e8f3ef;
+}
+
+:host ::ng-deep .mat-dialog-content {
+    padding-top: 8px;
+    line-height: 1.55;
+}
+
+:host ::ng-deep .mat-dialog-actions {
+    padding: 12px 0 0;
+}

@@ -35,7 +35,30 @@
 select {
     margin-top: 6px;
     width: 100%;
-    padding: 4px;
+    box-sizing: border-box;
+    padding: 10px 12px;
     border-radius: 6px;
-    border: none;
+    border: 1px solid rgba(255,255,255,.25);
+    color: #f2f8f6;
+    background: #26183b;
+    caret-color: #69e6ad;
 }
+
+select option { color: #f2f8f6; background: #26183b; }
+
+.player-search {
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 6px;
+    padding: 10px 12px;
+    border: 1px solid rgba(255,255,255,.25);
+    border-radius: 6px;
+    outline: none;
+    color: #f2f8f6;
+    background: #26183b;
+    caret-color: #69e6ad;
+}
+
+label[for="player-search"] { display: block; margin-top: 12px; }
+.player-search:focus { border-color: #69e6ad; }
+.player-search::placeholder { color: #a69bb7; }

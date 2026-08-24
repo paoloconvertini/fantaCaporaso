@@ -3,6 +3,9 @@ package com.fantasta.rest;
 import com.fantasta.dto.PlayerImportResult;
 import com.fantasta.dto.AdminPlayerDto;
 import com.fantasta.dto.AdminEligibleParticipantDto;
+import com.fantasta.dto.MarketPlayerImportResult;
+import com.fantasta.dto.UpdatePlayerValueDto;
+import com.fantasta.model.PlayerEntity;
 import com.fantasta.service.DbService;
 import com.fantasta.service.PlayerQueryService;
 import jakarta.annotation.security.RolesAllowed;
@@ -72,5 +75,41 @@ public class PlayerAdminResource {
                     .entity(java.util.Map.of("error", e.getMessage()))
                     .build();
         }
+    }
+
+    @POST
+    @Path("/market-update")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Transactional
+    @RolesAllowed("admin")
+    public Response updateMarketPlayers(@RestForm("file") InputStream file,
+                                        @RestForm("confirm") String confirm) {
+        if (file == null) throw new BadRequestException("File Excel mancante");
+        try {
+            MarketPlayerImportResult result = Boolean.parseBoolean(confirm)
+                    ? dbService.updateMarketPlayersFromExcel(file)
+                    : dbService.previewMarketPlayersFromExcel(file);
+            return Response.ok(result).build();
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(java.util.Map.of("error", e.getMessage())).build();
+        } catch (Exception e) {
+            return Response.serverError().entity(java.util.Map.of("error", e.getMessage())).build();
+        }
+    }
+
+    @PUT
+    @Path("/{playerId}/value")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
+    @RolesAllowed("admin")
+    public Response updatePlayerValue(@PathParam("playerId") Long playerId, UpdatePlayerValueDto dto) {
+        if (dto == null || dto.value == null || dto.value < 0) {
+            throw new BadRequestException("Quotazione non valida");
+        }
+        PlayerEntity player = PlayerEntity.findById(playerId);
+        if (player == null) throw new NotFoundException("Calciatore non trovato");
+        player.valore = dto.value;
+        return Response.ok().build();
     }
 }

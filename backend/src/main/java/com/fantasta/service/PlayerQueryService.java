@@ -27,7 +27,9 @@ public class PlayerQueryService {
     @Inject
     RosterService rosterService;
 
-    public List<PlayerDto> getFreePlayers(String role) {
+    public List<PlayerDto> getFreePlayers(String role, String query) {
+        String normalizedQuery = query == null ? "" : query.trim().toLowerCase(Locale.ROOT);
+        String namePattern = "%" + normalizedQuery + "%";
         if (role != null) {
             Role roleEnum;
             try {
@@ -36,13 +38,15 @@ public class PlayerQueryService {
                 throw new RuntimeException("Ruolo non valido: " + role);
             }
             return PlayerEntity.find(
-                            "assigned = false and active = true and role = ?1 order by valore desc", roleEnum
+                            "assigned = false and active = true and role = ?1 and lower(name) like ?2 order by valore desc, name",
+                            roleEnum, namePattern
                     ).stream()
                     .map(p -> toDto((PlayerEntity) p))
                     .collect(Collectors.toList());
         } else {
             return PlayerEntity.find(
-                            "assigned = false and active = true order by valore desc"
+                            "assigned = false and active = true and lower(name) like ?1 order by valore desc, name",
+                            namePattern
                     ).stream()
                     .map(p -> toDto((PlayerEntity) p))
                     .collect(Collectors.toList());

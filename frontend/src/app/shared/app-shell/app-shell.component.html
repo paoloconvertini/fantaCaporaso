@@ -16,14 +16,27 @@
             <a *ngIf="isUser" mat-list-item routerLink="/mobile" (click)="closeMenuOnMobile()"><mat-icon>gavel</mat-icon> Asta corrente</a>
             <a mat-list-item routerLink="/players" (click)="closeMenuOnMobile()"><mat-icon>sports_soccer</mat-icon> Svincolati</a>
             <a mat-list-item routerLink="/rosters" (click)="closeMenuOnMobile()"><mat-icon>groups_2</mat-icon> Rose</a>
+            <a mat-list-item routerLink="/auction-history" (click)="closeMenuOnMobile()"><mat-icon>history</mat-icon> Storico puntate</a>
             <a *ngIf="isAdmin || isParticipant" mat-list-item routerLink="/rosa" (click)="closeMenuOnMobile()">
                 <mat-icon>list_alt</mat-icon>
                 {{ isAdmin ? 'Gestione rose' : 'Rosa' }}
             </a>
             <ng-container *ngIf="isAdmin">
+                <a mat-list-item routerLink="/admin/mercato" (click)="closeMenuOnMobile()">
+                    <mat-icon>storefront</mat-icon>
+                    Mercato di riparazione
+                </a>
+                <a mat-list-item routerLink="/admin/movimenti-rose" (click)="closeMenuOnMobile()">
+                    <mat-icon>swap_horiz</mat-icon>
+                    Movimenti rose
+                </a>
                 <a mat-list-item routerLink="/admin/users" (click)="closeMenuOnMobile()">
                     <mat-icon>manage_accounts</mat-icon>
                     Utenti
+                </a>
+                <a mat-list-item routerLink="/admin/gazzetta" (click)="closeMenuOnMobile()">
+                    <mat-icon>newspaper</mat-icon>
+                    Gazzetta
                 </a>
                 <a mat-list-item routerLink="/upload-rosters" (click)="closeMenuOnMobile()"><mat-icon>file_upload</mat-icon> Importa rose FantaMaster</a>
                 <a mat-list-item routerLink="/upload-players" (click)="closeMenuOnMobile()"><mat-icon>file_upload</mat-icon> Importa quotazioni</a>

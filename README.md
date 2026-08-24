@@ -30,15 +30,14 @@ La configurazione di produzione autorizza l'origin stabile `https://asta.fantaca
 
 ```bash
 cp config/application-dev.env.example config/application-dev.env
-cp config/application-dev.env.example backend/.env
 ```
 
-Compilare i secret e le credenziali. Il catalogo calciatori non viene più sincronizzato automaticamente all'avvio: l'import stagionale è un'operazione esplicita dell'admin.
+Compilare i secret e le credenziali. Lo sviluppo usa esclusivamente il database `fantasta_dev` sul volume `fantasta_dev_pgdata`; il database storico di produzione resta sul volume `backend_pgdata`. Il catalogo calciatori non viene più sincronizzato automaticamente all'avvio: l'import stagionale è un'operazione esplicita dell'admin.
 
 2. Avviare PostgreSQL:
 
 ```bash
-docker compose -f backend/docker-compose.yml up -d postgres
+./scripts/start-dev.sh
 ```
 
 3. Avviare il backend con Java 21:
@@ -60,6 +59,8 @@ npm run start
 ```
 
 URL frontend: `http://localhost:4200`.
+
+Da IntelliJ `DEV - AVVIA` avvia insieme database separato, Quarkus e Angular; le tre configurazioni restano disponibili anche singolarmente. `DEV - DATABASE - FERMA` arresta soltanto PostgreSQL dev e conserva i dati. Il clone iniziale dalla produzione si esegue una sola volta con `./scripts/clone-prod-to-dev.sh`; lo script rifiuta di sovrascrivere un database dev gia' inizializzato.
 
 ## Stack completo locale
 
@@ -92,23 +93,31 @@ Lo stack espone per default il reverse proxy su `127.0.0.1:8088` e PostgreSQL su
 
 La pagina istituzionale statica si trova in `landing-page/` ed e' destinata a Cloudflare Pages sul dominio principale `fantacaporaso.it`. Non dipende dai container locali e mostra lo stato di mercato chiuso anche quando il Mac e' spento. Il sottodominio `asta.fantacaporaso.it` resta riservato all'applicazione d'asta pubblicata tramite Cloudflare Tunnel.
 
+La conclusione dell'intera sessione avviene dal comando admin `Concludi sessione`, distinto dalla chiusura del singolo round. Il comando rifiuta round ancora attivi, salva una sola fotografia finale delle rose, pulisce giro/skip e genera in background l'archivio statico completo in `backend/target/auction-archive/storico/`. Le sessioni precedenti restano consultabili e la pagina consente la ricerca per calciatore.
+
+La pubblicazione e' separata per ambiente: DEV deve mantenere `APP_ENVIRONMENT=dev` e `AUCTION_ARCHIVE_PUBLISH_ENABLED=false` e produce soltanto l'anteprima locale. Soltanto PROD puo' abilitare la consegna a Cloudflare, impostando entrambe le condizioni; il codice rifiuta qualsiasi pubblicazione proveniente da DEV. Un errore dell'archivio non annulla mai la conclusione della sessione e viene registrato sul relativo record per un successivo tentativo.
+
+Le credenziali Pages si configurano esclusivamente con `bash scripts/configure-cloudflare-pages.sh`: il token viene richiesto con input nascosto e salvato nel file PROD `config/application-cloud.env`, escluso da Git. Il token deve avere soltanto il permesso account `Pages Write`; non riutilizzare mai il token del Tunnel. Il deploy statico usa Wrangler nel container PROD e viene eseguito soltanto dopo la conclusione della sessione.
+
 ### Avvio asta da IntelliJ
 
 Nel selettore delle configurazioni Run sono disponibili:
 
-- `ASTA - AVVIA`: ferma PostgreSQL di sviluppo, avvia rapidamente le immagini già verificate sul volume persistente `backend_pgdata`, crea un nuovo Quick Tunnel, ne verifica realmente l'HTTPS e stampa il link da condividere;
-- `ASTA - STATO`: ristampa link, container e controlli di raggiungibilità;
-- `ASTA - FERMA`: arresta soltanto i servizi applicativi; PostgreSQL resta attivo sul volume persistente.
+- `PROD - ASTA - AVVIA`: avvia rapidamente le immagini già verificate sul volume persistente `backend_pgdata`, attiva il Named Tunnel, ne verifica realmente l'HTTPS e stampa il link da condividere;
+- `PROD - ASTA - STATO`: ristampa link, container e controlli di raggiungibilità;
+- `PROD - ASTA - FERMA`: arresta soltanto i servizi applicativi; PostgreSQL di produzione resta attivo sul volume persistente.
 
-L'applicazione usa il Named Tunnel Cloudflare `fantacaporaso-asta` e l'indirizzo stabile `https://asta.fantacaporaso.it`. Il token del tunnel e' salvato soltanto in `config/application-cloud.env`, escluso da Git. Durante l'asta non riavviare Docker Desktop, non sospendere il Mac e non eseguire nuovamente `ASTA - AVVIA`. Conservare anche il link LAN mostrato in console come alternativa per i dispositivi collegati alla stessa rete.
+L'applicazione usa il Named Tunnel Cloudflare `fantacaporaso-asta` e l'indirizzo stabile `https://asta.fantacaporaso.it`. Il token del tunnel e' salvato soltanto in `config/application-cloud.env`, escluso da Git. Durante l'asta non riavviare Docker Desktop, non sospendere il Mac e non eseguire nuovamente `PROD - ASTA - AVVIA`. Conservare anche il link LAN mostrato in console come alternativa per i dispositivi collegati alla stessa rete.
 
 Il tunnel forza HTTP/2 su TCP per evitare le disconnessioni QUIC/UDP osservate sulla rete locale. Per l'avvio manuale usare `./scripts/start-auction.sh`; per un deploy usare `./scripts/deploy-auction.sh --rebuild`; per il controllo usare `./scripts/status-auction.sh`.
 
 Il volume `backend_pgdata` e' dichiarato esterno: Compose lo utilizza ma non ne gestisce il ciclo di vita. Il deploy applicativo non include mai PostgreSQL e ricrea soltanto backend, frontend e reverse proxy con `--no-deps`. Prima di procedere verifica il volume, controlla che il database non sia vuoto, blocca l'operazione con mercato o round attivo e crea un dump validato in `backups/`. Lo script confronta inoltre i conteggi di partecipanti, calciatori e righe rosa prima e dopo il deploy. Non eliminare manualmente `backend_pgdata` e non avviare un secondo PostgreSQL sullo stesso volume.
 
-Il browser deve conoscere soltanto l'URL HTTPS pubblico. Il backend non pubblica porte nello stack completo; PostgreSQL pubblica soltanto `127.0.0.1:5433`, non raggiungibile dalla LAN o da Internet. La configurazione IntelliJ `fantasta@localhost` usa `jdbc:postgresql://localhost:5433/fantasta` e continua a funzionare dopo la ricreazione del container perché non dipende dal suo IP interno. Utente e password provengono da `backend/.env`; salvare la password nello storage sicuro di IntelliJ.
+Il browser deve conoscere soltanto l'URL HTTPS pubblico. Il backend non pubblica porte nello stack completo; PostgreSQL di produzione pubblica soltanto `127.0.0.1:5433`, non raggiungibile dalla LAN o da Internet. In IntelliJ la connessione `PRODUZIONE - NON MODIFICARE` usa la porta `5433`, mentre `SVILUPPO - fantasta_dev` usa la porta `5432`. Le due istanze possono restare attive contemporaneamente perché usano container, database, porte e volumi distinti.
 
 ## Backup e ripristino
+
+Ogni modifica futura allo schema deve avere una migrazione SQL idempotente in `database/migrations/`. Dopo la validazione in DEV, la stessa migrazione viene applicata al database PROD soltanto dopo controllo di round e mercato, backup validato e rilevazione dei conteggi principali prima e dopo. Le migrazioni di schema non copiano dati tra ambienti e non devono ricreare database, tabelle esistenti o volumi.
 
 Creare un backup prima delle prove finali e prima dell'asta:
 
@@ -123,6 +132,23 @@ Ripristino distruttivo:
 ```bash
 ./scripts/restore-db.sh --confirm backups/fantasta-YYYYMMDD-HHMMSS.dump
 ```
+
+## Mercato di riparazione
+
+Il mercato di riparazione si prepara dalla pagina admin `Mercato` e segue un ordine obbligatorio:
+
+1. selezionare il 1°, 2° o 3° mercato e salvare la configurazione;
+2. caricare il file aggiornato dei calciatori e controllare l'anteprima;
+3. correggere manualmente l'eventuale quotazione dei calciatori non presenti nel file;
+4. confermare l'aggiornamento delle quotazioni;
+5. effettuare gli svincoli manualmente dalla pagina Rose oppure importare le rose post-scambi;
+6. aprire l'asta dei calciatori disponibili.
+
+L'import di mercato dei calciatori non cancella mai le rose: aggiorna quotazioni, squadra e ruolo, inserisce i nuovi arrivati e marca come partiti gli assenti. Gli svincoli sono bloccati finche' questo passaggio non e' stato confermato. L'import rose di mercato accetta soltanto cessioni e scambi tra proprietari esistenti; aggiunte, duplicati, fogli mancanti e pacchetti portieri spezzati bloccano l'operazione.
+
+Il rimborso di una cessione e' sempre la quotazione corrente. Gli scambi non modificano i crediti residui. Quando un giocatore viene svincolato, tutti i suoi proprietari registrati possono riacquistarlo soltanto dalla quotazione di svincolo piu' un credito. I giocatori usciti dalla lista non consumano il limite di svincoli. Nel 1° e 3° mercato il pacchetto portieri si cede interamente e il nuovo pacchetto parte dalla somma delle tre quotazioni piu' alte; nel 2° mercato la porta non puo' essere cambiata.
+
+L'import `Importa quotazioni FantaMaster` fuori dalla pagina Mercato resta riservato al cambio stagione ed e' distruttivo: non utilizzarlo per un mercato di riparazione.
 
 Il ripristino ferma il backend, ricrea il database, importa il dump e riavvia il backend.
 
@@ -154,11 +180,21 @@ La dashboard guida l'admin nella sequenza operativa: configurazione partecipanti
 
 Partecipanti e osservatori raggiungono sempre il round attivo dalla voce `Asta corrente` del menu. La pagina recupera lo stato persistito anche dopo una navigazione o una riconnessione WebSocket, senza richiedere un aggiornamento manuale. Durante il countdown tutti vedono i nomi di chi ha puntato, deduplicati, ma mai gli importi. Alla chiusura, tutti vedono contemporaneamente la graduatoria completa, il vincitore e l'importo. Un partecipante può ritirare la propria offerta in qualsiasi momento prima della chiusura, anche quando è la più alta; il ritiro viene notificato in tempo reale. Le offerte a zero restano non valide. Durante l'asta la rosa è consultabile, ma lo svincolo dei calciatori è riservato all'admin.
 
+Durante un nuovo round admin e partecipanti vedono anche l'ultima assegnazione conclusa, conservata nello stato persistito del round. La pagina `Storico puntate` registra esclusivamente le assegnazioni con almeno due offerenti e mostra le offerte finali, la quotazione, il vincitore e il prezzo; assegnazioni dirette, correzioni, round senza offerte e round con un solo offerente sono esclusi. L'admin consulta l'intero storico, mentre ogni partecipante vede soltanto le aste in cui la propria squadra ha presentato un'offerta; un osservatore senza squadra non vede risultati. La restrizione viene applicata dal backend usando l'identità autenticata. Parità e spareggi riconoscibili restano collegati. La registrazione avviene dopo assegnazione e notifica, in una transazione separata e silenziosa: un suo eventuale fallimento non modifica il round e non produce messaggi nell'interfaccia.
+
 Il riepilogo mostra sempre i conteggi P/D/C/A, i crediti residui e il massimo spendibile per un singolo calciatore. Il massimo conserva obbligatoriamente almeno 1 credito per ogni altro posto ancora libero. La porta viene acquistata come pacchetto: quando una squadra possiede almeno un portiere, eventuali record mancanti nel pacchetto non riducono il massimo spendibile.
 
 La dashboard admin mostra, per il ruolo selezionato, sia le chiamate ancora disponibili sia i posti rosa complessivamente vuoti su tutte le squadre. Per i portieri i posti sono conteggiati singolarmente, anche se una porta può riempirne più di uno con una sola asta. Il comando di assegnazione manuale apre una ricerca per nome del calciatore o squadra ed e' indipendente dal turno corrente: un giocatore libero può essere assegnato direttamente indicando partecipante e prezzo. La lista propone solo le squadre con posti sufficienti per il ruolo e per l'eventuale pacchetto portieri. Se il giocatore e' già assegnato, la stessa finestra mostra proprietario e costo correnti e consente di correggerli; il proprietario corrente resta selezionabile anche a quota piena per correggere il solo prezzo, mentre il vecchio proprietario viene rimborsato automaticamente in caso di trasferimento. Quote ruolo, crediti e massimo spendibile vengono nuovamente validati al salvataggio.
 
-Nelle viste delle rose i reparti restano separati nell'ordine P/D/C/A e i calciatori sono ordinati alfabeticamente all'interno di ogni reparto, sia su desktop sia su mobile.
+Nelle viste delle rose i reparti restano separati nell'ordine P/D/C/A e i calciatori sono ordinati alfabeticamente all'interno di ogni reparto, sia su desktop sia su mobile. Nome e squadra reale sono sempre mostrati in quest'ordine; i calciatori non più presenti nel listone ufficiale restano nella rosa e sono evidenziati con il badge `Partito` fino allo svincolo dell'admin.
+
+La lista degli svincolati può essere filtrata contemporaneamente per ruolo e per nome del calciatore, senza distinzione tra maiuscole e minuscole.
+
+La pagina admin `Movimenti rose` conserva e mostra svincoli, uscite di giocatori partiti e trasferimenti tra fantasquadre. Gli acquisti effettuati durante i round d'asta, gli aggiornamenti di quotazione e le correzioni del solo prezzo non fanno parte di questo registro. L'admin può annullare l'ultima operazione compatibile: il revert ripristina rosa, prezzo, crediti, conteggio svincoli e restrizioni e opera sull'intero gruppo dell'importazione o pacchetto portieri. I movimenti annullati restano conservati per audit, sono nascosti per impostazione predefinita e diventano consultabili attivando `Mostra annullati`. Il backend blocca il revert se esistono movimenti successivi o se il calciatore è stato nuovamente assegnato.
+
+L'admin può correggere la quotazione corrente direttamente dalle liste degli svincolati e delle rose. La modifica non cambia il costo pagato, i crediti o il proprietario, ma aggiorna valore rosa e rimborso di un successivo svincolo.
+
+Dalla gestione di una rosa l'admin può eseguire uno scambio diretto con un'altra fantasquadra. Lo scambio deve contenere lo stesso numero di calciatori per parte, conserva costo storico e crediti residui, valida contemporaneamente i limiti di ruolo ed e' registrato come un'unica operazione annullabile. I portieri possono essere scambiati soltanto come pacchetto completo contro un altro pacchetto completo; anche lo svincolo di un solo portiere dissocia automaticamente l'intero pacchetto.
 
 Durante un round la pagina mobile riporta gli stessi due valori in forma compatta e non interattiva: icona Material `casino` per le chiamate disponibili e `group_add` per i posti rosa vuoti.
 
@@ -168,7 +204,7 @@ Se alla chiusura esiste un solo offerente, la puntata resta visibile come valore
 
 Admin e partecipanti ricevono inoltre un breve messaggio esplicativo quando il costo minimo viene applicato d'ufficio all'unico offerente.
 
-Ogni riga del riepilogo squadre apre la rosa selezionata. Tutti gli utenti autenticati possono consultare le rose, dove costo d'acquisto e quotazione corrente sono mostrati in colonne separate e il valore complessivo della squadra e' la somma delle quotazioni dei suoi giocatori; un'eventuale quotazione assente vale zero. L'intestazione di ogni squadra riporta crediti residui e valore complessivo della rosa. Le operazioni di svincolo restano disponibili esclusivamente all'admin e secondo lo stato del mercato.
+Ogni riga del riepilogo squadre apre la rosa selezionata. Tutti gli utenti autenticati possono consultare le rose, dove costo d'acquisto e quotazione corrente sono mostrati in colonne separate e il valore complessivo della squadra e' la somma delle quotazioni dei suoi giocatori; un'eventuale quotazione assente vale zero. L'intestazione di ogni squadra riporta crediti residui e valore complessivo della rosa. Le operazioni di svincolo restano disponibili esclusivamente all'admin e secondo lo stato del mercato. L'apertura e la chiusura del mercato sono manuali tramite il relativo interruttore nella pagina admin; non è prevista una scadenza automatica.
 
 Un giocatore senza offerte può essere saltato anche durante il round: lo skip annulla automaticamente il round e il relativo timer prima di passare al giocatore successivo. Non appena è presente almeno un'offerta, il comando viene disabilitato e il backend rifiuta comunque lo skip. Quando il ruolo non ha più chiamate disponibili, `Ricomincia giro` rende nuovamente estraibili tutti i giocatori saltati e ancora liberi.
 

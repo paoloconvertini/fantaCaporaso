@@ -17,6 +17,9 @@ import { HomeComponent } from './pages/home/home.component';
 import { environment } from '../environments/environment';
 import { AdminUsersComponent } from './pages/admin-users/admin-users.component';
 import { LoginComponent } from './pages/login/login.component';
+import { RosterMovementsComponent } from './pages/roster-movements/roster-movements.component';
+import { AuctionHistoryComponent } from './pages/auction-history/auction-history.component';
+import { NewspaperComponent } from './pages/newspaper/newspaper.component';
 
 const routes: Routes = [
     { path: 'login', component: LoginComponent },
@@ -29,11 +32,14 @@ const routes: Routes = [
             { path: 'admin', component: AdminComponent, canActivate: [AdminOnlyGuard] },
             { path: 'rosters', component: RostersComponent },
             { path: 'players', component: PlayersComponent },
+            { path: 'auction-history', component: AuctionHistoryComponent },
             { path: 'upload-rosters', component: UploadRostersComponent, canActivate: [AdminOnlyGuard] },
             { path: 'upload-players', component: UploadPlayersComponent, canActivate: [AdminOnlyGuard] },
             { path: 'rosa', component: RosaComponent },
             { path: 'admin/mercato', component: MercatoComponent, canActivate: [AdminOnlyGuard] },
+            { path: 'admin/movimenti-rose', component: RosterMovementsComponent, canActivate: [AdminOnlyGuard] },
             { path: 'admin/users', component: AdminUsersComponent, canActivate: [AdminOnlyGuard] },
+            { path: 'admin/gazzetta', component: NewspaperComponent, canActivate: [AdminOnlyGuard] },
 
             { path: 'mobile', component: MobileComponent, canActivate: [UserOnlyGuard] },
             { path: 'mobile/rosters', component: MobileRostersComponent },

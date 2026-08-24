@@ -19,17 +19,20 @@ public class MercatoSvincolo extends PanacheEntity {
     @Column(nullable = false)
     public int count = 0; // numero svincoli effettuati per questo ruolo
 
+    public String sessionCode;
+
     @Column(nullable = false)
     public LocalDateTime lastUpdate = LocalDateTime.now();
 
     /** 🔹 Metodo utility per incrementare */
-    public static void increment(ParticipantEntity participant, Role role) {
-        MercatoSvincolo record = find("participant = ?1 and role = ?2", participant, role).firstResult();
+    public static void increment(ParticipantEntity participant, Role role, String sessionCode) {
+        MercatoSvincolo record = find("participant = ?1 and role = ?2 and sessionCode = ?3", participant, role, sessionCode).firstResult();
         if (record == null) {
             record = new MercatoSvincolo();
             record.participant = participant;
             record.role = role;
             record.count = 1;
+            record.sessionCode = sessionCode;
         } else {
             record.count++;
             record.lastUpdate = LocalDateTime.now();
@@ -38,8 +41,8 @@ public class MercatoSvincolo extends PanacheEntity {
     }
 
     /** 🔹 Restituisce il numero di svincoli già fatti */
-    public static int getCount(ParticipantEntity participant, Role role) {
-        MercatoSvincolo record = find("participant = ?1 and role = ?2", participant, role).firstResult();
+    public static int getCount(ParticipantEntity participant, Role role, String sessionCode) {
+        MercatoSvincolo record = find("participant = ?1 and role = ?2 and sessionCode = ?3", participant, role, sessionCode).firstResult();
         return record != null ? record.count : 0;
     }
 }

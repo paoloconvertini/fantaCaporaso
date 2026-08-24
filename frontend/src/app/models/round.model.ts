@@ -7,4 +7,5 @@ export interface Round {
     durationSeconds: number;
     tieBreak?: string;
     allowedUsers?: number[];
+    previousAssignment?: { player: string; playerTeam?: string; playerRole?: string; winner: string; amount: number };
 }

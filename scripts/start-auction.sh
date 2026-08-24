@@ -18,9 +18,6 @@ export POSTGRES_VOLUME_NAME="$AUCTION_POSTGRES_VOLUME"
 export PUBLIC_BIND_ADDRESS="0.0.0.0"
 export PUBLIC_HTTP_PORT="8088"
 
-# Lo stesso volume PostgreSQL non deve essere aperto da due server contemporaneamente.
-docker compose --env-file "$AUCTION_DB_ENV" -f "$AUCTION_ROOT/backend/docker-compose.yml" stop postgres >/dev/null 2>&1 || true
-
 if [[ -z "$(auction_postgres_container)" ]]; then
   echo "Avvio il database persistente; i deploy successivi non lo toccheranno..."
   auction_compose up -d postgres

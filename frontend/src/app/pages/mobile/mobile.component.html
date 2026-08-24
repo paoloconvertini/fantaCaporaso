@@ -19,6 +19,11 @@
         <mat-icon aria-hidden="true">paid</mat-icon><strong>{{ round.value ?? '—' }}</strong>
       </span>
     </div>
+    <div class="previous-assignment" *ngIf="round.previousAssignment">
+      <mat-icon>history</mat-icon>
+      <div><small>Ultima assegnazione</small><strong>{{ round.previousAssignment.player }} · {{ round.previousAssignment.playerTeam }}</strong></div>
+      <span>{{ round.previousAssignment.winner }} <b>{{ round.previousAssignment.amount }}</b></span>
+    </div>
 
     <div class="market-numbers" aria-label="Situazione del ruolo corrente">
       <span class="market-number" [attr.aria-label]="remainingCalls + ' chiamate ancora disponibili'">

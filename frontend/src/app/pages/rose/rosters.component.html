@@ -44,12 +44,17 @@
                         <span *ngIf="row.index !== 'TOT'">{{ row.index }}</span>
                         <strong *ngIf="row.index === 'TOT'">Tot {{ role }}</strong>
                     </td>
-                    <td *ngFor="let p of participants" class="player-cell">
+                    <td *ngFor="let p of participants" class="player-cell"
+                        [class.departed-player]="row.index !== 'TOT' && row.players[p.id] && !row.players[p.id].active">
                         <ng-container *ngIf="row.players[p.id] as player">
                             <span *ngIf="row.index !== 'TOT'" class="player-pill">
-                                <span class="player-name">{{ player.playerName }}</span>
+                                <span class="player-identity">
+                                    <span class="player-name">{{ player.playerName }}</span>
+                                    <small class="player-team">{{ player.team }}</small>
+                                    <small *ngIf="!player.active" class="departed-badge">Partito</small>
+                                </span>
                                 <small class="cost-value" title="Costo d'acquisto">{{ player.amount }}</small>
-                                <small class="market-value" title="Quotazione">{{ player.valore || 0 }}</small>
+                                <small class="market-value" title="Quotazione">{{ player.valore || 0 }}<button *ngIf="isAdmin" class="inline-edit" type="button" (click)="editValue(player)" title="Modifica quotazione"><mat-icon>edit</mat-icon></button></small>
                             </span>
 
                             <span *ngIf="row.index === 'TOT'" class="total-values player-pill">
@@ -98,10 +103,15 @@
                     <span>Quota</span>
                 </div>
 
-                <div class="mobile-player" *ngFor="let player of playersFor(participant.id, role)">
-                    <span>{{ player.playerName }}</span>
+                <div class="mobile-player" *ngFor="let player of playersFor(participant.id, role)"
+                     [class.departed-player]="!player.active">
+                    <span class="player-identity">
+                        <span class="player-name">{{ player.playerName }}</span>
+                        <small class="player-team">{{ player.team }}</small>
+                        <small *ngIf="!player.active" class="departed-badge">Partito</small>
+                    </span>
                     <b title="Costo d'acquisto">{{ player.amount }}</b>
-                    <b class="market-value" title="Quotazione">{{ player.valore || 0 }}</b>
+                    <b class="market-value" title="Quotazione">{{ player.valore || 0 }}<button *ngIf="isAdmin" class="inline-edit" type="button" (click)="editValue(player)" title="Modifica quotazione"><mat-icon>edit</mat-icon></button></b>
                 </div>
 
                 <div class="mobile-role-totals" *ngIf="playersFor(participant.id, role).length">

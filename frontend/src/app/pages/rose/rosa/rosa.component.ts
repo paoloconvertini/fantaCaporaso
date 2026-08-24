@@ -8,6 +8,8 @@ import { ConfirmDialogComponent } from '../../../dialogs/confirm/confirm-dialog.
 import { MatDialog } from '@angular/material/dialog';
 import { UserApiService } from '../../../services/user-api.service';
 import { ActivatedRoute } from '@angular/router';
+import { EditPlayerValueDialogComponent } from '../../../dialogs/edit-player-value-dialog.component';
+import { RosterSwapDialogComponent } from '../../../dialogs/roster-swap-dialog.component';
 
 @Component({
     selector: 'app-rosa',
@@ -26,7 +28,7 @@ export class RosaComponent implements OnInit {
     loading = false;
 
     get displayedColumns(): string[] {
-        return this.isAdmin ? ['team', 'player', 'amount', 'valore', 'actions'] : ['team', 'player', 'amount', 'valore'];
+        return this.isAdmin ? ['player', 'team', 'amount', 'valore', 'actions'] : ['player', 'team', 'amount', 'valore'];
     }
 
     get totalMarketValue(): number {
@@ -108,7 +110,7 @@ export class RosaComponent implements OnInit {
                 this.roster = [...res].sort((a, b) =>
                     (a.playerName ?? '').localeCompare(b.playerName ?? '', 'it', { sensitivity: 'base' })
                 );
-                this.selectedRole = 'PORTIERE';
+                this.selectedRole = this.selectedRole || 'PORTIERE';
                 this.filterByRole(this.selectedRole);
                 this.residui = res?.length ? res[0].residui ?? 0 : 0;
                 this.loading = false;
@@ -120,6 +122,36 @@ export class RosaComponent implements OnInit {
                 this.loading = false;
                 this.snackBar.open('Errore nel caricamento della rosa', 'Chiudi', { duration: 3000 });
             }
+        });
+    }
+
+    editValue(player: RosterDto): void {
+        if (!this.isAdmin) return;
+        this.dialog.open(EditPlayerValueDialogComponent, {
+            data: { id: player.playerId, name: player.playerName, team: player.team, value: player.valore }
+        }).afterClosed().subscribe(value => {
+            if (typeof value === 'number') this.loadRoster();
+        });
+    }
+
+    openSwap(): void {
+        if (!this.isAdmin || !this.selectedParticipantId || !this.roster.length) return;
+        const source = this.participants.find(row => row.id === this.selectedParticipantId);
+        this.dialog.open(RosterSwapDialogComponent, {
+            width: '920px',
+            maxWidth: '96vw',
+            panelClass: 'roster-swap-dialog-panel',
+            data: {
+                sourceParticipantId: this.selectedParticipantId,
+                sourceParticipantName: source?.name || this.roster[0]?.participantName,
+                sourceRoster: this.roster,
+                participants: this.participants,
+                initialRole: this.selectedRole || 'PORTIERE'
+            }
+        }).afterClosed().subscribe(result => {
+            if (!result) return;
+            this.snackBar.open('Scambio completato e registrato nei movimenti', 'Chiudi', { duration: 3500 });
+            this.loadRoster();
         });
     }
 
@@ -158,7 +190,9 @@ export class RosaComponent implements OnInit {
             width: '350px',
             data: {
                 title: 'Conferma svincolo',
-                message: `Vuoi davvero svincolare ${player.playerName}?`
+                message: player.role === 'PORTIERE'
+                    ? `Vuoi cedere l’intero pacchetto portieri? Il rimborso sarà la somma delle quotazioni attuali.`
+                    : `Vuoi svincolare ${player.playerName} e recuperare ${player.valore || 0} crediti?`
             }
         });
 
@@ -181,8 +215,10 @@ export class RosaComponent implements OnInit {
         if (!participantId) return;
 
         this.rosterService.svincola(participantId, playerId).subscribe({
-            next: () => {
-                this.snackBar.open('Giocatore svincolato', 'Chiudi', { duration: 2000 });
+            next: (result) => {
+                this.snackBar.open(
+                    `${result.goalkeeperPackage ? 'Pacchetto portieri ceduto' : 'Giocatore svincolato'}: +${result.refundedCredits} crediti, residuo ${result.remainingCredits}`,
+                    'Chiudi', { duration: 3500 });
                 this.loadRoster(); // 🔁 ricarica dal backend per aggiornare residui
             }
         });

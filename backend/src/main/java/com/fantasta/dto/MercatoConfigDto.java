@@ -16,4 +16,8 @@ public class MercatoConfigDto {
     public int maxDifensori;
     public int maxCentrocampisti;
     public int maxAttaccanti;
+    public int numeroMercato;
+    public String sessionCode;
+    public boolean quotazioniAggiornate;
+    public LocalDateTime quotazioniAggiornateAt;
 }

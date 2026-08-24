@@ -586,3 +586,4 @@ mat-icon.big-icon {
 }
 .automatic-minimum { display: flex; align-items: center; gap: 6px; margin-top: 8px; color: #8ff0c3; font-size: .85rem; }
 .automatic-minimum mat-icon { width: 18px; height: 18px; font-size: 18px; }
+.previous-assignment { display:grid; gap:3px; padding:12px!important; border:1px solid rgba(105,230,173,.22); background:rgba(105,230,173,.07)!important; }.previous-assignment small { color:#91a69f; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:.08em; }.previous-assignment strong { color:#fff; }.previous-assignment span { color:#c5d8d1; }.previous-assignment b { color:#69e6ad; }

@@ -21,10 +21,14 @@ export class RosterService {
         return this.http.get<ParticipantRosterDto[]>(`${this.BASE_URL}/grouped`);
     }
 
-    svincola(participantId: number, playerId: number): Observable<void> {
-        return this.http.post<void>(
+    svincola(participantId: number, playerId: number): Observable<any> {
+        return this.http.post<any>(
             `${this.BASE_URL}/svincola?participantId=${participantId}`,
             { playerId }
         );
+    }
+
+    swap(payload: { sourceParticipantId: number; destinationParticipantId: number; sourcePlayerIds: number[]; destinationPlayerIds: number[] }): Observable<any> {
+        return this.http.post<any>(`${this.BASE_URL}/swap`, payload);
     }
 }

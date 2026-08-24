@@ -52,7 +52,8 @@ public class RosterQueryService {
                 r.player.team,
                 r.player.role.toString(),
                 r.amount,
-                r.player.valore
+                r.player.valore,
+                r.player.active
         );
     }
 
@@ -65,7 +66,8 @@ public class RosterQueryService {
                 r.player.team,
                 r.player.role.toString(),
                 r.amount,
-                r.player.valore
+                r.player.valore,
+                r.player.active
         );
     }
 }

@@ -1,6 +1,8 @@
 package com.fantasta.service;
 
 import com.fantasta.dto.PlayerImportResult;
+import com.fantasta.dto.MarketPlayerChangeDto;
+import com.fantasta.dto.MarketPlayerImportResult;
 import com.fantasta.model.*;
 import com.fantasta.model.Role;
 import io.quarkus.hibernate.orm.panache.Panache;
@@ -20,6 +22,12 @@ import java.nio.file.Path;
 public class DbService {
 
     private static final Logger LOG = Logger.getLogger(DbService.class);
+
+    @jakarta.inject.Inject
+    MarketRestrictionService marketRestrictionService;
+
+    @jakarta.inject.Inject
+    MercatoService mercatoService;
 
     /**
      * Sincronizza il catalogo giocatori con l’Excel:
@@ -250,6 +258,7 @@ public class DbService {
             rosterEntry.persist();
             packagePlayer.assigned = true;
             packagePlayer.persist();
+            marketRestrictionService.rememberCurrentOwner(packagePlayer, participant);
             created.add(rosterEntry);
         }
         return created;
@@ -278,14 +287,7 @@ public class DbService {
         }
 
         List<PlayerEntity> selected = new ArrayList<>();
-        if (available.size() <= 3) {
-            selected.addAll(available);
-        } else {
-            selected.add(available.get(0));
-            selected.add(available.get(1));
-            List<PlayerEntity> lowest = lowestValued(available.subList(2, available.size()));
-            selected.add(lowest.get(ThreadLocalRandom.current().nextInt(lowest.size())));
-        }
+        selected.addAll(available.subList(0, Math.min(3, available.size())));
 
         if (selected.size() == 2) {
             findSurplusGoalkeeper(team).ifPresent(selected::add);
@@ -457,6 +459,94 @@ public class DbService {
         return new PlayerImportResult(rows.size(), rows.size(), 0, 0, 0, 0, true);
     }
 
+    /** Anteprima non distruttiva per una sessione di mercato di riparazione. */
+    public MarketPlayerImportResult previewMarketPlayersFromExcel(InputStream is) throws Exception {
+        mercatoService.requireConfiguredMarket();
+        return marketPlayerReport(parseExcel(is), true);
+    }
+
+    /** Aggiorna il catalogo senza cancellare o spostare alcuna riga rosa. */
+    @Transactional
+    public MarketPlayerImportResult updateMarketPlayersFromExcel(InputStream is) throws Exception {
+        mercatoService.requireConfiguredMarket();
+        Map<String, ExcelRow> rows = parseExcel(is);
+        MarketPlayerImportResult result = marketPlayerReport(rows, false);
+
+        for (ExcelRow row : rows.values()) {
+            PlayerEntity player = PlayerEntity.find("lower(name) = ?1", norm(row.name)).firstResult();
+            if (player == null) {
+                player = new PlayerEntity();
+                player.name = row.name;
+                player.assigned = false;
+            }
+            player.team = row.team;
+            player.role = row.role;
+            player.valore = row.valore == null ? 0D : row.valore;
+            player.active = true;
+            player.deletedAt = null;
+            player.persist();
+        }
+
+        for (PlayerEntity player : PlayerEntity.<PlayerEntity>list("active = true")) {
+            if (rows.containsKey(norm(player.name))) continue;
+            player.active = false;
+            player.deletedAt = java.time.Instant.now();
+            // La rosa resta intatta: sarà l'admin a confermare la cessione.
+            player.assigned = RosterEntity.count("player", player) > 0;
+        }
+        mercatoService.markQuotesUpdated();
+        return result;
+    }
+
+    private MarketPlayerImportResult marketPlayerReport(Map<String, ExcelRow> rows, boolean preview) {
+        MarketPlayerImportResult result = new MarketPlayerImportResult(preview, rows.size());
+        Map<String, PlayerEntity> existingByName = PlayerEntity.<PlayerEntity>listAll().stream()
+                .collect(java.util.stream.Collectors.toMap(p -> norm(p.name), p -> p, (a, b) -> a));
+
+        for (ExcelRow row : rows.values()) {
+            PlayerEntity existing = existingByName.get(norm(row.name));
+            if (existing == null) {
+                result.newPlayers.add(change(null, row, List.of()));
+                continue;
+            }
+            double newValue = row.valore == null ? 0D : row.valore;
+            if (!Objects.equals(existing.team, row.team) || existing.role != row.role
+                    || Double.compare(value(existing), newValue) != 0 || !existing.active) {
+                result.updated.add(change(existing, row, ownerNames(existing)));
+            }
+        }
+
+        for (PlayerEntity existing : existingByName.values()) {
+            if (!existing.active || rows.containsKey(norm(existing.name))) continue;
+            MarketPlayerChangeDto change = change(existing, null, ownerNames(existing));
+            if (change.assigned) result.departedInRosters.add(change);
+            else result.departedFree.add(change);
+        }
+        return result;
+    }
+
+    private MarketPlayerChangeDto change(PlayerEntity existing, ExcelRow row, List<String> owners) {
+        return new MarketPlayerChangeDto(
+                existing == null ? null : existing.id,
+                existing == null ? row.name : existing.name,
+                existing == null ? null : existing.team,
+                row == null ? null : row.team,
+                (row == null ? existing.role : row.role).name(),
+                existing == null ? 0D : value(existing),
+                row == null || row.valore == null ? 0D : row.valore,
+                existing != null && RosterEntity.count("player", existing) > 0,
+                owners);
+    }
+
+    private List<String> ownerNames(PlayerEntity player) {
+        return RosterEntity.<RosterEntity>list("player", player).stream()
+                .map(roster -> roster.participant.name).toList();
+    }
+
+    private double value(PlayerEntity player) {
+        return player.valore == null ? 0D : player.valore;
+    }
+
     /** Sostituzione completa del catalogo per il cambio stagione. */
     @Transactional
     public PlayerImportResult replacePlayersFromExcel(InputStream is) throws Exception {
@@ -469,6 +559,9 @@ public class DbService {
         RosterHistoryEntity.deleteAll();
         GiroEntity.deleteAll();
         AuctionRoundStateEntity.deleteAll();
+        MarketMovementEntity.deleteAll();
+        PlayerReacquisitionRestrictionEntity.deleteAll();
+        PlayerOwnerHistoryEntity.deleteAll();
         PlayerEntity.deleteAll();
 
         for (ExcelRow xr : rows.values()) {
@@ -498,10 +591,10 @@ public class DbService {
                 Double value = parseValore(row.getCell(columns.get("value"), Row.MissingCellPolicy.RETURN_BLANK_AS_NULL));
                 if (name == null || name.isBlank()) throw new IllegalArgumentException("Nome calciatore mancante alla riga " + (row.getRowNum() + 1));
                 if (team == null || team.isBlank()) throw new IllegalArgumentException("Squadra mancante per " + name);
-                if (value == null || value < 0) throw new IllegalArgumentException("Quotazione non valida per " + name);
+                if (value != null && value < 0) throw new IllegalArgumentException("Quotazione non valida per " + name);
                 String key = norm(name);
                 if (rows.containsKey(key)) throw new IllegalArgumentException("Calciatore duplicato: " + name);
-                rows.put(key, new ExcelRow(name.trim(), team.trim(), role, value));
+                rows.put(key, new ExcelRow(name.trim(), team.trim(), role, value == null ? 0D : value));
             }
         }
         if (rows.isEmpty()) throw new IllegalArgumentException("Nessun calciatore valido trovato nel file Excel");

@@ -173,6 +173,38 @@
     font-weight: 600;
 }
 
+.player-identity {
+    min-width: 0;
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+    text-align: left;
+}
+
+.player-team {
+    padding: 0 !important;
+    color: #475569 !important;
+    background: transparent !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+}
+
+.departed-player { opacity: .7; }
+.departed-badge {
+    width: max-content;
+    margin-top: 2px;
+    padding: 2px 6px !important;
+    border: 1px solid rgba(159,48,18,.4);
+    border-radius: 999px;
+    color: #8a260f !important;
+    background: rgba(255,153,112,.32) !important;
+    font-size: 9px !important;
+    font-weight: 900 !important;
+    text-transform: uppercase;
+}
+
 .player-pill small,
 .total-amount {
     min-width: 0;
@@ -190,6 +222,9 @@
     background: #065f46;
     color: #ecfdf5;
 }
+
+.inline-edit { width: 18px; height: 18px; margin-left: 3px; padding: 0; border: 0; border-radius: 50%; color: #d1fae5; background: rgba(255,255,255,.14); cursor: pointer; vertical-align: middle; }
+.inline-edit mat-icon { width: 12px; height: 12px; font-size: 12px; line-height: 12px; }
 
 .total-values {
     padding-top: 7px;
@@ -330,6 +365,9 @@
     font-size: 15px;
     font-weight: 600;
 }
+
+.mobile-player .player-team { color: #94a3b8 !important; }
+.mobile-player .departed-badge { color: #ffc2a8 !important; background: rgba(166,55,20,.28) !important; }
 
 .role-empty {
     color: #94a3b8;

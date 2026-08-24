@@ -42,7 +42,7 @@ describe('RosaComponent', () => {
 
   it('does not expose the release column to participants', () => {
     component.isAdmin = false;
-    expect(component.displayedColumns).toEqual(['team', 'player', 'amount', 'valore']);
+    expect(component.displayedColumns).toEqual(['player', 'team', 'amount', 'valore']);
     expect(component.displayedColumns).not.toContain('actions');
   });
 

@@ -163,6 +163,8 @@
     font-size: 0.9rem;
     color: #ffeb3b;
 }
+.previous-assignment { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:9px; margin:9px 0; padding:9px 10px; border:1px solid rgba(105,230,173,.22); border-radius:9px; background:rgba(105,230,173,.07); }
+.previous-assignment mat-icon { color:#69e6ad; }.previous-assignment div { display:grid; min-width:0; }.previous-assignment small { color:#91a69f; font-size:.68rem; }.previous-assignment strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.82rem; }.previous-assignment span { color:#dcebe5; font-size:.75rem; white-space:nowrap; }.previous-assignment b { margin-left:4px; color:#69e6ad; }
 
 /* Lista attivi */
 .list-row {

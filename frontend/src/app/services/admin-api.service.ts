@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { HttpParams } from '@angular/common/http';
 import {Round} from "../models/round.model";
 
 @Injectable({
@@ -27,8 +28,8 @@ export class AdminApiService {
       return this.http.post(`${this.base}/api/round/close`, {});
   }
 
-  closeAuction(sessionId: number): Observable<any> {
-    return this.http.post(`${this.base}/api/admin/close-auction?sessionId=${sessionId}`, {});
+  closeAuction(): Observable<any> {
+    return this.http.post(`${this.base}/api/admin/close-auction`, {});
   }
 
   resetRound(): Observable<any> {
@@ -81,6 +82,54 @@ export class AdminApiService {
     formData.append('file', file);
     formData.append('confirm', String(confirm));
     return this.http.post<any>(`${this.base}/api/admin/players/upload`, formData);
+  }
+
+  updateMarketPlayers(file: File, confirm = false): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('confirm', String(confirm));
+    return this.http.post<any>(`${this.base}/api/admin/players/market-update`, formData);
+  }
+
+  updatePlayerValue(playerId: number, value: number): Observable<void> {
+    return this.http.put<void>(`${this.base}/api/admin/players/${playerId}/value`, { value });
+  }
+
+  previewNewspaper(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<any>(`${this.base}/api/admin/newspaper/preview`, formData);
+  }
+
+  getNewspaperPublishStatus(): Observable<any> {
+    return this.http.get<any>(`${this.base}/api/admin/newspaper/publish-status`);
+  }
+
+  publishNewspaper(edition: any, image: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('edition', JSON.stringify(edition));
+    formData.append('image', image);
+    return this.http.post<any>(`${this.base}/api/admin/newspaper/publish`, formData);
+  }
+
+  reconcileMarketRosters(file: File, confirm = false): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('confirm', String(confirm));
+    return this.http.post<any>(`${this.base}/api/admin/rosters/market-reconcile`, formData);
+  }
+
+  getRosterMovements(filters: { q?: string; type?: string; participantId?: number; includeReverted?: boolean }): Observable<any[]> {
+    let params = new HttpParams();
+    if (filters.q) params = params.set('q', filters.q);
+    if (filters.type) params = params.set('type', filters.type);
+    if (filters.participantId) params = params.set('participantId', String(filters.participantId));
+    if (filters.includeReverted) params = params.set('includeReverted', 'true');
+    return this.http.get<any[]>(`${this.base}/api/admin/roster-movements`, { params });
+  }
+
+  revertRosterMovement(id: number): Observable<void> {
+    return this.http.post<void>(`${this.base}/api/admin/roster-movements/${id}/revert`, {});
   }
 
   // 🔹 MANUAL ASSIGN

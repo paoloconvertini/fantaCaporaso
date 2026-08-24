@@ -7,6 +7,8 @@ import com.fantasta.dto.RoundDto;
 import com.fantasta.model.RoundState;
 import com.fantasta.service.AuctionService;
 import com.fantasta.service.DbService;
+import com.fantasta.service.AuctionHistoryService;
+import com.fantasta.service.AuctionArchiveService;
 import com.fantasta.ws.RoundSocket;
 import io.vertx.core.Vertx;
 import io.quarkus.security.identity.SecurityIdentity;
@@ -28,6 +30,7 @@ import java.util.Map;
 @ApplicationScoped
 public class AuctionResource {
     private static final Logger LOG = Logger.getLogger(AuctionResource.class);
+    private record ClosedRound(RoundState state, RoundDto dto) {}
 
     @Inject
     Vertx vertx;
@@ -47,6 +50,12 @@ public class AuctionResource {
 
     @Inject
     SecurityIdentity identity;
+
+    @Inject
+    AuctionHistoryService auctionHistoryService;
+
+    @Inject
+    AuctionArchiveService auctionArchiveService;
 
     @PostConstruct
     void recoverPersistedTimer() {
@@ -138,15 +147,17 @@ public class AuctionResource {
             autoCloseTimerId = vertx.setTimer(delay, id -> {
                 // Ogni accesso transazionale resta sul worker thread: il callback del
                 // timer gira sul thread I/O e non puo' aprire direttamente una JTA.
-                vertx.<RoundDto>executeBlocking(promise -> {
+                vertx.<ClosedRound>executeBlocking(promise -> {
                     try {
-                        promise.complete(service.closeIfActiveDto(expectedRoundId));
+                        RoundState closed = service.closeIfActive(expectedRoundId);
+                        promise.complete(closed == null ? null : new ClosedRound(closed, service.toDto(closed)));
                     } catch (Throwable t) {
                         promise.fail(t);
                     }
                 }, false).onComplete(result -> {
                     if (result.succeeded() && result.result() != null) {
-                        socket.broadcast("ROUND_CLOSED", result.result());
+                        socket.broadcast("ROUND_CLOSED", result.result().dto());
+                        recordHistoryBestEffort(result.result().state());
                     } else if (result.failed()) {
                         LOG.errorf(result.cause(), "Chiusura automatica fallita per il round %s", expectedRoundId);
                     }
@@ -170,6 +181,7 @@ public class AuctionResource {
         scheduledRoundId = null;
         RoundState s = service.close();
         socket.broadcast("ROUND_CLOSED", RoundDto.toDto(s));
+        recordHistoryBestEffort(s);
         return RoundDto.toDto(s);
     }
 
@@ -222,13 +234,21 @@ public class AuctionResource {
 
     @POST
     @Path("/assign")
-    @Transactional
     @RolesAllowed("admin")
     public RoundDto manualAssign(ManualAssignDto dto) {
         RoundState s = service.manualAssign(dto.participantId, dto.player, dto.team, dto.amount);
         RoundDto roundDto = RoundDto.toDto(s);
         socket.broadcast("ROUND_CLOSED", roundDto);
+        recordHistoryBestEffort(s);
         return roundDto;
+    }
+
+    private void recordHistoryBestEffort(RoundState round) {
+        vertx.executeBlocking(() -> {
+            auctionHistoryService.record(round);
+            return null;
+        }, false).onFailure(error -> LOG.debugf(error,
+                "Storico puntate non salvato per il round %s", round == null ? null : round.roundId));
     }
 
     @PUT
@@ -243,12 +263,16 @@ public class AuctionResource {
     @Path("/admin/close-auction")
     @Transactional
     @RolesAllowed("admin")
-    public Response closeAuction(@QueryParam("sessionId") Long sessionId) {
-        if (sessionId == null) {
-            throw new BadRequestException("SessionId mancante");
+    public Response closeAuction() {
+        var result = service.closeAuction();
+        if (!result.alreadyClosed()) {
+            vertx.executeBlocking(() -> {
+                auctionArchiveService.generateAndPublishBestEffort(result.id());
+                return null;
+            }, false).onFailure(error -> LOG.debugf(error,
+                    "Archivio statico non generato per la sessione %s", result.sessionCode()));
         }
-        service.closeAuction(sessionId);
-        return Response.ok().entity(Map.of("message", "Asta chiusa con successo")).build();
+        return Response.ok(result).build();
     }
 
 }

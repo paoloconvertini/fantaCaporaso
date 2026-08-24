@@ -28,6 +28,16 @@ describe('AppShellComponent', () => {
   it('recognizes the admin role', () => {
     expect(component.isAdmin).toBeTrue();
     expect(component.isParticipant).toBeFalse();
+    expect(fixture.nativeElement.textContent).toContain('Mercato di riparazione');
+  });
+
+  it('hides the repair market entry from non-admin users', () => {
+    component.isAdmin = false;
+    component.isUser = true;
+    component.isParticipant = true;
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).not.toContain('Mercato di riparazione');
   });
 
   it('shows the current auction entry to participants', () => {

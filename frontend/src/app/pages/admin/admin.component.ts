@@ -433,16 +433,18 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
 
     closeAuction() {
-        if (!confirm('Sei sicuro di voler chiudere l’asta?')) return;
+        if (!confirm('Concludere l’intera sessione? Verranno salvata la fotografia delle rose, puliti giro e skip e generato lo storico pubblico.')) return;
 
-        const sessionId = Date.now();
-        this.adminApi.closeAuction(sessionId).subscribe({
-            next: () => {
-                this.snackBar.open('Asta chiusa con successo', 'Chiudi', { duration: 3000 });
+        this.adminApi.closeAuction().subscribe({
+            next: (result) => {
+                const message = result?.alreadyClosed
+                    ? 'La sessione risultava già conclusa'
+                    : 'Sessione conclusa con successo';
+                this.snackBar.open(message, 'Chiudi', { duration: 3000 });
                 this.refreshRemaining();
             },
             error: (err) => {
-                this.showError('Errore chiusura asta', err);
+                this.showError('Errore conclusione sessione', err);
             }
         });
     }

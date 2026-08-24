@@ -10,8 +10,12 @@
 
     <mat-card class="list-card" *ngFor="let row of rosters">
         <h4>{{row.participant}} · Valore rosa {{ totalMarketValue(row.participant) }}</h4>
-        <div class="list-row">
-            <span>{{row.playerName}}</span>
+        <div class="list-row" [class.departed-row]="!row.active">
+            <span class="player-identity">
+                <strong>{{row.playerName}}</strong>
+                <small>{{row.team}}</small>
+                <small *ngIf="!row.active" class="departed-badge">Partito</small>
+            </span>
             <span class="summary-right">{{row.role}} · C {{row.amount}} · Q {{row.valore || 0}}</span>
         </div>
     </mat-card>

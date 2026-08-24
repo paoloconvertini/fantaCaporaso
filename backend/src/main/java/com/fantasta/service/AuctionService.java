@@ -1,5 +1,6 @@
 package com.fantasta.service;
 
+import com.fantasta.dto.AuctionSessionCloseDto;
 import com.fantasta.dto.RoundDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,6 +12,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @ApplicationScoped
@@ -33,6 +35,12 @@ public class AuctionService {
     DbService dbService;
 
     @Inject
+    MercatoService mercatoService;
+
+    @Inject
+    MarketRestrictionService marketRestrictionService;
+
+    @Inject
     EntityManager entityManager;
 
     @Transactional
@@ -44,9 +52,19 @@ public class AuctionService {
     }
 
     @Transactional
+    public RoundDto toDto(RoundState round) {
+        return RoundDto.toDto(round);
+    }
+
+    @Transactional
     public synchronized RoundState start(String player, String team, String role,
                                          Integer duration, String tieBreak, Integer value,
                                          Set<Long> allowedUsers) {
+        if (mercatoService.isMercatoAttivo()) {
+            mercatoService.requireUpdatedQuotes();
+        }
+        if (state == null) state = loadCurrentState();
+        RoundState previous = state;
         RoundState s = new RoundState();
         s.roundId = UUID.randomUUID().toString();
         s.player = player;
@@ -56,7 +74,7 @@ public class AuctionService {
         PlayerEntity calledPlayer = dbService.findByNameTeam(player, team);
         s.purchaseSize = calledPlayer == null ? 1 : dbService.purchaseSize(calledPlayer);
         s.closed = false;
-        s.minimumBid = minimumBidFor(allowedUsers, role);
+        s.minimumBid = minimumBidFor(allowedUsers, calledPlayer);
         s.durationSeconds = duration;
         s.endEpochMillis = (duration != null && duration > 0)
                 ? (System.currentTimeMillis() + duration * 1000L)
@@ -66,6 +84,17 @@ public class AuctionService {
                 ? new HashSet<>(allowedUsers)
                 : null;
         s.tieUsers = null;
+        s.auctionSessionCode = previous != null && previous.auctionSessionCode != null
+                ? previous.auctionSessionCode : UUID.randomUUID().toString();
+        s.previousAssignment = lastAssignment(previous);
+        boolean tieBreakRound = allowedUsers != null && !allowedUsers.isEmpty()
+                && previous != null && previous.tieUsers != null && !previous.tieUsers.isEmpty();
+        if (tieBreakRound) {
+            s.competitiveOriginRoundId = previous.competitiveOriginRoundId != null
+                    ? previous.competitiveOriginRoundId : previous.roundId;
+            s.historyBids = new LinkedHashMap<>(previous.historyBids == null
+                    ? Collections.emptyMap() : previous.historyBids);
+        }
 
         this.state = s;
         persistCurrentState();
@@ -120,10 +149,6 @@ public class AuctionService {
         if (participantId == null)
             throw new IllegalArgumentException("Partecipante mancante");
 
-        double minimumBid = state.minimumBid != null ? state.minimumBid : 1D;
-        if (amount < minimumBid)
-            throw new IllegalArgumentException("Offerta minima " + formatAmount(minimumBid));
-
         ParticipantEntity p = ParticipantEntity.findById(participantId);
         if (p == null)
             throw new IllegalArgumentException("Partecipante non trovato: " + participantId);
@@ -138,6 +163,10 @@ public class AuctionService {
         PlayerEntity auctionPlayer = dbService.findByNameTeam(state.player, state.playerTeam);
         if (auctionPlayer == null) throw new IllegalArgumentException("Giocatore non trovato");
         int purchaseSize = dbService.purchaseSize(auctionPlayer);
+        double minimumBid = minimumBidForParticipant(auctionPlayer, p,
+                state.minimumBid != null ? state.minimumBid : 1D);
+        if (amount < minimumBid)
+            throw new IllegalArgumentException("Offerta minima " + formatAmount(minimumBid));
 
         // ✅ residuo calcolato da RosterService
         int residuo = participantService.remainingCreditsById(p.id, p.totalCredits);
@@ -162,8 +191,8 @@ public class AuctionService {
 
     }
 
-    private Double minimumBidFor(Set<Long> allowedUsers, String role) {
-        double roleMinimum = Role.fromString(role) == Role.PORTIERE ? 3D : 1D;
+    private Double minimumBidFor(Set<Long> allowedUsers, PlayerEntity player) {
+        double roleMinimum = baseMinimumBid(player);
         if (state == null || allowedUsers == null || allowedUsers.isEmpty() || state.bids == null || state.bids.isEmpty()) {
             return roleMinimum;
         }
@@ -175,6 +204,25 @@ public class AuctionService {
                 .orElse(0D);
 
         return Math.max(roleMinimum, maxAllowedBid + 1D);
+    }
+
+    private double baseMinimumBid(PlayerEntity player) {
+        if (player == null || player.role != Role.PORTIERE) return 1D;
+        if (mercatoService.isMercatoAttivo()) {
+            return dbService.goalkeeperPackage(player).stream()
+                    .mapToDouble(goalkeeper -> goalkeeper.valore == null ? 0D : goalkeeper.valore)
+                    .sum();
+        }
+        return 3D;
+    }
+
+    private double minimumBidForParticipant(PlayerEntity player, ParticipantEntity participant, double roundMinimum) {
+        if (player.role == Role.PORTIERE) {
+            List<PlayerEntity> goalkeepers = dbService.goalkeeperPackage(player);
+            double base = Math.max(roundMinimum, baseMinimumBid(player));
+            return marketRestrictionService.hasRestriction(goalkeepers, participant) ? base + 1D : base;
+        }
+        return Math.max(roundMinimum, marketRestrictionService.minimumBid(player, participant));
     }
 
     private String formatAmount(double amount) {
@@ -229,6 +277,11 @@ public class AuctionService {
                 .toList();
 
         state.tieUsers = null;
+        if (state.historyBids == null) state.historyBids = new LinkedHashMap<>();
+        if (state.competitiveOriginRoundId == null && state.bids != null && state.bids.size() >= 2) {
+            state.competitiveOriginRoundId = state.roundId;
+        }
+        if (state.bids != null) state.historyBids.putAll(state.bids);
 
         if (top.isEmpty()) {
             state.winner = null;
@@ -239,9 +292,7 @@ public class AuctionService {
             PlayerEntity player = dbService.findByNameTeam(state.player, state.playerTeam);
             double chargedAmount = e.getValue();
             if (state.bids.size() == 1 && player != null) {
-                chargedAmount = player.role == Role.PORTIERE
-                        ? Math.max(3D, dbService.purchaseSize(player))
-                        : 1D;
+                chargedAmount = minimumBidForParticipant(player, p, baseMinimumBid(player));
             }
             state.winner = new Winner(id, p != null ? p.name : ("??-" + id), chargedAmount);
 
@@ -308,15 +359,34 @@ public class AuctionService {
         if (amount > maxBid) {
             throw new IllegalArgumentException("Importo massimo " + maxBid + ": conserva almeno 1 credito per ogni posto libero");
         }
-        if (player.role == Role.PORTIERE && amount < 3D) {
-            throw new IllegalArgumentException("Offerta minima per la porta: 3 crediti");
+        double minimumBid = minimumBidForParticipant(player, p, baseMinimumBid(player));
+        if (amount == null || amount < minimumBid) {
+            throw new IllegalArgumentException("Offerta minima " + formatAmount(minimumBid));
         }
+
+        boolean recognizedTie = state != null
+                && Objects.equals(state.player, playerName)
+                && Objects.equals(state.playerTeam, team)
+                && state.historyBids != null && state.historyBids.size() >= 2
+                && state.competitiveOriginRoundId != null;
 
         // 🔹 Salvataggio su DB
         dbService.assignPurchasedPlayer(player, p.id, amount);
 
         // 🔹 Aggiorna RoundState
-        if (state == null) state = new RoundState();
+        if (state == null) {
+            state = new RoundState();
+            state.roundId = UUID.randomUUID().toString();
+            state.auctionSessionCode = UUID.randomUUID().toString();
+        }
+        state.player = playerName;
+        state.playerTeam = team;
+        state.playerRole = player.role.name();
+        state.value = player.valore == null ? null : (int) Math.round(player.valore);
+        if (!recognizedTie) {
+            state.competitiveOriginRoundId = null;
+            state.historyBids = new LinkedHashMap<>();
+        }
         state.winner = new Winner(p.id, p.name, amount);
         state.closed = true;
         state.tieUsers = null;
@@ -326,6 +396,20 @@ public class AuctionService {
         // 🔔 NOTIFICA SUMMARY
         socket.broadcast("SUMMARY_UPDATED", Map.of("reason", "manual_assign"));
         return state;
+    }
+
+    private AssignmentSummary lastAssignment(RoundState previous) {
+        if (previous == null) return null;
+        if (previous.closed && previous.winner != null) {
+            AssignmentSummary summary = new AssignmentSummary();
+            summary.player = previous.player;
+            summary.playerTeam = previous.playerTeam;
+            summary.playerRole = previous.playerRole;
+            summary.winner = previous.winner.user;
+            summary.amount = previous.winner.amount;
+            return summary;
+        }
+        return previous.previousAssignment;
     }
 
     /**
@@ -377,8 +461,9 @@ public class AuctionService {
         if (amount > maxBid) {
             throw new IllegalArgumentException("Importo massimo " + maxBid + ": conserva almeno 1 credito per ogni posto libero");
         }
-        if (player.role == Role.PORTIERE && amount < 3D) {
-            throw new IllegalArgumentException("Offerta minima per la porta: 3 crediti");
+        double minimumBid = minimumBidForParticipant(player, participant, baseMinimumBid(player));
+        if (amount < minimumBid) {
+            throw new IllegalArgumentException("Offerta minima " + formatAmount(minimumBid));
         }
     }
 
@@ -417,6 +502,13 @@ public class AuctionService {
             throw new IllegalArgumentException("Importo insufficiente per il pacchetto portieri");
         }
 
+        if (!Objects.equals(previousOwner.id, participant.id)) {
+            String operationCode = UUID.randomUUID().toString();
+            for (RosterEntity entry : entries) {
+                recordRosterTransfer(entry, previousOwner, participant, amount, operationCode);
+            }
+        }
+
         for (int i = 0; i < entries.size(); i++) {
             RosterEntity entry = entries.get(i);
             entry.participant = participant;
@@ -427,19 +519,74 @@ public class AuctionService {
         }
     }
 
+    private void recordRosterTransfer(RosterEntity entry, ParticipantEntity source,
+                                      ParticipantEntity destination, double resultingAmount,
+                                      String operationCode) {
+        MarketMovementEntity movement = new MarketMovementEntity();
+        movement.participant = source;
+        movement.destinationParticipant = destination;
+        movement.player = entry.player;
+        movement.type = MarketMovementEntity.Type.EXCHANGE;
+        movement.currentValue = entry.player.valore == null ? 0D : entry.player.valore;
+        movement.previousRosterAmount = entry.amount == null ? 0D : entry.amount;
+        movement.refundedAmount = 0D;
+        movement.playerNameSnapshot = entry.player.name;
+        movement.playerTeamSnapshot = entry.player.team;
+        movement.sourceParticipantSnapshot = source.name;
+        movement.destinationParticipantSnapshot = destination.name;
+        movement.operationCode = operationCode;
+        movement.resultingRosterAmount = resultingAmount;
+        movement.creditsPreserved = false;
+        var market = mercatoService.getConfig();
+        movement.sessionCode = market == null ? null : market.sessionCode;
+        movement.persist();
+    }
+
     @Transactional
-    public void closeAuction(Long sessionId) {
-        // Copia lo stato corrente delle rose
+    public synchronized AuctionSessionCloseDto closeAuction() {
+        if (state == null) state = loadCurrentState();
+        if (state != null && !state.closed) {
+            throw new IllegalStateException("Concludi o annulla prima il round attivo");
+        }
+
+        if (state == null || state.auctionSessionCode == null) {
+            AuctionHistorySessionEntity latest = AuctionHistorySessionEntity.find(
+                    "order by closedAt desc").firstResult();
+            if (latest != null) return closeDto(latest, true);
+            throw new IllegalStateException("Nessuna sessione d'asta da concludere");
+        }
+
+        AuctionHistorySessionEntity existing = AuctionHistorySessionEntity.find(
+                "sessionCode", state.auctionSessionCode).firstResult();
+        if (existing != null) return closeDto(existing, true);
+
+        AuctionHistorySessionEntity session = new AuctionHistorySessionEntity();
+        session.sessionCode = state.auctionSessionCode;
+        var market = mercatoService.getConfig();
+        session.label = market != null && market.attiva
+                ? "Mercato di riparazione " + market.numeroMercato
+                : "Asta iniziale";
+        session.closedAt = LocalDateTime.now();
+        session.rosterSnapshotId = System.currentTimeMillis();
+        session.publishStatus = "PENDING";
+        session.publishAttempts = 0;
+        session.persistAndFlush();
+
         List<RosterEntity> roster = RosterEntity.listAll();
-        RosterService.createRoster(sessionId, roster);
+        RosterService.createRoster(session.rosterSnapshotId, roster);
 
         // Pulisce giro e skip
         GiroEntity.deleteAll();
         SkipEntity.deleteAll();
         state = null;
         clearCurrentState();
-        socket.broadcast("SUMMARY_UPDATED", Map.of("reason", "auction_closed", "sessionId", sessionId));
+        socket.broadcast("SUMMARY_UPDATED", Map.of("reason", "auction_closed", "sessionId", session.id));
+        return closeDto(session, false);
+    }
 
+    private AuctionSessionCloseDto closeDto(AuctionHistorySessionEntity session, boolean alreadyClosed) {
+        return new AuctionSessionCloseDto(session.id, session.sessionCode, session.label,
+                session.publishStatus, alreadyClosed);
     }
 
     private void persistCurrentState() {

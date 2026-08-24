@@ -4,6 +4,8 @@ import { forkJoin } from 'rxjs';
 import { AdminApiService } from '../../services/admin-api.service';
 import { AuthService } from '../../services/auth.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
+import { EditPlayerValueDialogComponent } from '../../dialogs/edit-player-value-dialog.component';
 
 interface Player {
     playerId: number;
@@ -13,6 +15,8 @@ interface Player {
     valore: number;
     participantId: number;
     participantName: string;
+    team: string;
+    active: boolean;
 }
 
 @Component({
@@ -33,7 +37,8 @@ export class RostersComponent implements OnInit {
     constructor(private api: UserApiService,
                 private adminApi: AdminApiService,
                 private auth: AuthService,
-                private snackBar: MatSnackBar) {}
+                private snackBar: MatSnackBar,
+                private dialog: MatDialog) {}
 
     ngOnInit(): void {
         this.isAdmin = this.auth.hasRole('admin');
@@ -51,6 +56,15 @@ export class RostersComponent implements OnInit {
                 URL.revokeObjectURL(url);
             },
             error: () => this.snackBar.open('Errore esportazione rose', 'Chiudi', { duration: 3500 })
+        });
+    }
+
+    editValue(player: Player): void {
+        if (!this.isAdmin) return;
+        this.dialog.open(EditPlayerValueDialogComponent, {
+            data: { id: player.playerId, name: player.playerName, team: player.team, value: player.valore }
+        }).afterClosed().subscribe(value => {
+            if (typeof value === 'number') this.loadRosters();
         });
     }
 

@@ -47,6 +47,11 @@ import { ConfirmDialogComponent } from './dialogs/confirm/confirm-dialog.compone
 import { HomeComponent } from './pages/home/home.component';
 import { AdminUsersComponent } from './pages/admin-users/admin-users.component';
 import { LoginComponent } from './pages/login/login.component';
+import { RosterMovementsComponent } from './pages/roster-movements/roster-movements.component';
+import { EditPlayerValueDialogComponent } from './dialogs/edit-player-value-dialog.component';
+import { RosterSwapDialogComponent } from './dialogs/roster-swap-dialog.component';
+import { AuctionHistoryComponent } from './pages/auction-history/auction-history.component';
+import { NewspaperComponent } from './pages/newspaper/newspaper.component';
 
 
 export function initializeAuth(auth: AuthService) {
@@ -74,6 +79,11 @@ export function initializeAuth(auth: AuthService) {
         HomeComponent,
         AdminUsersComponent,
         LoginComponent,
+        RosterMovementsComponent,
+        EditPlayerValueDialogComponent,
+        RosterSwapDialogComponent,
+        AuctionHistoryComponent,
+        NewspaperComponent,
     ],
     imports: [
         BrowserModule,

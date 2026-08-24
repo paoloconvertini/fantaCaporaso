@@ -17,4 +17,14 @@ public class MercatoConfigEntity extends PanacheEntity {
     public int maxDifensori;
     public int maxCentrocampisti;
     public int maxAttaccanti;
+
+    /** Numero regolamentare del mercato di riparazione: 1, 2 o 3. */
+    public int numeroMercato;
+
+    /** Cambia a ogni nuova sessione e separa conteggi e movimenti. */
+    public String sessionCode;
+
+    /** Gli svincoli restano bloccati finché le quotazioni non sono aggiornate. */
+    public boolean quotazioniAggiornate;
+    public LocalDateTime quotazioniAggiornateAt;
 }

@@ -7,6 +7,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @ApplicationScoped
 public class MercatoService {
@@ -18,16 +19,23 @@ public class MercatoService {
 
     @Transactional
     public MercatoConfigDto updateConfig(MercatoConfigDto dto) {
+        if (dto.numeroMercato < 1 || dto.numeroMercato > 3) {
+            throw new IllegalArgumentException("Seleziona il mercato di riparazione 1, 2 o 3");
+        }
         MercatoConfigEntity cfg = MercatoConfigEntity.findAll().firstResult();
         if (cfg == null) {
             cfg = new MercatoConfigEntity();
         }
+        boolean newSession = cfg.sessionCode == null || cfg.numeroMercato != dto.numeroMercato;
         cfg.attiva = dto.attiva;
         cfg.fineSessione = dto.fineSessione;
-        cfg.maxPortieri = dto.maxPortieri;
-        cfg.maxDifensori = dto.maxDifensori;
-        cfg.maxCentrocampisti = dto.maxCentrocampisti;
-        cfg.maxAttaccanti = dto.maxAttaccanti;
+        cfg.numeroMercato = dto.numeroMercato;
+        applyOfficialLimits(cfg);
+        if (newSession) {
+            cfg.sessionCode = UUID.randomUUID().toString();
+            cfg.quotazioniAggiornate = false;
+            cfg.quotazioniAggiornateAt = null;
+        }
 
         cfg.persist();
         return toDto(cfg);
@@ -41,6 +49,10 @@ public class MercatoService {
         dto.maxDifensori = e.maxDifensori;
         dto.maxCentrocampisti = e.maxCentrocampisti;
         dto.maxAttaccanti = e.maxAttaccanti;
+        dto.numeroMercato = e.numeroMercato;
+        dto.sessionCode = e.sessionCode;
+        dto.quotazioniAggiornate = e.quotazioniAggiornate;
+        dto.quotazioniAggiornateAt = e.quotazioniAggiornateAt;
         return dto;
     }
 
@@ -65,11 +77,43 @@ public class MercatoService {
 
     public boolean isMercatoAttivo() {
         MercatoConfigEntity cfg = MercatoConfigEntity.findAll().firstResult();
-        if (cfg == null) return false;
+        return cfg != null && cfg.attiva;
+    }
 
-        LocalDateTime now = LocalDateTime.now();
+    public MercatoConfigEntity requireConfiguredMarket() {
+        MercatoConfigEntity cfg = MercatoConfigEntity.findAll().firstResult();
+        if (cfg == null || cfg.numeroMercato < 1 || cfg.numeroMercato > 3 || cfg.sessionCode == null) {
+            throw new IllegalStateException("Configura prima la sessione di mercato");
+        }
+        return cfg;
+    }
 
-        return cfg.attiva && (cfg.fineSessione == null || now.isBefore(cfg.fineSessione));
+    public void requireUpdatedQuotes() {
+        MercatoConfigEntity cfg = requireConfiguredMarket();
+        if (!cfg.quotazioniAggiornate) {
+            throw new IllegalStateException("Aggiorna e conferma prima le quotazioni della sessione");
+        }
+    }
+
+    @Transactional
+    public void markQuotesUpdated() {
+        MercatoConfigEntity cfg = requireConfiguredMarket();
+        cfg.quotazioniAggiornate = true;
+        cfg.quotazioniAggiornateAt = LocalDateTime.now();
+    }
+
+    private void applyOfficialLimits(MercatoConfigEntity cfg) {
+        if (cfg.numeroMercato == 2) {
+            cfg.maxPortieri = 0;
+            cfg.maxDifensori = 1;
+            cfg.maxCentrocampisti = 1;
+            cfg.maxAttaccanti = 1;
+        } else {
+            cfg.maxPortieri = 1; // un unico cambio dell'intero pacchetto
+            cfg.maxDifensori = 2;
+            cfg.maxCentrocampisti = 2;
+            cfg.maxAttaccanti = 2;
+        }
     }
 
 }

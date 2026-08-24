@@ -31,7 +31,7 @@
       <button mat-icon-button color="primary" (click)="drawNextPlayer()" matTooltip="Estrai la prossima chiamata" [disabled]="!role || !auctionReady">
         <mat-icon>shuffle</mat-icon>
       </button>
-      <button mat-icon-button color="warn" (click)="closeAuction()" matTooltip="Chiudi asta">
+      <button mat-icon-button color="warn" (click)="closeAuction()" matTooltip="Concludi l'intera sessione">
         <mat-icon>gavel</mat-icon>
       </button>
     </mat-button-toggle-group>
@@ -140,6 +140,11 @@
           </div>
           <div *ngIf="activeUsers.length===0" class="muted">Nessuno ha ancora puntato</div>
           <div *ngIf="activeUsers.length>0" class="muted">Gli importi saranno visibili alla chiusura.</div>
+        </mat-card>
+        <mat-card class="previous-assignment" *ngIf="round?.previousAssignment">
+          <small>Ultima assegnazione</small>
+          <strong>{{ round.previousAssignment.player }} · {{ round.previousAssignment.playerTeam }}</strong>
+          <span>{{ round.previousAssignment.winner }} — <b>{{ round.previousAssignment.amount }} crediti</b></span>
         </mat-card>
       </div>
 

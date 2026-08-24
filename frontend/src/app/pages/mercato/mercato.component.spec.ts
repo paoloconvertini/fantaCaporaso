@@ -4,6 +4,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of } from 'rxjs';
 import { MercatoService } from '../../services/mercato.service';
+import { AdminApiService } from '../../services/admin-api.service';
 
 import { MercatoComponent } from './mercato.component';
 
@@ -17,6 +18,7 @@ describe('MercatoComponent', () => {
       declarations: [MercatoComponent],
       providers: [
         { provide: MercatoService, useValue: { getConfig: () => of({}) } },
+        { provide: AdminApiService, useValue: {} },
         { provide: MatSnackBar, useValue: { open: () => undefined } }
       ],
       schemas: [NO_ERRORS_SCHEMA]

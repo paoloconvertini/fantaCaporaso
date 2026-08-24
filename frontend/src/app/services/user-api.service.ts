@@ -34,6 +34,15 @@ export class UserApiService {
     return this.http.get(`${this.base}/api/round`);
   }
 
+  getAuctionHistory(filters: { q?: string; role?: string; sort?: string; page?: number; size?: number }): Observable<any> {
+    let params = new HttpParams();
+    if (filters.q) params = params.set('q', filters.q);
+    if (filters.role) params = params.set('role', filters.role);
+    if (filters.sort) params = params.set('sort', filters.sort);
+    params = params.set('page', String(filters.page || 0)).set('size', String(filters.size || 30));
+    return this.http.get<any>(`${this.base}/api/auction-history`, { params });
+  }
+
   /** Recupera lo stato canonico dopo navigazioni o messaggi WebSocket persi. */
   refreshRound(): void {
     this.getRound().subscribe({
@@ -49,9 +58,10 @@ export class UserApiService {
   }
 
   // 🔹 PLAYERS
-  getPlayers(params?: { role?: string }): Observable<any[]> {
+  getPlayers(params?: { role?: string; q?: string }): Observable<any[]> {
     let httpParams = new HttpParams();
     if (params?.role) httpParams = httpParams.set('role', params.role);
+    if (params?.q) httpParams = httpParams.set('q', params.q);
     return this.http.get<any[]>(`${this.base}/api/players/free`, { params: httpParams });
   }
 

@@ -82,6 +82,37 @@ th {
     display: none;
 }
 
+.player-search {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+    color: #cbd5e1;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.player-search input {
+    width: min(100%, 420px);
+    box-sizing: border-box;
+    padding: 11px 13px;
+    border: 1px solid rgba(255,255,255,.24);
+    border-radius: 9px;
+    outline: none;
+    color: #f4fbf8;
+    background: rgba(15,23,42,.72);
+    caret-color: #69e6ad;
+}
+
+.player-search input:focus {
+    border-color: #69e6ad;
+    box-shadow: 0 0 0 3px rgba(105,230,173,.13);
+}
+
+.player-search input::placeholder { color: #82958e; }
+.inline-edit { width: 22px; height: 22px; margin-left: 5px; padding: 0; border: 0; border-radius: 50%; color: #d1fae5; background: rgba(255,255,255,.12); cursor: pointer; vertical-align: middle; }
+.inline-edit mat-icon { width: 14px; height: 14px; font-size: 14px; line-height: 14px; }
+
 .role-chip {
     border: 1px solid rgba(255,255,255,0.22);
     background: rgba(255,255,255,0.08);

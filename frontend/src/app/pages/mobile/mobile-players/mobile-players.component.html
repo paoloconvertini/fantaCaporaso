@@ -6,6 +6,9 @@
             <option [ngValue]="null">Tutti</option>
             <option *ngFor="let r of roles" [ngValue]="r">{{ r }}</option>
         </select>
+        <label for="player-search">Cerca calciatore:</label>
+        <input id="player-search" class="player-search" type="search" [(ngModel)]="searchQuery"
+               (input)="onSearchChange()" placeholder="Scrivi il nome..." autocomplete="off" />
     </mat-card>
 
     <mat-card class="list-card" *ngFor="let p of players">

@@ -1,5 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import {UserApiService} from "../../services/user-api.service";
+import { AuthService } from '../../services/auth.service';
+import { MatDialog } from '@angular/material/dialog';
+import { EditPlayerValueDialogComponent } from '../../dialogs/edit-player-value-dialog.component';
 
 @Component({
     selector: 'app-players',
@@ -10,13 +13,17 @@ export class PlayersComponent implements OnInit {
     players: any[] = [];
     roles: string[] = ['PORTIERE', 'DIFENSORE', 'CENTROCAMPISTA', 'ATTACCANTE'];
     selectedRole: string | null = null;
+    searchQuery = '';
     loading = false;
+    isAdmin = false;
+    private searchTimer?: ReturnType<typeof setTimeout>;
 
     displayedColumns = ['name', 'team', 'role', 'valore'];
 
-    constructor(private api: UserApiService) {}
+    constructor(private api: UserApiService, private auth: AuthService, private dialog: MatDialog) {}
 
     ngOnInit(): void {
+        this.isAdmin = this.auth.hasRole('admin');
         this.loadPlayers();
     }
 
@@ -24,6 +31,7 @@ export class PlayersComponent implements OnInit {
         this.loading = true;
         let params: any = {};
         if (this.selectedRole) params.role = this.selectedRole;
+        if (this.searchQuery.trim()) params.q = this.searchQuery.trim();
 
         this.api.getPlayers(params).subscribe({
             next: data => {
@@ -44,6 +52,20 @@ export class PlayersComponent implements OnInit {
     setRole(role: string | null): void {
         this.selectedRole = role;
         this.loadPlayers();
+    }
+
+    onSearchChange(): void {
+        clearTimeout(this.searchTimer);
+        this.searchTimer = setTimeout(() => this.loadPlayers(), 250);
+    }
+
+    editValue(player: any): void {
+        if (!this.isAdmin) return;
+        this.dialog.open(EditPlayerValueDialogComponent, {
+            data: { id: player.id, name: player.name, team: player.team, value: player.valore }
+        }).afterClosed().subscribe(value => {
+            if (typeof value === 'number') this.loadPlayers();
+        });
     }
 
     roleLabel(role: string): string {

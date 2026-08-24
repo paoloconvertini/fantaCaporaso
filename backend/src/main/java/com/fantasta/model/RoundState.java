@@ -19,4 +19,8 @@ public class RoundState {
     public List<Long> tieUsers;       // lista ID partecipanti in parità
     public String tieBreak;           // NONE | FIRST | RANDOM
     public Set<Long> allowedUsers;
+    public AssignmentSummary previousAssignment;
+    public String auctionSessionCode;
+    public String competitiveOriginRoundId;
+    public Map<String, Double> historyBids = new LinkedHashMap<>();
 }

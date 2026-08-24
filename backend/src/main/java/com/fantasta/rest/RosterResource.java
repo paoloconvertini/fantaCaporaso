@@ -4,6 +4,7 @@ import com.fantasta.dto.ParticipantRosterDto;
 import com.fantasta.dto.RosterDto;
 import com.fantasta.dto.RosterImportResult;
 import com.fantasta.dto.SvincoloRequest;
+import com.fantasta.dto.RosterSwapRequest;
 import com.fantasta.model.ParticipantEntity;
 import com.fantasta.model.RosterEntity;
 import com.fantasta.service.RosterService;
@@ -58,6 +59,17 @@ public class RosterResource {
         }
     }
 
+    @POST
+    @Path("/market-reconcile")
+    @Transactional
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @RolesAllowed("admin")
+    public Response reconcileMarketRosters(@RestForm("file") InputStream file,
+                                           @RestForm("confirm") String confirm) {
+        if (file == null) throw new BadRequestException("File Excel mancante");
+        return Response.ok(rosterService.reconcileMarketRosters(file, Boolean.parseBoolean(confirm))).build();
+    }
+
     @GET
     @Path("/export")
     @Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
@@ -72,8 +84,14 @@ public class RosterResource {
     @Path("/svincola")
     @RolesAllowed("admin")
     public Response svincola(@QueryParam("participantId") Long participantId, SvincoloRequest req) {
-        rosterService.svincola(participantId, req);
-        return Response.ok().build();
+        return Response.ok(rosterService.svincola(participantId, req)).build();
+    }
+
+    @POST
+    @Path("/swap")
+    @RolesAllowed("admin")
+    public Response swap(RosterSwapRequest request) {
+        return Response.ok(rosterService.swap(request)).build();
     }
 
 

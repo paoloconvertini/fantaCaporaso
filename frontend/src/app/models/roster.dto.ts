@@ -8,5 +8,6 @@ export interface RosterDto {
     amount: number;
     valore: number;
     residui: number;
+    active: boolean;
 
 }

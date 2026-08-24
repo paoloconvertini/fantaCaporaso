@@ -19,7 +19,8 @@ public class PlayerQueryResource {
     @GET
     @Path("/free")
     @RolesAllowed({"admin", "user"})
-    public List<PlayerDto> getFreePlayers(@QueryParam("role") String role) {
-        return playerQueryService.getFreePlayers(role);
+    public List<PlayerDto> getFreePlayers(@QueryParam("role") String role,
+                                           @QueryParam("q") String query) {
+        return playerQueryService.getFreePlayers(role, query);
     }
 }

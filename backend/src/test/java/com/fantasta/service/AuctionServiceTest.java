@@ -34,6 +34,37 @@ class AuctionServiceTest {
 
     @Test
     @TestTransaction
+    void cannotConcludeSessionWhileRoundIsActive() {
+        cleanAuctionData();
+        player("Round ancora attivo", "Roma", Role.DIFENSORE, 8);
+        auctionService.start("Round ancora attivo", "Roma", "DIFENSORE", 30, "NONE", 8, null);
+
+        IllegalStateException error = assertThrows(IllegalStateException.class, auctionService::closeAuction);
+
+        assertEquals("Concludi o annulla prima il round attivo", error.getMessage());
+    }
+
+    @Test
+    @TestTransaction
+    void concludingSessionIsIdempotent() {
+        cleanAuctionData();
+        ParticipantEntity participant = participant("Sessione idempotente", 500);
+        PlayerEntity player = player("Ultimo giocatore sessione", "Roma", Role.DIFENSORE, 8);
+        auctionService.start(player.name, player.team, player.role.name(), 30, "NONE", 8, null);
+        auctionService.bid(participant.id, 1D);
+        auctionService.close();
+
+        var first = auctionService.closeAuction();
+        var second = auctionService.closeAuction();
+
+        assertFalse(first.alreadyClosed());
+        assertTrue(second.alreadyClosed());
+        assertEquals(first.id(), second.id());
+        assertEquals(1L, AuctionHistorySessionEntity.count("sessionCode", first.sessionCode()));
+    }
+
+    @Test
+    @TestTransaction
     void adminCanAssignAFreePlayerOutsideTheCurrentRound() {
         cleanAuctionData();
         ParticipantEntity participant = participant("Assegnazione fuori turno", 500);
@@ -195,6 +226,50 @@ class AuctionServiceTest {
         assertEquals(second.id, roster.participant.id);
         assertEquals(15D, roster.amount);
         assertEquals(openSlotsBefore - 1, rosterService.openSlotsByRole().get("ATTACCANTE"));
+    }
+
+    @Test
+    @TestTransaction
+    void newRoundCarriesThePreviousAssignment() {
+        cleanAuctionData();
+        ParticipantEntity first = participant("Ultima assegnazione uno", 500);
+        ParticipantEntity second = participant("Ultima assegnazione due", 500);
+        player("Storico precedente", "Milan", Role.ATTACCANTE, 20);
+        player("Nuova chiamata", "Roma", Role.DIFENSORE, 8);
+
+        auctionService.start("Storico precedente", "Milan", "ATTACCANTE", 30, "NONE", 20, null);
+        auctionService.bid(first.id, 12D);
+        auctionService.bid(second.id, 15D);
+        auctionService.close();
+        RoundState next = auctionService.start("Nuova chiamata", "Roma", "DIFENSORE", 30, "NONE", 8, null);
+
+        assertNotNull(next.previousAssignment);
+        assertEquals("Storico precedente", next.previousAssignment.player);
+        assertEquals(second.name, next.previousAssignment.winner);
+        assertEquals(15D, next.previousAssignment.amount);
+    }
+
+    @Test
+    @TestTransaction
+    void tieBreakKeepsTheCompetitiveBidContext() {
+        cleanAuctionData();
+        ParticipantEntity first = participant("Contesto spareggio uno", 500);
+        ParticipantEntity second = participant("Contesto spareggio due", 500);
+        player("Contesto spareggio", "Roma", Role.DIFENSORE, 8);
+
+        auctionService.start("Contesto spareggio", "Roma", "DIFENSORE", 30, "NONE", 8, null);
+        auctionService.bid(first.id, 10D);
+        auctionService.bid(second.id, 10D);
+        RoundState tied = auctionService.close();
+        RoundState tieBreak = auctionService.start("Contesto spareggio", "Roma", "DIFENSORE", 30,
+                "NONE", 8, Set.copyOf(tied.tieUsers));
+        auctionService.bid(first.id, 11D);
+        RoundState closed = auctionService.close();
+
+        assertEquals(tied.roundId, closed.competitiveOriginRoundId);
+        assertEquals(2, closed.historyBids.size());
+        assertEquals(11D, closed.historyBids.get(String.valueOf(first.id)));
+        assertEquals(10D, closed.historyBids.get(String.valueOf(second.id)));
     }
 
     @Test

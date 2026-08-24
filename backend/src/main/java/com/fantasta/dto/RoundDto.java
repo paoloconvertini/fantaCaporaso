@@ -24,6 +24,7 @@ public class RoundDto {
     public List<Long> allowedUsers;
     public Integer value;               // (opzionale) valore del calciatore
     public Integer purchaseSize;
+    public com.fantasta.model.AssignmentSummary previousAssignment;
 
     public static RoundDto toDto(RoundState s) {
         if (s == null) return null;
@@ -40,6 +41,7 @@ public class RoundDto {
         dto.winner = s.winner;
         dto.value = s.value;
         dto.purchaseSize = s.purchaseSize;
+        dto.previousAssignment = s.previousAssignment;
 
         Map<String, Integer> namedBids = new LinkedHashMap<>();
         if (s.bids != null) {
