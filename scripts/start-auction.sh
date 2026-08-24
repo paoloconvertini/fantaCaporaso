@@ -18,6 +18,35 @@ export POSTGRES_VOLUME_NAME="$AUCTION_POSTGRES_VOLUME"
 export PUBLIC_BIND_ADDRESS="0.0.0.0"
 export PUBLIC_HTTP_PORT="8088"
 
+auction_service_running() {
+  local container
+  container="$(auction_compose ps -q "$1")"
+  [[ -n "$container" ]] && [[ "$(docker inspect -f '{{.State.Running}}' "$container")" == "true" ]]
+}
+
+auction_service_healthy() {
+  local container
+  container="$(auction_compose ps -q "$1")"
+  [[ -n "$container" ]] \
+    && [[ "$(docker inspect -f '{{.State.Running}}' "$container")" == "true" ]] \
+    && [[ "$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$container")" == "healthy" ]]
+}
+
+if [[ "$rebuild" != true ]] \
+  && auction_service_healthy postgres \
+  && auction_service_healthy backend \
+  && auction_service_healthy frontend \
+  && auction_service_healthy reverse-proxy \
+  && auction_service_running cloudflared \
+  && curl --fail --silent --max-time 2 "$AUCTION_LOCAL_URL/" >/dev/null 2>&1 \
+  && curl --fail --silent --max-time 5 "$(auction_public_url)/" >/dev/null 2>&1; then
+  auction_assert_database
+  auction_print_links
+  auction_compose ps
+  echo "PROD è già attivo e raggiungibile. Nessun container è stato riavviato o ricreato."
+  exit 0
+fi
+
 if [[ -z "$(auction_postgres_container)" ]]; then
   echo "Avvio il database persistente; i deploy successivi non lo toccheranno..."
   auction_compose up -d postgres
@@ -49,7 +78,7 @@ fi
 public_ready=false
 public_url="$(auction_public_url)"
 echo "Avvio Named Tunnel Cloudflare su $public_url..."
-auction_compose up -d --force-recreate --no-deps cloudflared
+auction_compose up -d --no-deps cloudflared
 
 for _ in $(seq 1 90); do
   if curl --fail --silent --max-time 5 "$public_url/" >/dev/null 2>&1; then

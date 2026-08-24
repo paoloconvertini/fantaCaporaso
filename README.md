@@ -11,7 +11,7 @@ Nel normale utilizzo servono soltanto questi quattro comandi:
 | Obiettivo | Configurazione | Risultato |
 | --- | --- | --- |
 | Sviluppare o provare modifiche senza toccare i dati reali | `DEV - AVVIA` | Avvia database DEV separato, backend Quarkus e frontend Angular su `http://localhost:4200` |
-| Usare l'applicazione reale per asta, mercato o pubblicazione Gazzetta | `PROD - AVVIA` | Avvia le immagini verificate, il proxy e il tunnel senza ricreare PostgreSQL |
+| Usare l'applicazione reale per asta, mercato o pubblicazione Gazzetta | `PROD - AVVIA` | Se PROD e' gia' operativo lo verifica senza riavviare nulla; altrimenti avvia soltanto i servizi necessari, senza ricreare PostgreSQL |
 | Controllare se PROD e' gia' pronto | `PROD - STATO` | Verifica container, volume, database, pagina locale e link pubblico |
 | Spegnere i servizi applicativi PROD | `PROD - FERMA` | Ferma applicazione e tunnel conservando PostgreSQL e il volume `backend_pgdata` |
 
@@ -25,7 +25,7 @@ La preparazione editoriale non usa il database, ma la consegna a Cloudflare e' c
 soltanto dal backend PROD:
 
 1. eseguire `PROD - STATO`;
-2. se PROD e' fermo, eseguire una sola volta `PROD - AVVIA`;
+2. eseguire `PROD - AVVIA`: se PROD e' gia' attivo, il controllo termina senza riavviare o ricreare container;
 3. aprire `http://localhost:8088/admin/gazzetta` ed effettuare il login admin;
 4. caricare l'export FantaMaster, generare l'anteprima e modificare testi e immagine;
 5. premere `Pubblica` soltanto dopo il controllo finale;
@@ -133,11 +133,11 @@ Le credenziali Pages si configurano esclusivamente con `bash scripts/configure-c
 
 Nel selettore delle configurazioni Run sono disponibili:
 
-- `PROD - AVVIA`: avvia rapidamente le immagini già verificate sul volume persistente `backend_pgdata`, attiva il Named Tunnel, ne verifica realmente l'HTTPS e stampa il link da condividere;
+- `PROD - AVVIA`: controlla prima lo stato corrente; se tutto e' gia' raggiungibile non riavvia nulla, altrimenti avvia le immagini verificate e gli eventuali servizi mancanti sul volume persistente `backend_pgdata`, verifica realmente l'HTTPS e stampa il link da condividere;
 - `PROD - STATO`: ristampa link, container e controlli di raggiungibilità;
 - `PROD - FERMA`: arresta soltanto i servizi applicativi; PostgreSQL di produzione resta attivo sul volume persistente.
 
-L'applicazione usa il Named Tunnel Cloudflare `fantacaporaso-asta` e l'indirizzo stabile `https://asta.fantacaporaso.it`. Il token del tunnel e' salvato soltanto in `config/application-cloud.env`, escluso da Git. Durante l'asta non riavviare Docker Desktop, non sospendere il Mac e non eseguire nuovamente `PROD - AVVIA`. Conservare anche il link LAN mostrato in console come alternativa per i dispositivi collegati alla stessa rete.
+L'applicazione usa il Named Tunnel Cloudflare `fantacaporaso-asta` e l'indirizzo stabile `https://asta.fantacaporaso.it`. Il token del tunnel e' salvato soltanto in `config/application-cloud.env`, escluso da Git. Durante l'asta non riavviare Docker Desktop e non sospendere il Mac. `PROD - AVVIA` puo' essere eseguito anche per controllo: se tutti i servizi sono gia' operativi non li riavvia e non li ricrea. Conservare anche il link LAN mostrato in console come alternativa per i dispositivi collegati alla stessa rete.
 
 Il tunnel forza HTTP/2 su TCP per evitare le disconnessioni QUIC/UDP osservate sulla rete locale. Per l'avvio manuale usare `./scripts/start-auction.sh`; per un deploy usare `./scripts/deploy-auction.sh --rebuild`; per il controllo usare `./scripts/status-auction.sh`.
 
