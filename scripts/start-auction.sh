@@ -7,12 +7,17 @@ echo "Avvio modalità ASTA usando il volume persistente backend_pgdata..."
 docker info >/dev/null
 
 rebuild=false
-if [[ "${1:-}" == "--rebuild" ]]; then
-  rebuild=true
-elif [[ $# -gt 0 ]]; then
-  echo "Uso: $0 [--rebuild]" >&2
-  exit 2
-fi
+open_path="/"
+for argument in "$@"; do
+  case "$argument" in
+    --rebuild) rebuild=true ;;
+    --gazzetta) open_path="/admin/gazzetta" ;;
+    *)
+      echo "Uso: $0 [--rebuild] [--gazzetta]" >&2
+      exit 2
+      ;;
+  esac
+done
 
 export POSTGRES_VOLUME_NAME="$AUCTION_POSTGRES_VOLUME"
 export PUBLIC_BIND_ADDRESS="0.0.0.0"
@@ -43,6 +48,7 @@ if [[ "$rebuild" != true ]] \
   auction_assert_database
   auction_print_links
   auction_compose ps
+  auction_open_in_chrome "$AUCTION_LOCAL_URL$open_path"
   echo "PROD è già attivo e raggiungibile. Nessun container è stato riavviato o ricreato."
   exit 0
 fi
@@ -97,4 +103,5 @@ if [[ "$public_ready" != true ]]; then
   exit 1
 fi
 
+auction_open_in_chrome "$AUCTION_LOCAL_URL$open_path"
 echo "Modalità ASTA pronta. Non chiudere Docker Desktop e non sospendere il Mac."

@@ -11,7 +11,8 @@ Nel normale utilizzo servono soltanto questi quattro comandi:
 | Obiettivo | Configurazione | Risultato |
 | --- | --- | --- |
 | Sviluppare o provare modifiche senza toccare i dati reali | `DEV - AVVIA` | Avvia database DEV separato, backend Quarkus e frontend Angular su `http://localhost:4200` |
-| Usare l'applicazione reale per asta, mercato o pubblicazione Gazzetta | `PROD - AVVIA` | Se PROD e' gia' operativo lo verifica senza riavviare nulla; altrimenti avvia soltanto i servizi necessari, senza ricreare PostgreSQL |
+| Usare l'applicazione reale nei giorni dell'asta | `PROD - ASTA` | Verifica o avvia PROD e apre l'interfaccia dell'asta in Google Chrome |
+| Preparare e pubblicare la Gazzetta | `PROD - GAZZETTA` | Verifica o avvia PROD e apre la redazione Gazzetta in Google Chrome |
 | Controllare se PROD e' gia' pronto | `PROD - STATO` | Verifica container, volume, database, pagina locale e link pubblico |
 | Spegnere i servizi applicativi PROD | `PROD - FERMA` | Ferma applicazione e tunnel conservando PostgreSQL e il volume `backend_pgdata` |
 
@@ -21,15 +22,36 @@ Le configurazioni nella cartella IntelliJ `Componenti DEV` sono dettagli interni
 
 ### Pubblicare la Gazzetta
 
-La preparazione editoriale non usa il database, ma la consegna a Cloudflare e' consentita
-soltanto dal backend PROD:
+Il flusso editoriale assistito produce ogni edizione in `gazzetta-editions/<stagione>/giornata-<numero>`.
+Testi e copertina vengono preparati e verificati prima della pubblicazione; l'export FantaMaster
+resta la fonte per risultati, fantapunteggi, classifica e formazioni.
+Le immagini profilo autorizzate delle squadre sono conservate in `gazzetta-assets/profili/` e
+possono essere riutilizzate per rendere copertine e rubriche riconoscibili alla lega.
 
-1. eseguire `PROD - STATO`;
-2. eseguire `PROD - AVVIA`: se PROD e' gia' attivo, il controllo termina senza riavviare o ricreare container;
-3. aprire `http://localhost:8088/admin/gazzetta` ed effettuare il login admin;
-4. caricare l'export FantaMaster, generare l'anteprima e modificare testi e immagine;
-5. premere `Pubblica` soltanto dopo il controllo finale;
-6. verificare `https://gazzetta.fantacaporaso.it`.
+Per controllare un'edizione senza pubblicarla:
+
+```bash
+./scripts/preview-gazzetta.sh gazzetta-editions/2026-27/giornata-01
+```
+
+La pubblicazione non usa il database e richiede conferma esplicita:
+
+```bash
+./scripts/publish-gazzetta.sh gazzetta-editions/2026-27/giornata-01 --confirm
+```
+
+Lo script accetta soltanto cartelle sotto `gazzetta-editions/`, verifica il progetto Cloudflare
+dedicato `fantacaporaso-gazzetta` e rifiuta credenziali o configurazioni incomplete. Dopo il deploy
+verificare `https://gazzetta.fantacaporaso.it`.
+
+Il precedente laboratorio nell'applicazione resta temporaneamente disponibile durante la
+transizione, ma non è il flusso editoriale raccomandato:
+
+1. eseguire `PROD - GAZZETTA`: il comando verifica lo stato e, se PROD e' gia' attivo, non riavvia né ricrea i container;
+2. attendere l'apertura automatica di `http://localhost:8088/admin/gazzetta` in Google Chrome ed effettuare il login admin;
+3. caricare l'export FantaMaster, generare l'anteprima e modificare testi e immagine;
+4. premere `Pubblica` soltanto dopo il controllo finale;
+5. verificare `https://gazzetta.fantacaporaso.it`.
 
 Non avviare DEV per pubblicare: in DEV il pulsante Cloudflare e' intenzionalmente disabilitato.
 Se PROD e' gia' attivo non occorre riavviarlo e non va eseguito alcun rebuild.
@@ -133,11 +155,12 @@ Le credenziali Pages si configurano esclusivamente con `bash scripts/configure-c
 
 Nel selettore delle configurazioni Run sono disponibili:
 
-- `PROD - AVVIA`: controlla prima lo stato corrente; se tutto e' gia' raggiungibile non riavvia nulla, altrimenti avvia le immagini verificate e gli eventuali servizi mancanti sul volume persistente `backend_pgdata`, verifica realmente l'HTTPS e stampa il link da condividere;
+- `PROD - ASTA`: controlla o avvia PROD, verifica realmente l'HTTPS, stampa il link da condividere e apre l'interfaccia dell'asta in Google Chrome;
+- `PROD - GAZZETTA`: esegue gli stessi controlli senza creare uno stack separato e apre direttamente la redazione Gazzetta in Google Chrome;
 - `PROD - STATO`: ristampa link, container e controlli di raggiungibilità;
 - `PROD - FERMA`: arresta soltanto i servizi applicativi; PostgreSQL di produzione resta attivo sul volume persistente.
 
-L'applicazione usa il Named Tunnel Cloudflare `fantacaporaso-asta` e l'indirizzo stabile `https://asta.fantacaporaso.it`. Il token del tunnel e' salvato soltanto in `config/application-cloud.env`, escluso da Git. Durante l'asta non riavviare Docker Desktop e non sospendere il Mac. `PROD - AVVIA` puo' essere eseguito anche per controllo: se tutti i servizi sono gia' operativi non li riavvia e non li ricrea. Conservare anche il link LAN mostrato in console come alternativa per i dispositivi collegati alla stessa rete.
+L'applicazione usa il Named Tunnel Cloudflare `fantacaporaso-asta` e l'indirizzo stabile `https://asta.fantacaporaso.it`. Il token del tunnel e' salvato soltanto in `config/application-cloud.env`, escluso da Git. Durante l'asta non riavviare Docker Desktop e non sospendere il Mac. `PROD - ASTA` e `PROD - GAZZETTA` possono essere eseguiti anche per controllo: se tutti i servizi sono gia' operativi non li riavviano e non li ricreano. Conservare anche il link LAN mostrato in console come alternativa per i dispositivi collegati alla stessa rete.
 
 Il tunnel forza HTTP/2 su TCP per evitare le disconnessioni QUIC/UDP osservate sulla rete locale. Per l'avvio manuale usare `./scripts/start-auction.sh`; per un deploy usare `./scripts/deploy-auction.sh --rebuild`; per il controllo usare `./scripts/status-auction.sh`.
 

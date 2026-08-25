@@ -93,6 +93,15 @@ auction_lan_url() {
   [[ -n "$address" ]] && echo "http://$address:8088"
 }
 
+auction_open_in_chrome() {
+  local url="$1"
+  if open -a "Google Chrome" "$url" >/dev/null 2>&1; then
+    echo "Aperto in Google Chrome: $url"
+  else
+    echo "Avviso: impossibile aprire Google Chrome automaticamente. Apri manualmente: $url" >&2
+  fi
+}
+
 auction_print_links() {
   local public_url lan_url
   public_url="$(auction_public_url)"

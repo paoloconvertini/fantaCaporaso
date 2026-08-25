@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="PROD - AVVIA" type="js.build_tools.npm" factoryName="npm">
+  <configuration default="false" name="PROD - ASTA" type="js.build_tools.npm" factoryName="npm">
     <package-json value="$PROJECT_DIR$/frontend/package.json" />
     <command value="run" />
     <scripts>

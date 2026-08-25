@@ -11,6 +11,7 @@
     "dev:database:status": "bash ../scripts/status-dev.sh",
     "dev:database:stop": "bash ../scripts/stop-dev.sh",
     "auction:start": "bash ../scripts/start-auction.sh",
+    "auction:gazzetta": "bash ../scripts/start-auction.sh --gazzetta",
     "auction:rebuild": "bash ../scripts/start-auction.sh --rebuild",
     "auction:status": "bash ../scripts/status-auction.sh",
     "auction:stop": "bash ../scripts/stop-auction.sh"
