@@ -27,6 +27,9 @@ Testi e copertina vengono preparati e verificati prima della pubblicazione; l'ex
 resta la fonte per risultati, fantapunteggi, classifica e formazioni.
 Le immagini profilo autorizzate delle squadre sono conservate in `gazzetta-assets/profili/` e
 possono essere riutilizzate per rendere copertine e rubriche riconoscibili alla lega.
+Le edizioni mantengono una larghezza editoriale fissa anche sugli schermi piccoli: il telefono
+mostra inizialmente l'intera pagina e il lettore ingrandisce articoli e colonne con lo zoom,
+senza trasformare il giornale in una sequenza verticale di blocchi.
 
 Per controllare un'edizione senza pubblicarla:
 
