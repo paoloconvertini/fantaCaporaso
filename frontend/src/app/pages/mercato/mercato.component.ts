@@ -20,6 +20,10 @@ export class MercatoComponent implements OnInit {
     rostersResult: any = null;
     quotesLoading = false;
     rostersLoading = false;
+    departuresFile: File | null = null;
+    departuresResult: any = null;
+    departuresLoading = false;
+    sessionCode?: string;
 
     constructor(
         private fb: FormBuilder,
@@ -37,6 +41,7 @@ export class MercatoComponent implements OnInit {
             maxCentrocampisti: [0, [Validators.required, Validators.min(0)]],
             maxAttaccanti: [0, [Validators.required, Validators.min(0)]],
             quotazioniAggiornate: [false],
+            partitiImportati: [false],
         });
 
         this.loadConfig();
@@ -62,6 +67,7 @@ export class MercatoComponent implements OnInit {
         this.service.getConfig().subscribe({
             next: (config) => {
                 if (config) {
+                    this.resetPreviewsForSession(config.sessionCode);
                     this.form.patchValue(config);
                     this.mercatoAttivo = config.attiva;
                     if (!config.attiva) {
@@ -82,6 +88,7 @@ export class MercatoComponent implements OnInit {
                         maxCentrocampisti: 0,
                         maxAttaccanti: 0,
                         quotazioniAggiornate: false,
+                        partitiImportati: false,
                     });
                 }
 
@@ -95,8 +102,38 @@ export class MercatoComponent implements OnInit {
         this.quotesResult = null;
     }
 
+    private resetPreviewsForSession(sessionCode?: string): void {
+        if (this.sessionCode !== sessionCode) {
+            this.departuresResult = this.quotesResult = this.rostersResult = null;
+            this.departuresFile = this.quotesFile = this.rostersFile = null;
+        }
+        this.sessionCode = sessionCode;
+    }
+
+    selectDeparturesFile(event: Event): void {
+        this.departuresFile = (event.target as HTMLInputElement).files?.[0] || null;
+        this.departuresResult = null;
+    }
+
+    importDepartures(confirm = false): void {
+        if (!this.departuresFile || this.departuresLoading || this.form.get('partitiImportati')?.value) return;
+        if (confirm && (!this.departuresResult?.preview || this.departuresResult.errors?.length)) return;
+        this.departuresLoading = true;
+        this.adminApi.importMarketDepartures(this.departuresFile, confirm).subscribe({
+            next: result => {
+                this.departuresResult = result;
+                this.departuresLoading = false;
+                if (confirm && !result.errors?.length) {
+                    this.snackBar.open('Partiti importati: ora aggiorna le quotazioni dei restanti', 'Chiudi', { duration: 3500 });
+                    this.loadConfig();
+                }
+            },
+            error: error => { this.showError(error); this.departuresLoading = false; }
+        });
+    }
+
     previewQuotes(): void {
-        if (!this.quotesFile) return;
+        if (!this.quotesFile || !this.form.get('partitiImportati')?.value) return;
         this.quotesLoading = true;
         this.adminApi.updateMarketPlayers(this.quotesFile, false).subscribe({
             next: result => { this.quotesResult = result; this.quotesLoading = false; },
@@ -105,7 +142,7 @@ export class MercatoComponent implements OnInit {
     }
 
     confirmQuotes(): void {
-        if (!this.quotesFile || !this.quotesResult?.preview) return;
+        if (!this.quotesFile || !this.quotesResult?.preview || !this.form.get('partitiImportati')?.value) return;
         this.quotesLoading = true;
         this.adminApi.updateMarketPlayers(this.quotesFile, true).subscribe({
             next: result => {
@@ -179,6 +216,7 @@ export class MercatoComponent implements OnInit {
 
         this.service.updateConfig(dto).subscribe({
             next: (saved) => {
+                this.resetPreviewsForSession(saved.sessionCode);
                 this.form.patchValue(saved);
                 this.snackBar.open('Configurazione aggiornata', 'Chiudi', { duration: 2000 });
             }

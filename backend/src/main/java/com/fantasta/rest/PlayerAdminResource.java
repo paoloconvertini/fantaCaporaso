@@ -7,6 +7,7 @@ import com.fantasta.dto.MarketPlayerImportResult;
 import com.fantasta.dto.UpdatePlayerValueDto;
 import com.fantasta.model.PlayerEntity;
 import com.fantasta.service.DbService;
+import com.fantasta.service.MarketDepartureImportService;
 import com.fantasta.service.PlayerQueryService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
@@ -28,6 +29,26 @@ public class PlayerAdminResource {
 
     @Inject
     PlayerQueryService playerQueryService;
+
+    @Inject
+    MarketDepartureImportService departureImportService;
+
+    @POST
+    @Path("/market-departures")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @RolesAllowed("admin")
+    public Response importDepartures(@RestForm("file") InputStream file,
+                                     @RestForm("confirm") String confirm) {
+        if (file == null) throw new BadRequestException("File Excel mancante");
+        try {
+            return Response.ok(departureImportService.importDepartures(file, Boolean.parseBoolean(confirm))).build();
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(java.util.Map.of("error", e.getMessage())).build();
+        } catch (Exception e) {
+            return Response.serverError().entity(java.util.Map.of("error", "File dei partiti non valido")).build();
+        }
+    }
 
     @GET
     @Path("/search")

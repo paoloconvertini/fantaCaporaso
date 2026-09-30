@@ -34,6 +34,7 @@ public class MercatoService {
         if (newSession) {
             cfg.sessionCode = UUID.randomUUID().toString();
             cfg.quotazioniAggiornate = false;
+            cfg.partitiImportati = false;
             cfg.quotazioniAggiornateAt = null;
         }
 
@@ -52,6 +53,7 @@ public class MercatoService {
         dto.numeroMercato = e.numeroMercato;
         dto.sessionCode = e.sessionCode;
         dto.quotazioniAggiornate = e.quotazioniAggiornate;
+        dto.partitiImportati = e.partitiImportati;
         dto.quotazioniAggiornateAt = e.quotazioniAggiornateAt;
         return dto;
     }
@@ -89,15 +91,23 @@ public class MercatoService {
     }
 
     public void requireUpdatedQuotes() {
-        MercatoConfigEntity cfg = requireConfiguredMarket();
+        MercatoConfigEntity cfg = requireImportedDepartures();
         if (!cfg.quotazioniAggiornate) {
             throw new IllegalStateException("Aggiorna e conferma prima le quotazioni della sessione");
         }
     }
 
+    public MercatoConfigEntity requireImportedDepartures() {
+        MercatoConfigEntity cfg = requireConfiguredMarket();
+        if (!cfg.partitiImportati) {
+            throw new IllegalStateException("Importa e conferma prima il file dei giocatori partiti");
+        }
+        return cfg;
+    }
+
     @Transactional
     public void markQuotesUpdated() {
-        MercatoConfigEntity cfg = requireConfiguredMarket();
+        MercatoConfigEntity cfg = requireImportedDepartures();
         cfg.quotazioniAggiornate = true;
         cfg.quotazioniAggiornateAt = LocalDateTime.now();
     }

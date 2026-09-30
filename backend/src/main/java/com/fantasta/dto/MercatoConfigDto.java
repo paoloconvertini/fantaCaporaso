@@ -19,5 +19,6 @@ public class MercatoConfigDto {
     public int numeroMercato;
     public String sessionCode;
     public boolean quotazioniAggiornate;
+    public boolean partitiImportati;
     public LocalDateTime quotazioniAggiornateAt;
 }

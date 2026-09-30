@@ -29,6 +29,85 @@ class MarketRepairServiceTest {
     @Inject MercatoService mercatoService;
     @Inject PlayerQueryService playerQueryService;
     @Inject RosterMovementService rosterMovementService;
+    @Inject MarketDepartureImportService departureImportService;
+
+    @Test
+    @TestTransaction
+    void importsExplicitDeparturesBeforeQuotesAndPreservesRefund() throws Exception {
+        configureMarket(1, false);
+        MercatoConfigEntity config = MercatoConfigEntity.findAll().firstResult();
+        config.partitiImportati = false;
+        ParticipantEntity owner = participant("Squadra partiti test");
+        PlayerEntity departed = player("Partito esplicito test", 5, true);
+        roster(owner, departed, 3);
+        byte[] file = departureWorkbook(owner.name, departed.name, "23");
+        assertThrows(IllegalStateException.class,
+                () -> dbService.previewMarketPlayersFromExcel(new ByteArrayInputStream(workbook())));
+        var preview = departureImportService.importDepartures(new ByteArrayInputStream(file), false);
+        assertTrue(preview.preview);
+        assertTrue(preview.errors.isEmpty());
+        assertTrue(departed.active);
+        assertEquals(5D, departed.valore);
+        assertFalse(config.partitiImportati);
+
+        departureImportService.importDepartures(new ByteArrayInputStream(file), true);
+        assertTrue(config.partitiImportati);
+        assertFalse(config.quotazioniAggiornate);
+        assertFalse(departed.active);
+        assertEquals(23D, departed.valore);
+        assertEquals(1, RosterEntity.count("player", departed));
+        assertThrows(IllegalStateException.class,
+                () -> departureImportService.importDepartures(new ByteArrayInputStream(file), true));
+
+        try (XSSFWorkbook quotes = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            var sheet = quotes.createSheet("Tutti");
+            String[][] rows = {{"Nome", "Squadra", "Ruolo", "Quotazione"},
+                    {departed.name, "Inter", "A", "99"}, {"Aggiornato mercato", "Inter", "A", "34"}};
+            for (int i = 0; i < rows.length; i++) {
+                var row = sheet.createRow(i);
+                for (int c = 0; c < rows[i].length; c++) row.createCell(c).setCellValue(rows[i][c]);
+            }
+            quotes.write(out);
+            dbService.updateMarketPlayersFromExcel(new ByteArrayInputStream(out.toByteArray()));
+        }
+        assertFalse(departed.active);
+        assertEquals(23D, departed.valore);
+        SvincoloRequest request = new SvincoloRequest();
+        request.playerId = departed.id;
+        var release = rosterService.svincola(owner.id, request);
+        assertTrue(release.departed);
+        assertEquals(23D, release.refundedCredits);
+        assertEquals(0, MercatoSvincolo.getCount(owner, Role.ATTACCANTE, config.sessionCode));
+    }
+
+    @Test
+    @TestTransaction
+    void departureOwnerMismatchDoesNotApplyPartialChanges() throws Exception {
+        configureMarket(1, false);
+        MercatoConfigEntity config = MercatoConfigEntity.findAll().firstResult();
+        config.partitiImportati = false;
+        PlayerEntity player = player("Partito mismatch test", 9, true);
+        roster(participant("Proprietario corretto test"), player, 4);
+        var result = departureImportService.importDepartures(new ByteArrayInputStream(
+                departureWorkbook("Proprietario errato", player.name, "20")), true);
+        assertFalse(result.errors.isEmpty());
+        assertTrue(player.active);
+        assertEquals(9D, player.valore);
+        assertFalse(config.partitiImportati);
+    }
+
+    private byte[] departureWorkbook(String owner, String name, String value) throws Exception {
+        try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            var sheet = workbook.createSheet("Giocatori Partiti");
+            sheet.createRow(1).createCell(1).setCellValue("Giocatori Partiti");
+            var row = sheet.createRow(3);
+            String[] values = {"", "Responsabile - (" + owner + ")", "A", "ZZZ - Partito - " + name, "Inter", value, "Partito"};
+            for (int c = 0; c < values.length; c++) row.createCell(c).setCellValue(values[c]);
+            row.createCell(9).setCellValue("Riepilogo laterale ignorato");
+            workbook.write(out);
+            return out.toByteArray();
+        }
+    }
 
     @Test
     @TestTransaction
@@ -138,7 +217,7 @@ class MarketRepairServiceTest {
 
     @Test
     @TestTransaction
-    void marketImportUpdatesQuotesAndPreservesAssignedDepartedPlayers() throws Exception {
+    void marketImportUpdatesQuotesAndPreservesPlayersAbsentFromList() throws Exception {
         configureMarket(1, false);
         ParticipantEntity participant = participant("Mercato import");
         PlayerEntity updated = player("Aggiornato mercato", 10, true);
@@ -154,9 +233,9 @@ class MarketRepairServiceTest {
         dbService.updateMarketPlayersFromExcel(new ByteArrayInputStream(excel));
 
         assertEquals(34D, updated.valore);
-        assertFalse(departed.active);
+        assertTrue(departed.active);
         assertEquals(1, RosterEntity.count("player", departed));
-        assertFalse(rosterService.getRosterByParticipant(participant.id).stream()
+        assertTrue(rosterService.getRosterByParticipant(participant.id).stream()
                 .filter(row -> row.playerId.equals(departed.id))
                 .findFirst()
                 .orElseThrow()
@@ -308,6 +387,7 @@ class MarketRepairServiceTest {
         config.attiva = true;
         config.fineSessione = LocalDateTime.now().plusDays(1);
         config.quotazioniAggiornate = quotesUpdated;
+        config.partitiImportati = true;
         config.maxPortieri = number == 2 ? 0 : 1;
         config.maxDifensori = number == 2 ? 1 : 2;
         config.maxCentrocampisti = number == 2 ? 1 : 2;

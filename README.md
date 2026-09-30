@@ -194,13 +194,15 @@ Ripristino distruttivo:
 Il mercato di riparazione si prepara dalla pagina admin `Mercato` e segue un ordine obbligatorio:
 
 1. selezionare il 1°, 2° o 3° mercato e salvare la configurazione;
-2. caricare il file aggiornato dei calciatori e controllare l'anteprima;
-3. correggere manualmente l'eventuale quotazione dei calciatori non presenti nel file;
-4. confermare l'aggiornamento delle quotazioni;
+2. caricare e confermare il file `Giocatori Partiti`, verificando gli abbinamenti con le rose;
+3. caricare il listino aggiornato dei restanti calciatori e controllare l'anteprima;
+4. correggere eventuali quotazioni mancanti e confermare l'aggiornamento;
 5. effettuare gli svincoli manualmente dalla pagina Rose oppure importare le rose post-scambi;
 6. aprire l'asta dei calciatori disponibili.
 
-L'import di mercato dei calciatori non cancella mai le rose: aggiorna quotazioni, squadra e ruolo, inserisce i nuovi arrivati e marca come partiti gli assenti. Gli svincoli sono bloccati finche' questo passaggio non e' stato confermato. L'import rose di mercato accetta soltanto cessioni e scambi tra proprietari esistenti; aggiunte, duplicati, fogli mancanti e pacchetti portieri spezzati bloccano l'operazione.
+L'import dei partiti legge il foglio `Giocatori Partiti`: partecipante in B, ruolo in C, nome in D (rimuovendo il prefisso `ZZZ - Partito -`), squadra in E, quotazione in F e stato `Partito` in G. Ignora il riepilogo laterale. Nomi duplicati, dati invalidi o abbinamenti non riconosciuti impediscono la conferma senza modifiche parziali. La conferma è unica per sessione, mantiene le rose e usa la quotazione F per il successivo rimborso.
+
+L'import di mercato dei calciatori non cancella mai le rose: aggiorna quotazioni, squadra e ruolo dei restanti e inserisce i nuovi arrivati. Non riattiva né cambia la quotazione dei partiti confermati nella sessione; i calciatori assenti dal listino mantengono stato e valore. Quotazioni e svincoli richiedono prima la conferma dei partiti; gli svincoli richiedono anche la conferma delle quotazioni. L'import rose di mercato accetta soltanto cessioni e scambi tra proprietari esistenti; aggiunte, duplicati, fogli mancanti e pacchetti portieri spezzati bloccano l'operazione.
 
 Il rimborso di una cessione e' sempre la quotazione corrente. Gli scambi non modificano i crediti residui. Quando un giocatore viene svincolato, tutti i suoi proprietari registrati possono riacquistarlo soltanto dalla quotazione di svincolo piu' un credito. I giocatori usciti dalla lista non consumano il limite di svincoli. Nel 1° e 3° mercato il pacchetto portieri si cede interamente e il nuovo pacchetto parte dalla somma delle tre quotazioni piu' alte; nel 2° mercato la porta non puo' essere cambiata.
 
@@ -327,3 +329,7 @@ Non aggiungere `-v` durante l'uso ordinario: cancellerebbe il database locale.
 Il frontend usa ancora Angular 14. `npm audit --omit=dev` segnala vulnerabilita' corrette soltanto passando a una versione Angular moderna, con cambiamenti incompatibili. Per ridurre il rischio immediato, l'app non usa HTML/SVG dinamico o bypass del sanitizer e Nginx applica una Content Security Policy restrittiva. Dopo l'asta va pianificato l'upgrade completo di Angular, Material e toolchain, senza usare `npm audit fix --force` alla cieca.
 
 Il database esistente usa ancora l'aggiornamento schema Hibernate. Dopo l'asta va creata una baseline Flyway verificata e il profilo di produzione deve passare dalla modifica automatica dello schema alla sola validazione.
+
+La migrazione `database/migrations/20260930_market_departures.sql` aggiunge lo stato di import dei partiti alla configurazione e la sessione di partenza ai calciatori. Applicarla secondo la procedura DEV/PROD documentata prima del deploy. Le sessioni esistenti richiedono la conferma del nuovo passaggio dei partiti. L’endpoint admin `POST /api/admin/players/market-departures` accetta multipart `file` e `confirm` (false per anteprima).
+
+L'abbinamento dei proprietari accetta il nome completo del partecipante o il nome della squadra tra parentesi. Riconosce automaticamente le equivalenze confermate `Em Fallét` / `Em Fallet`, `Johnson Oil` / `johnsons oil` e `3/4 e 1 Gazzosa` / `34 e 1 Gazzosa`. Altre differenze restano segnalate per evitare abbinamenti a proprietari diversi.

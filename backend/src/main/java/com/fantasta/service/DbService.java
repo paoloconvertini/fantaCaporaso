@@ -461,19 +461,20 @@ public class DbService {
 
     /** Anteprima non distruttiva per una sessione di mercato di riparazione. */
     public MarketPlayerImportResult previewMarketPlayersFromExcel(InputStream is) throws Exception {
-        mercatoService.requireConfiguredMarket();
+        mercatoService.requireImportedDepartures();
         return marketPlayerReport(parseExcel(is), true);
     }
 
     /** Aggiorna il catalogo senza cancellare o spostare alcuna riga rosa. */
     @Transactional
     public MarketPlayerImportResult updateMarketPlayersFromExcel(InputStream is) throws Exception {
-        mercatoService.requireConfiguredMarket();
+        String session = mercatoService.requireImportedDepartures().sessionCode;
         Map<String, ExcelRow> rows = parseExcel(is);
         MarketPlayerImportResult result = marketPlayerReport(rows, false);
 
         for (ExcelRow row : rows.values()) {
             PlayerEntity player = PlayerEntity.find("lower(name) = ?1", norm(row.name)).firstResult();
+            if (player != null && Objects.equals(player.departureSessionCode, session)) continue;
             if (player == null) {
                 player = new PlayerEntity();
                 player.name = row.name;
@@ -487,24 +488,19 @@ public class DbService {
             player.persist();
         }
 
-        for (PlayerEntity player : PlayerEntity.<PlayerEntity>list("active = true")) {
-            if (rows.containsKey(norm(player.name))) continue;
-            player.active = false;
-            player.deletedAt = java.time.Instant.now();
-            // La rosa resta intatta: sarà l'admin a confermare la cessione.
-            player.assigned = RosterEntity.count("player", player) > 0;
-        }
         mercatoService.markQuotesUpdated();
         return result;
     }
 
     private MarketPlayerImportResult marketPlayerReport(Map<String, ExcelRow> rows, boolean preview) {
+        String session = mercatoService.requireImportedDepartures().sessionCode;
         MarketPlayerImportResult result = new MarketPlayerImportResult(preview, rows.size());
         Map<String, PlayerEntity> existingByName = PlayerEntity.<PlayerEntity>listAll().stream()
                 .collect(java.util.stream.Collectors.toMap(p -> norm(p.name), p -> p, (a, b) -> a));
 
         for (ExcelRow row : rows.values()) {
             PlayerEntity existing = existingByName.get(norm(row.name));
+            if (existing != null && Objects.equals(existing.departureSessionCode, session)) continue;
             if (existing == null) {
                 result.newPlayers.add(change(null, row, List.of()));
                 continue;

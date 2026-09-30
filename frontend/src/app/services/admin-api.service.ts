@@ -91,6 +91,13 @@ export class AdminApiService {
     return this.http.post<any>(`${this.base}/api/admin/players/market-update`, formData);
   }
 
+  importMarketDepartures(file: File, confirm = false): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('confirm', String(confirm));
+    return this.http.post<any>(`${this.base}/api/admin/players/market-departures`, formData);
+  }
+
   updatePlayerValue(playerId: number, value: number): Observable<void> {
     return this.http.put<void>(`${this.base}/api/admin/players/${playerId}/value`, { value });
   }

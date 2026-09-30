@@ -21,4 +21,5 @@ public class PlayerEntity extends PanacheEntity {
     public boolean active = true;
 
     public java.time.Instant deletedAt;
+    public String departureSessionCode;
 }

@@ -9,5 +9,6 @@ export interface MercatoConfigDto {
     numeroMercato: number;
     sessionCode?: string;
     quotazioniAggiornate: boolean;
+    partitiImportati: boolean;
     quotazioniAggiornateAt?: string;
 }

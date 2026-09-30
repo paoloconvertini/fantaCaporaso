@@ -26,5 +26,6 @@ public class MercatoConfigEntity extends PanacheEntity {
 
     /** Gli svincoli restano bloccati finché le quotazioni non sono aggiornate. */
     public boolean quotazioniAggiornate;
+    public boolean partitiImportati;
     public LocalDateTime quotazioniAggiornateAt;
 }

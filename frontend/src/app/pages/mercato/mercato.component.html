@@ -54,10 +54,34 @@
     <mat-card class="workflow-card">
         <div class="step-number">1</div>
         <div>
+            <h3>Importa giocatori partiti</h3>
+            <p>Carica il file Giocatori Partiti. La quotazione del file sarà usata per il rimborso; le rose restano intatte.</p>
+            <p *ngIf="form?.get('partitiImportati')?.value">Partiti già confermati per questa sessione.</p>
+            <input type="file" accept=".xlsx,.xls" (change)="selectDeparturesFile($event)"
+                   [disabled]="form?.get('partitiImportati')?.value || departuresLoading">
+            <button mat-raised-button color="primary" (click)="importDepartures()"
+                    [disabled]="!departuresFile || departuresLoading || form?.get('partitiImportati')?.value">Verifica partiti</button>
+            <mat-spinner *ngIf="departuresLoading" diameter="28"></mat-spinner>
+        </div>
+    </mat-card>
+
+    <mat-card class="detail-card" *ngIf="departuresResult">
+        <h4>Giocatori partiti: {{ departuresResult.players?.length || 0 }}</h4>
+        <p class="error" *ngFor="let error of departuresResult.errors">{{ error }}</p>
+        <p *ngFor="let player of departuresResult.players">
+            {{ player.name }} — {{ player.owners?.join(', ') }} — quotazione {{ player.newValue }}
+        </p>
+        <button *ngIf="departuresResult.preview" mat-raised-button color="accent" (click)="importDepartures(true)"
+                [disabled]="departuresLoading || (departuresResult.errors?.length || 0) > 0">Conferma giocatori partiti</button>
+    </mat-card>
+
+    <mat-card class="workflow-card" [class.disabled-step]="!form?.get('partitiImportati')?.value">
+        <div class="step-number">2</div>
+        <div>
             <h3>Aggiorna quotazioni e svincolati</h3>
-            <p>È il primo passaggio obbligatorio. Le rose esistenti non vengono cancellate.</p>
-            <input type="file" accept=".xlsx,.xls" (change)="selectQuotesFile($event)">
-            <button mat-raised-button color="primary" (click)="previewQuotes()" [disabled]="!quotesFile || quotesLoading">Verifica file</button>
+            <p>Aggiorna i restanti calciatori dopo aver confermato i partiti. Le rose esistenti non vengono cancellate.</p>
+            <input type="file" accept=".xlsx,.xls" (change)="selectQuotesFile($event)" [disabled]="!form?.get('partitiImportati')?.value || quotesLoading">
+            <button mat-raised-button color="primary" (click)="previewQuotes()" [disabled]="!quotesFile || quotesLoading || !form?.get('partitiImportati')?.value">Verifica file</button>
             <mat-spinner *ngIf="quotesLoading" diameter="28"></mat-spinner>
         </div>
     </mat-card>
@@ -65,12 +89,13 @@
     <div class="result-grid" *ngIf="quotesResult">
         <mat-card><strong>Aggiornati</strong><span>{{ quotesResult.updated?.length || 0 }}</span></mat-card>
         <mat-card><strong>Nuovi</strong><span>{{ quotesResult.newPlayers?.length || 0 }}</span></mat-card>
-        <mat-card><strong>Partiti in rosa</strong><span>{{ quotesResult.departedInRosters?.length || 0 }}</span></mat-card>
-        <mat-card><strong>Partiti liberi</strong><span>{{ quotesResult.departedFree?.length || 0 }}</span></mat-card>
+        <mat-card><strong>Assenti dal listino in rosa</strong><span>{{ quotesResult.departedInRosters?.length || 0 }}</span></mat-card>
+        <mat-card><strong>Assenti dal listino liberi</strong><span>{{ quotesResult.departedFree?.length || 0 }}</span></mat-card>
     </div>
 
     <mat-card class="detail-card" *ngIf="quotesResult?.departedInRosters?.length">
         <h4>Calciatori non trovati nel nuovo file ma ancora in rosa</h4>
+        <p>Questi calciatori mantengono stato e quotazione: l'assenza dal listino non li marca come partiti.</p>
         <div class="detail-row" *ngFor="let player of quotesResult.departedInRosters">
             <span><strong>{{ player.name }}</strong> — {{ player.owners?.join(', ') }} — quotazione {{ player.oldValue || 0 }}</span>
             <button mat-stroked-button (click)="editMissingValue(player)">Modifica quotazione</button>
@@ -81,7 +106,7 @@
             (click)="confirmQuotes()" [disabled]="quotesLoading">Conferma aggiornamento quotazioni</button>
 
     <mat-card class="workflow-card" [class.disabled-step]="!form?.get('quotazioniAggiornate')?.value">
-        <div class="step-number">2</div>
+        <div class="step-number">3</div>
         <div>
             <h3>Scambi e cessioni dalle rose</h3>
             <p>Puoi importare le rose post-scambi oppure effettuare gli svincoli manualmente dalla pagina Rose.</p>
@@ -99,7 +124,7 @@
         <p *ngFor="let item of rostersResult.exchanges">Scambio: {{ item }}</p>
         <p *ngFor="let item of rostersResult.releases">Cessione: {{ item }}</p>
         <button *ngIf="rostersResult.preview" mat-raised-button color="accent" (click)="confirmRosters()"
-                [disabled]="rostersLoading || rostersResult.errors?.length">Conferma scambi e cessioni</button>
+                [disabled]="rostersLoading || (rostersResult.errors?.length || 0) > 0">Conferma scambi e cessioni</button>
     </mat-card>
 
     <ng-template #loadingTpl>
