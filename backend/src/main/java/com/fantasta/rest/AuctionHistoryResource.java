@@ -10,7 +10,7 @@ import jakarta.ws.rs.core.MediaType;
 
 @Path("/api/auction-history")
 @Produces(MediaType.APPLICATION_JSON)
-@RolesAllowed({"admin", "user"})
+@RolesAllowed({"admin", "user", "observer"})
 public class AuctionHistoryResource {
     @Inject AuctionHistoryService service;
     @Inject SecurityIdentity identity;

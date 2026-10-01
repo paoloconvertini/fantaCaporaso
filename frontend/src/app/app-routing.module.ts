@@ -21,6 +21,8 @@ import { RosterMovementsComponent } from './pages/roster-movements/roster-moveme
 import { AuctionHistoryComponent } from './pages/auction-history/auction-history.component';
 import { NewspaperComponent } from './pages/newspaper/newspaper.component';
 
+import { TargetsComponent } from './pages/targets/targets.component';
+
 const routes: Routes = [
     { path: 'login', component: LoginComponent },
     {
@@ -32,6 +34,7 @@ const routes: Routes = [
             { path: 'admin', component: AdminComponent, canActivate: [AdminOnlyGuard] },
             { path: 'rosters', component: RostersComponent },
             { path: 'players', component: PlayersComponent },
+            { path: 'targets', component: TargetsComponent },
             { path: 'auction-history', component: AuctionHistoryComponent },
             { path: 'upload-rosters', component: UploadRostersComponent, canActivate: [AdminOnlyGuard] },
             { path: 'upload-players', component: UploadPlayersComponent, canActivate: [AdminOnlyGuard] },

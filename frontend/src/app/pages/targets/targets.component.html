@@ -1,0 +1,34 @@
+<main class="targets-page">
+  <header><span class="eyebrow">Strategia d’asta</span><h1>I miei obiettivi</h1>
+    <p>Confronta le tue possibilità con i crediti e i posti liberi degli avversari, ruolo per ruolo.</p></header>
+  <p *ngIf="!auth.canUseTargets">Questa funzione è disponibile per gli osservatori associati a una squadra. Chiedi al gestore di impostare l’associazione.</p>
+  <p *ngIf="error" class="error" role="alert">{{ error }} <button mat-button (click)="refresh()">Riprova</button></p>
+  <ng-container *ngIf="analysis">
+    <div class="team-heading"><h2>{{ analysis.team }}</h2><span>{{ analysis.credits }} crediti residui</span>
+      <button mat-stroked-button (click)="refresh()" [disabled]="loading"><mat-icon>refresh</mat-icon> Aggiorna</button></div>
+    <nav aria-label="Ruolo degli obiettivi"><button *ngFor="let r of analysis.roles" type="button" [class.active]="r.role === selectedRole"
+      [attr.aria-pressed]="r.role === selectedRole" (click)="selectedRole = r.role">{{ label(r.role) }} · {{ r.targets.length }}</button></nav>
+    <ng-container *ngIf="role as r">
+      <section class="metrics"><div><strong>{{ r.roleSlots }}</strong><span>Posti liberi · {{ label(r.role) }}</span></div>
+        <div><strong>{{ r.maximumBid }}</strong><span>Massima offerta per {{ r.purchaseSize === 3 ? 'una porta' : 'un obiettivo' }}</span></div>
+        <div><strong>{{ r.blockers }}</strong><span>Acquisti avversari sopra il tuo massimo</span></div></section>
+      <section class="scenario" aria-live="polite">
+        <h2>Scenario sfavorevole</h2>
+        <p *ngIf="!r.targets.length">Segna gli obiettivi nella pagina <a routerLink="/players">Svincolati</a> per analizzare questo ruolo.</p>
+        <p *ngIf="r.targets.length && !r.roleSlots">Non hai posti liberi in questo ruolo.</p>
+        <p *ngIf="r.targets.length && r.roleSlots && r.reachable"><strong>{{ r.reachable.name }}</strong> è il {{ r.blockers + 1 }}° obiettivo in ordine di quotazione raggiungibile nello scenario simulato.</p>
+        <p *ngIf="r.targets.length && r.roleSlots && !r.reachable">Nessun obiettivo risulta raggiungibile nello scenario sfavorevole con il tuo massimo attuale.</p>
+        <small>Si ipotizza che gli avversari spendano per superarti sugli obiettivi di questo ruolo. Si riserva 1 credito per ogni altro posto libero. È una simulazione, non una garanzia: prezzi, parità, vincoli di riacquisto degli avversari e scelte reali possono cambiare il risultato.</small>
+      </section>
+      <section><h2>{{ label(r.role) }} · Obiettivi</h2><div class="target" *ngFor="let target of r.targets; let i = index" [class.reachable]="r.reachable?.id === target.id">
+        <span class="rank">{{ i + 1 }}</span><div class="target-name"><strong>{{ target.name }}</strong><span>{{ target.team }} · Quotazione {{ target.value }} · Minimo per te {{ target.minimumBid }}</span><small *ngIf="!target.affordable">Minimo superiore alla tua disponibilità per questo ruolo</small></div>
+        <app-target-button [playerId]="target.id" [removeOnly]="true"></app-target-button>
+      </div></section>
+      <section><h2>Chi può superarti in questo ruolo</h2><p *ngIf="!r.opponents.length">Nessun avversario può offrire più del tuo massimo con i posti e i crediti attuali.</p>
+        <div class="opponent" *ngFor="let other of r.opponents"><strong>{{ other.name }}</strong><span>{{ other.credits }} crediti · {{ other.roleSlots }} posti nel ruolo · {{ other.totalSlots }} da finanziare in totale</span><b>Fino a {{ other.capacity }} {{ other.capacity === 1 ? 'obiettivo' : 'obiettivi' }}</b></div>
+      </section>
+    </ng-container>
+    <section *ngIf="analysis.unavailable.length"><h2>Obiettivi non più disponibili</h2><div class="target" *ngFor="let target of analysis.unavailable"><strong>{{ target.name }}</strong><span>{{ target.team }}</span><app-target-button [playerId]="target.id" [removeOnly]="true"></app-target-button></div></section>
+    <p class="updated">Ultimo aggiornamento: {{ analysis.generatedAt | date:'dd/MM/yyyy HH:mm:ss' }} · Aggiornamento automatico ogni 15 secondi</p>
+  </ng-container>
+</main>

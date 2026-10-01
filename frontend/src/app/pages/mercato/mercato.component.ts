@@ -189,7 +189,7 @@ export class MercatoComponent implements OnInit {
 
     confirmRosters(): void {
         if (!this.rostersFile || !this.rostersResult?.preview || this.rostersResult?.errors?.length) return;
-        if (!window.confirm('Applicare scambi e cessioni mostrati nell’anteprima?')) return;
+        if (!window.confirm('Applicare correzioni delle riserve portieri, scambi e cessioni mostrati nell’anteprima?')) return;
         this.rostersLoading = true;
         this.adminApi.reconcileMarketRosters(this.rostersFile, true).subscribe({
             next: result => {

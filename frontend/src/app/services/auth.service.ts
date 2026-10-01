@@ -84,6 +84,14 @@ export class AuthService {
     return this.hasRole('admin');
   }
 
+  get isObserver(): boolean {
+    return this.hasRole('observer') || (this.hasRole('user') && !this.user?.participantId);
+  }
+
+  get canUseTargets(): boolean {
+    return this.hasRole('observer') && this.user?.participantId != null;
+  }
+
   get isUser(): boolean {
     return this.hasRole('user');
   }

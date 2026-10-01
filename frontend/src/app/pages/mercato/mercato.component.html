@@ -109,7 +109,7 @@
         <div class="step-number">3</div>
         <div>
             <h3>Scambi e cessioni dalle rose</h3>
-            <p>Puoi importare le rose post-scambi oppure effettuare gli svincoli manualmente dalla pagina Rose.</p>
+            <p>Importa le rose aggiornate: l'anteprima distingue le correzioni delle riserve portieri, senza variazioni di crediti o cambio porta, da scambi e cessioni.</p>
             <input type="file" accept=".xlsx,.xls" (change)="selectRostersFile($event)"
                    [disabled]="!form?.get('quotazioniAggiornate')?.value">
             <button mat-raised-button color="primary" (click)="previewRosters()"
@@ -121,10 +121,12 @@
     <mat-card class="detail-card" *ngIf="rostersResult">
         <h4>Anteprima riconciliazione</h4>
         <p class="error" *ngFor="let item of rostersResult.errors">{{ item }}</p>
+        <p *ngFor="let item of rostersResult.goalkeeperCorrections">Correzione pacchetto portieri: {{ item }}</p>
+        <p *ngFor="let item of rostersResult.rosterCorrections">Correzione rosa: {{ item }}</p>
         <p *ngFor="let item of rostersResult.exchanges">Scambio: {{ item }}</p>
         <p *ngFor="let item of rostersResult.releases">Cessione: {{ item }}</p>
         <button *ngIf="rostersResult.preview" mat-raised-button color="accent" (click)="confirmRosters()"
-                [disabled]="rostersLoading || (rostersResult.errors?.length || 0) > 0">Conferma scambi e cessioni</button>
+                [disabled]="rostersLoading || (rostersResult.errors?.length || 0) > 0">Conferma correzioni, scambi e cessioni</button>
     </mat-card>
 
     <ng-template #loadingTpl>

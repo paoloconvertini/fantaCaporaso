@@ -52,7 +52,7 @@ public class RandomResource {
      */
     @GET
     @Path("/state")
-    @RolesAllowed({"admin", "user"})
+    @RolesAllowed({"admin", "user", "observer"})
     public Map<String, Object> state() {
         GiroEntity giro = db.ensureCurrentGiro();
 

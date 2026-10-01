@@ -10,6 +10,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class AppIdentityProvider implements IdentityProvider<AppAuthRequest> {
+    @jakarta.inject.Inject com.fantasta.service.AppUserService users;
 
     @Override
     public Class<AppAuthRequest> getRequestType() {
@@ -18,12 +19,13 @@ public class AppIdentityProvider implements IdentityProvider<AppAuthRequest> {
 
     @Override
     public Uni<SecurityIdentity> authenticate(AppAuthRequest request, AuthenticationRequestContext context) {
-        AppJwtService.Claims claims = request.claims;
-        QuarkusSecurityIdentity.Builder builder = QuarkusSecurityIdentity.builder()
-                .setPrincipal(new QuarkusPrincipal(claims.username()))
-                .addRole(claims.role())
-                .addAttribute("participant_id", claims.participantId());
-
-        return Uni.createFrom().item(builder.build());
+        return context.runBlocking(() -> {
+            var user = users.currentIdentity(request.claims.username());
+            QuarkusSecurityIdentity.Builder builder = QuarkusSecurityIdentity.builder()
+                    .setPrincipal(new QuarkusPrincipal(user.username))
+                    .addRoles(new java.util.HashSet<>(user.roles));
+            if (user.participantId != null) builder.addAttribute("participant_id", user.participantId);
+            return builder.build();
+        });
     }
 }

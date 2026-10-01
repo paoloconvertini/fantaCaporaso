@@ -49,7 +49,8 @@ public class AppUserService {
             participant.persist();
         }
 
-        if (participant != null && AppUserEntity.find("participant", participant).firstResult() != null) {
+        if (participant != null && !"observer".equals(normalizeRole(request.role))
+                && AppUserEntity.count("participant = ?1 and role = ?2", participant, "user") > 0) {
             throw new BadRequestException("La squadra ha gia' un account associato");
         }
 
@@ -57,11 +58,19 @@ public class AppUserService {
         user.username = username;
         user.passwordHash = passwordService.hash(request.password);
         user.role = normalizeRole(request.role);
+        if ("user".equals(user.role) && participant == null) user.role = "observer";
         user.participant = participant;
         user.enabled = true;
         user.mustChangePassword = !"admin".equals(user.role) && !Boolean.TRUE.equals(request.permanentPassword);
         user.persist();
         return user;
+    }
+
+    @Transactional
+    public AuthUserDto currentIdentity(String username) {
+        AppUserEntity user = AppUserEntity.find("username", username).firstResult();
+        if (user == null || !user.enabled) throw new NotAuthorizedException("Account non disponibile");
+        return toDto(user);
     }
 
     @Transactional
@@ -114,6 +123,19 @@ public class AppUserService {
         return user;
     }
 
+    @Transactional
+    public void associateObserver(String username, Long participantId) {
+        AppUserEntity user = AppUserEntity.find("username", normalizeUsername(username)).firstResult();
+        if (user == null) throw new BadRequestException("Utente non trovato");
+        if (!"observer".equals(user.role) && !("user".equals(user.role) && user.participant == null)) {
+            throw new BadRequestException("Solo un account osservatore può essere associato con questa operazione");
+        }
+        ParticipantEntity participant = participantId == null ? null : ParticipantEntity.findById(participantId);
+        if (participantId != null && participant == null) throw new BadRequestException("Squadra non trovata");
+        user.role = "observer";
+        user.participant = participant;
+    }
+
     private void validateCreate(CreateUserRequest request) {
         if (request == null) {
             throw new BadRequestException("Dati utente mancanti");
@@ -139,7 +161,7 @@ public class AppUserService {
             return "user";
         }
         String normalized = role.trim().toLowerCase(Locale.ROOT);
-        if (!"admin".equals(normalized) && !"user".equals(normalized)) {
+        if (!"admin".equals(normalized) && !"user".equals(normalized) && !"observer".equals(normalized)) {
             throw new BadRequestException("Ruolo non valido");
         }
         return normalized;

@@ -17,13 +17,13 @@ export class AppShellComponent implements OnInit {
   menuOpened = window.innerWidth >= 1024;
   menuMode: 'side' | 'over' = this.menuOpened ? 'side' : 'over';
 
-  constructor(private auth: AuthService) {}
+  constructor(public auth: AuthService) {}
 
   async ngOnInit() {
     const roles = this.auth.roles;
     this.isAdmin = roles.includes('admin');
-    this.isUser = roles.includes('user');
-    this.isParticipant = this.isUser && this.auth.user?.participantId != null;
+    this.isUser = roles.includes('user') || roles.includes('observer');
+    this.isParticipant = roles.includes('user') && this.auth.user?.participantId != null;
   }
 
   toggleMenu() {

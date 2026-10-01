@@ -22,11 +22,11 @@ export class AdminUsersComponent implements OnInit {
   saving = false;
 
   get configuredParticipants(): number {
-    return this.users.filter(user => !!user.participantId).length;
+    return this.users.filter(user => user.role !== 'observer' && !!user.participantId).length;
   }
 
   get unconfiguredParticipants(): ParticipantOption[] {
-    const configured = new Set(this.users.map(user => Number(user.participantId)).filter(Boolean));
+    const configured = new Set(this.users.filter(user => user.role !== 'observer').map(user => Number(user.participantId)).filter(Boolean));
     return this.participants.filter(participant => !configured.has(participant.id));
   }
 
@@ -62,7 +62,7 @@ export class AdminUsersComponent implements OnInit {
 
     this.saving = true;
     const payload = observer
-      ? { ...this.form.value, participantId: null, participantName: null, totalCredits: null }
+      ? { ...this.form.value, role: 'observer', participantName: null, totalCredits: null }
       : this.form.value;
     this.adminApi.createUser(payload).subscribe({
       next: () => {
@@ -78,6 +78,13 @@ export class AdminUsersComponent implements OnInit {
         const message = err?.error?.message || err?.error?.error || 'Errore creazione utente';
         this.snackBar.open(message, 'Chiudi', { duration: 4000 });
       }
+    });
+  }
+
+  associateObserver(user: any, participantId: number | null): void {
+    this.adminApi.associateObserver(user.username, participantId).subscribe({
+      next: () => { this.loadUsers(); this.snackBar.open('Associazione aggiornata', 'Chiudi', { duration: 2500 }); },
+      error: err => this.snackBar.open(err?.error?.message || 'Errore associazione', 'Chiudi', { duration: 3500 })
     });
   }
 

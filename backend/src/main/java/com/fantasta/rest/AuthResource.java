@@ -83,7 +83,7 @@ public class AuthResource {
 
     @GET
     @Path("/me")
-    @RolesAllowed({"admin", "user", "password-change"})
+    @RolesAllowed({"admin", "user", "observer", "password-change"})
     public AuthUserDto me() {
         String username = identity.getPrincipal().getName();
         Long participantId = identity.getAttribute("participant_id");

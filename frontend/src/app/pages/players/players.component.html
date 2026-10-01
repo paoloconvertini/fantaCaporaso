@@ -39,6 +39,7 @@
                 <th>Squadra</th>
                 <th>Ruolo</th>
                 <th>Valore</th>
+                <th *ngIf="auth.canUseTargets">Obiettivi</th>
             </tr>
             </thead>
             <tbody>
@@ -47,6 +48,7 @@
                 <td>{{ row.team }}</td>
                 <td>{{ row.role }}</td>
                 <td>{{ row.valore }} <button *ngIf="isAdmin" class="inline-edit" type="button" (click)="editValue(row)" title="Modifica quotazione"><mat-icon>edit</mat-icon></button></td>
+                <td *ngIf="auth.canUseTargets"><app-target-button [playerId]="row.id"></app-target-button></td>
             </tr>
             </tbody>
         </table>
@@ -62,6 +64,7 @@
                     <span>{{ row.team }}</span>
                 </div>
                 <div class="player-meta">
+                    <app-target-button [playerId]="row.id"></app-target-button>
                     <span class="role-pill">{{ roleLabel(row.role) }}</span>
                     <strong>{{ row.valore }} <button *ngIf="isAdmin" class="inline-edit" type="button" (click)="editValue(row)" title="Modifica quotazione"><mat-icon>edit</mat-icon></button></strong>
                 </div>

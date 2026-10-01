@@ -1,6 +1,7 @@
 package com.fantasta.rest;
 
 import com.fantasta.model.ParticipantEntity;
+import com.fantasta.model.AppUserEntity;
 import com.fantasta.model.PlayerEntity;
 import com.fantasta.model.Role;
 import com.fantasta.model.RosterEntity;
@@ -58,7 +59,7 @@ class AuctionTimerResourceTest {
             for (int i = 0; i < ids.size(); i++) {
                 Long participantId = ids.get(i);
                 double amount = i + 1D;
-                String cookie = jwtService.createToken("http-user-" + i, "user", participantId);
+                String cookie = participantToken("http-user-" + i, participantId);
                 requests.add(executor.submit(() -> {
                     ready.countDown();
                     start.await();
@@ -73,7 +74,7 @@ class AuctionTimerResourceTest {
             for (Future<Integer> request : requests) assertEquals(200, request.get());
 
             assertEquals(16, auctionService.get().bids.size());
-            String firstCookie = jwtService.createToken("http-user-0", "user", ids.get(0));
+            String firstCookie = participantToken("http-user-0", ids.get(0));
             given().cookie("FANTASTA_AUTH", firstCookie).contentType(ContentType.JSON)
                     .body(Map.of("participantId", ids.get(15), "amount", 22))
                     .when().post("/api/bids").then().statusCode(200);
@@ -84,7 +85,7 @@ class AuctionTimerResourceTest {
             auctionService.reset();
             QuarkusTransaction.requiringNew().run(() -> {
                 PlayerEntity.delete("team", "Team carico HTTP");
-                for (Long id : ids) ParticipantEntity.deleteById(id);
+                for (Long id : ids) { AppUserEntity.delete("participant.id", id); ParticipantEntity.deleteById(id); }
             });
         }
     }
@@ -107,7 +108,7 @@ class AuctionTimerResourceTest {
 
         try {
             auctionService.start("Difensore identita", "Team identita", "DIFENSORE", 30, "NONE", 5, null);
-            String userCookie = jwtService.createToken("utente-identita", "user", ids[0]);
+            String userCookie = participantToken("utente-identita", ids[0]);
 
             given().cookie("FANTASTA_AUTH", userCookie)
                     .contentType(ContentType.JSON)
@@ -121,6 +122,7 @@ class AuctionTimerResourceTest {
             auctionService.reset();
             QuarkusTransaction.requiringNew().run(() -> {
                 PlayerEntity.delete("team", "Team identita");
+                AppUserEntity.delete("participant.id", ids[0]);
                 ParticipantEntity.deleteById(ids[0]);
                 ParticipantEntity.deleteById(ids[1]);
             });
@@ -144,7 +146,7 @@ class AuctionTimerResourceTest {
 
         try {
             auctionService.start("Difensore ritiro HTTP", "Team ritiro HTTP", "DIFENSORE", 30, "NONE", 5, null);
-            String userCookie = jwtService.createToken("utente-ritiro", "user", participantId);
+            String userCookie = participantToken("utente-ritiro", participantId);
 
             given().cookie("FANTASTA_AUTH", userCookie)
                     .contentType(ContentType.JSON)
@@ -164,6 +166,7 @@ class AuctionTimerResourceTest {
             auctionService.reset();
             QuarkusTransaction.requiringNew().run(() -> {
                 PlayerEntity.delete("team", "Team ritiro HTTP");
+                AppUserEntity.delete("participant.id", participantId);
                 ParticipantEntity.deleteById(participantId);
             });
         }
@@ -237,9 +240,21 @@ class AuctionTimerResourceTest {
             QuarkusTransaction.requiringNew().run(() -> {
                 RosterEntity.delete("participant.id", participantId);
                 PlayerEntity.delete("team", "Team timer");
+                AppUserEntity.delete("participant.id", participantId);
                 ParticipantEntity.deleteById(participantId);
             });
         }
+    }
+
+    private String participantToken(String username, Long participantId) {
+        QuarkusTransaction.requiringNew().run(() -> {
+            if (AppUserEntity.count("username", username) == 0) {
+                AppUserEntity account = new AppUserEntity(); account.username = username;
+                account.role = "user"; account.passwordHash = "unused-test-hash";
+                account.participant = ParticipantEntity.findById(participantId); account.persist();
+            }
+        });
+        return jwtService.createToken(username, "user", participantId);
     }
 
     private void goalkeeper(String name, double value) {

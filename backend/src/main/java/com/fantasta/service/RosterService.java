@@ -296,6 +296,7 @@ public class RosterService {
     public MarketRosterImportResult reconcileMarketRosters(InputStream in, boolean confirm) {
         mercatoService.requireUpdatedQuotes();
         Map<Long, ParticipantEntity> desiredOwnerByPlayer = new HashMap<>();
+        Map<Long, Double> historicalCosts = new HashMap<>();
         Set<Long> seenParticipants = new HashSet<>();
         MarketRosterImportResult result = new MarketRosterImportResult(!confirm);
 
@@ -324,6 +325,13 @@ public class RosterService {
                         continue;
                     }
                     ParticipantEntity duplicate = desiredOwnerByPlayer.putIfAbsent(player.id, participant);
+                    String costText = cellText(row, 3).replace(',', '.');
+                    try {
+                        double cost = Double.parseDouble(costText);
+                        if (Double.isFinite(cost) && cost >= 0) historicalCosts.put(player.id, cost);
+                    } catch (NumberFormatException ignored) {
+                        // Richiesto soltanto per ripristinare una riga mancante nel database.
+                    }
                     if (duplicate != null) {
                         result.errors.add(player.name + " compare sia in " + duplicate.name + " sia in " + participant.name);
                     }
@@ -343,11 +351,32 @@ public class RosterService {
         List<RosterEntity> current = RosterEntity.listAll();
         Map<Long, RosterEntity> currentByPlayer = current.stream()
                 .collect(Collectors.toMap(entry -> entry.player.id, entry -> entry));
+        List<GoalkeeperCorrection> corrections = goalkeeperCorrections(current, desiredOwnerByPlayer, result);
+        Set<Long> correctedOutgoing = corrections.stream().filter(c -> c.entry() != null).map(c -> c.entry().player.id).collect(Collectors.toSet());
+        Set<Long> correctedIncoming = corrections.stream().map(c -> c.replacement().id).collect(Collectors.toSet());
+        List<RosterEntity> missingEntries = new ArrayList<>();
         for (Map.Entry<Long, ParticipantEntity> desired : desiredOwnerByPlayer.entrySet()) {
+            if (correctedIncoming.contains(desired.getKey())) continue;
             RosterEntity existing = currentByPlayer.get(desired.getKey());
             PlayerEntity player = PlayerEntity.findById(desired.getKey());
             if (existing == null) {
-                result.errors.add("Aggiunta non consentita durante la riconciliazione: " + player.name);
+                long desiredCount = desiredOwnerByPlayer.entrySet().stream()
+                        .filter(entry -> entry.getValue().id.equals(desired.getValue().id))
+                        .map(entry -> PlayerEntity.<PlayerEntity>findById(entry.getKey()))
+                        .filter(candidate -> candidate.role == player.role).count();
+                if (player.role == Role.PORTIERE || !player.active || !historicalCosts.containsKey(player.id)
+                        || desiredCount > max(player.role)) {
+                    result.errors.add("Riga rosa mancante non ripristinabile: " + player.name
+                            + " (verifica ruolo, disponibilità, costo storico nel file e posti in rosa)");
+                } else {
+                    RosterEntity restored = new RosterEntity();
+                    restored.player = player;
+                    restored.participant = desired.getValue();
+                    restored.amount = historicalCosts.get(player.id);
+                    missingEntries.add(restored);
+                    result.rosterCorrections.add(player.name + " — " + restored.participant.name
+                            + " (ripristino riga mancante, costo storico " + restored.amount + ", crediti invariati)");
+                }
             } else if (Objects.equals(existing.participant.id, desired.getValue().id)) {
                 result.unchanged.add(player.name + " — " + existing.participant.name);
             } else {
@@ -355,16 +384,60 @@ public class RosterService {
             }
         }
         for (RosterEntity existing : current) {
+            if (correctedOutgoing.contains(existing.player.id)) continue;
             if (!desiredOwnerByPlayer.containsKey(existing.player.id)) {
                 result.releases.add(existing.player.name + " — " + existing.participant.name
                         + " (rimborso " + Math.round(existing.player.valore == null ? 0D : existing.player.valore) + ")");
             }
         }
 
-        validateGoalkeeperReconciliation(current, desiredOwnerByPlayer, result);
+        validateGoalkeeperReconciliation(current.stream()
+                .filter(entry -> !correctedOutgoing.contains(entry.player.id)).toList(), desiredOwnerByPlayer, result);
         if (!result.errors.isEmpty() || !confirm) return result;
 
         String operationCode = UUID.randomUUID().toString();
+
+        Map<Long, Integer> remainingBeforeCorrections = new HashMap<>();
+        for (ParticipantEntity participant : allParticipants) {
+            remainingBeforeCorrections.put(participant.id,
+                    participantService.remainingCreditsById(participant.id, participant.totalCredits));
+        }
+        for (RosterEntity entry : missingEntries) {
+            entry.persist();
+            entry.player.assigned = true;
+            marketRestrictionService.rememberCurrentOwner(entry.player, entry.participant);
+            Log.infof("Ripristino riga rosa per %s: %s, costo storico %s",
+                    entry.participant.name, entry.player.name, entry.amount);
+        }
+
+        Set<PlayerEntity> correctedPlayers = new HashSet<>();
+        for (GoalkeeperCorrection correction : corrections) {
+            RosterEntity entry = correction.entry();
+            if (entry == null) {
+                entry = new RosterEntity();
+                entry.participant = correction.owner();
+                entry.amount = 0D; // Completamento di una porta già pagata, senza nuovo addebito.
+                entry.player = correction.replacement();
+                entry.persist();
+            } else {
+                PlayerEntity outgoing = entry.player;
+                PlayerOwnerHistoryEntity.remember(outgoing, entry.participant);
+                correctedPlayers.add(outgoing);
+                entry.player = correction.replacement();
+            }
+            correctedPlayers.add(entry.player);
+            marketRestrictionService.rememberCurrentOwner(entry.player, entry.participant);
+            Log.infof("Correzione pacchetto portieri per %s: %s, costo riga %s, sessione %s",
+                    entry.participant.name, entry.player.name, entry.amount,
+                    mercatoService.requireConfiguredMarket().sessionCode);
+        }
+        for (PlayerEntity player : correctedPlayers) {
+            player.assigned = RosterEntity.count("player", player) > 0;
+        }
+        for (ParticipantEntity participant : allParticipants) {
+            participant.totalCredits = remainingBeforeCorrections.get(participant.id)
+                    + participantService.spentCreditsById(participant.id);
+        }
 
         // Le rimozioni passano dallo stesso servizio degli svincoli manuali.
         Set<Long> releasedPlayers = new HashSet<>();
@@ -417,6 +490,68 @@ public class RosterService {
             participant.totalCredits = remainingBeforeExchanges.get(participant.id) + newSpent;
         }
         return result;
+    }
+
+    private record GoalkeeperCorrection(RosterEntity entry, ParticipantEntity owner, PlayerEntity replacement) {}
+
+    private List<GoalkeeperCorrection> goalkeeperCorrections(List<RosterEntity> current,
+                                                              Map<Long, ParticipantEntity> desired,
+                                                              MarketRosterImportResult result) {
+        List<GoalkeeperCorrection> corrections = new ArrayList<>();
+        Map<Long, List<RosterEntity>> packages = current.stream()
+                .filter(entry -> entry.player.role == Role.PORTIERE)
+                .collect(Collectors.groupingBy(entry -> entry.participant.id));
+        Map<Long, RosterEntity> assigned = current.stream().collect(Collectors.toMap(entry -> entry.player.id, entry -> entry));
+        for (List<RosterEntity> entries : packages.values()) {
+            ParticipantEntity owner = entries.get(0).participant;
+            List<PlayerEntity> desiredKeepers = desired.entrySet().stream()
+                    .filter(entry -> entry.getValue().id.equals(owner.id))
+                    .map(entry -> PlayerEntity.<PlayerEntity>findById(entry.getKey()))
+                    .filter(player -> player.role == Role.PORTIERE).toList();
+            List<RosterEntity> outgoing = entries.stream()
+                    .filter(entry -> !desired.containsKey(entry.player.id) || !desired.get(entry.player.id).id.equals(owner.id))
+                    .sorted(Comparator.<RosterEntity>comparingDouble(entry -> entry.amount == null ? 0D : entry.amount)
+                            .reversed().thenComparing(entry -> entry.player.id)).toList();
+            List<PlayerEntity> incoming = desiredKeepers.stream()
+                    .filter(player -> !assigned.containsKey(player.id) || !assigned.get(player.id).participant.id.equals(owner.id))
+                    .sorted(Comparator.<PlayerEntity>comparingDouble(player -> player.valore == null ? 0D : player.valore)
+                            .reversed().thenComparing(player -> player.id)).toList();
+            if (incoming.isEmpty()) continue;
+            // Lo scambio completo fra proprietari segue la riconciliazione ordinaria.
+            if (entries.size() == 3 && outgoing.size() == 3 && incoming.size() == 3
+                    && incoming.stream().allMatch(player -> assigned.containsKey(player.id))
+                    && incoming.stream().map(player -> assigned.get(player.id).participant.id).distinct().count() == 1) continue;
+            Map<String, Long> clubs = entries.stream().collect(Collectors.groupingBy(
+                    entry -> normalizeTeamName(entry.player.team), Collectors.counting()));
+            long maximum = clubs.values().stream().mapToLong(Long::longValue).max().orElse(0);
+            List<String> mainClubs = clubs.entrySet().stream().filter(entry -> entry.getValue() == maximum)
+                    .map(Map.Entry::getKey).toList();
+            if (entries.size() > 3 || desiredKeepers.size() != 3 || incoming.size() != outgoing.size() + 3 - entries.size()
+                    || mainClubs.size() != 1 || mainClubs.get(0).isBlank()
+                    || incoming.stream().anyMatch(player -> !player.active || !normalizeTeamName(player.team).equals(mainClubs.get(0)))) {
+                result.errors.add("Correzione porta non riconosciuta per " + owner.name
+                        + ": il pacchetto deve avere tre portieri e i nuovi portieri devono appartenere allo stesso club della porta esistente");
+                continue;
+            }
+            for (int i = 0; i < incoming.size(); i++) {
+                RosterEntity entry = i < outgoing.size() ? outgoing.get(i) : null;
+                PlayerEntity replacement = incoming.get(i);
+                corrections.add(new GoalkeeperCorrection(entry, owner, replacement));
+                result.goalkeeperCorrections.add(owner.name + ": "
+                        + (entry == null ? "posto mancante" : entry.player.name) + " → " + replacement.name
+                        + " (costo storico porta invariato, crediti invariati, nessun cambio porta)");
+            }
+        }
+        Set<Long> correctedOutgoing = corrections.stream().filter(c -> c.entry() != null)
+                .map(c -> c.entry().player.id).collect(Collectors.toSet());
+        for (GoalkeeperCorrection correction : corrections) {
+            RosterEntity source = assigned.get(correction.replacement().id);
+            if (source != null && !correctedOutgoing.contains(source.player.id)) {
+                result.errors.add("Il portiere " + source.player.name + " appartiene a " + source.participant.name
+                        + ": anche la porta di origine deve essere corretta nello stesso import");
+            }
+        }
+        return corrections;
     }
 
     private void validateGoalkeeperReconciliation(List<RosterEntity> current,

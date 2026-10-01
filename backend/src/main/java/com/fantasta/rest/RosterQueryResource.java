@@ -17,7 +17,7 @@ public class RosterQueryResource {
     RosterQueryService rosterQueryService;
 
     @GET
-    @RolesAllowed({"admin", "user"})
+    @RolesAllowed({"admin", "user", "observer"})
     public List<RosterDto> getRosters(
             @QueryParam("participantId") Long participantId,
             @QueryParam("sessionId") Long sessionId

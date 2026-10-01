@@ -20,7 +20,7 @@ export class PlayersComponent implements OnInit {
 
     displayedColumns = ['name', 'team', 'role', 'valore'];
 
-    constructor(private api: UserApiService, private auth: AuthService, private dialog: MatDialog) {}
+    constructor(private api: UserApiService, public auth: AuthService, private dialog: MatDialog) {}
 
     ngOnInit(): void {
         this.isAdmin = this.auth.hasRole('admin');

@@ -34,7 +34,7 @@ public class ParticipantResource {
         ParticipantDto dto = new ParticipantDto();
         dto.id = e.id;
         dto.name = e.name;
-        AppUserEntity account = AppUserEntity.find("participant", e).firstResult();
+        AppUserEntity account = AppUserEntity.find("participant = ?1 and role = ?2", e, "user").firstResult();
         dto.username = account == null ? null : account.username;
         dto.totalCredits = e.totalCredits;
         dto.spentCredits = participantService.spentCreditsById(e.id);
@@ -45,7 +45,7 @@ public class ParticipantResource {
 
     @GET
     @Path("/me")
-    @RolesAllowed({"admin", "user"})
+    @RolesAllowed({"admin", "user", "observer"})
     public ParticipantDto me() {
         ParticipantEntity e = findCurrentParticipant();
         if (e == null) {
@@ -68,7 +68,7 @@ public class ParticipantResource {
 
     @GET
     @Path("/{id}")
-    @RolesAllowed({"admin", "user"})
+    @RolesAllowed({"admin", "user", "observer"})
     public ParticipantDto getById(@PathParam("id") Long id) {
         ParticipantEntity e = ParticipantEntity.findById(id);
         if (e == null) throw new NotFoundException("Partecipante non trovato");
@@ -77,7 +77,7 @@ public class ParticipantResource {
 
     @GET
     @Path("/all")
-    @RolesAllowed({"admin", "user"})
+    @RolesAllowed({"admin", "user", "observer"})
     public List<ParticipantDto> all() {
         return ParticipantEntity.<ParticipantEntity>listAll()
                 .stream()
@@ -88,7 +88,7 @@ public class ParticipantResource {
     @NoCache
     @GET
     @Path("/summary")
-    @RolesAllowed({"admin", "user"})
+    @RolesAllowed({"admin", "user", "observer"})
     public List<ParticipantSummaryDto> summary() {
         return ParticipantEntity.<ParticipantEntity>listAll().stream()
                 .map(e -> {

@@ -13,6 +13,7 @@
 
     <mat-card class="list-card" *ngFor="let p of players">
         <h4>{{p.name}}</h4>
+        <app-target-button [playerId]="p.id"></app-target-button>
         <div class="list-row">
             <span>{{p.team}}</span>
             <span class="summary-right">{{p.role}} - {{p.valore}}</span>

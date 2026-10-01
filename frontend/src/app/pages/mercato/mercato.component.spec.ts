@@ -49,7 +49,7 @@ describe('MercatoComponent', () => {
     fixture.detectChanges();
     const buttons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('button'));
     const departures = buttons.find(button => button.textContent?.includes('Conferma giocatori partiti'))!;
-    const rosters = buttons.find(button => button.textContent?.includes('Conferma scambi e cessioni'))!;
+    const rosters = buttons.find(button => button.textContent?.includes('Conferma correzioni, scambi e cessioni'))!;
     expect(departures.disabled).toBeFalse();
     expect(rosters.disabled).toBeFalse();
     component.departuresResult.errors = ['Proprietario non corrispondente'];
@@ -69,6 +69,16 @@ describe('MercatoComponent', () => {
     component.quotesResult = { preview: true };
     component.confirmQuotes();
     expect(api.updateMarketPlayers).not.toHaveBeenCalled();
+  });
+
+  it('shows reserve corrections separately from releases', () => {
+    component.rostersResult = {
+      preview: true, errors: [], exchanges: [], releases: [],
+      goalkeeperCorrections: ['Squadra: Vecchio → Nuovo (costo storico 1, crediti invariati, nessun cambio porta)']
+    };
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Correzione pacchetto portieri: Squadra: Vecchio → Nuovo');
+    expect(fixture.nativeElement.textContent).toContain('nessun cambio porta');
   });
 
   it('refreshes confirmed departure state from the server', () => {

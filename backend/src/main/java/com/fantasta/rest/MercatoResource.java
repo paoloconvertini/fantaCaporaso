@@ -18,7 +18,7 @@ public class MercatoResource {
 
     @GET
     @Path("/config")
-    @RolesAllowed({"user", "admin"})
+    @RolesAllowed({"user", "admin", "observer"})
     public Response getConfig() {
         return Response.ok(service.getConfig()).build();
     }

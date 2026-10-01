@@ -18,7 +18,7 @@ public class AppJwtService {
 
     public static final String COOKIE_NAME = "FANTASTA_AUTH";
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final Set<String> ALLOWED_ROLES = Set.of("admin", "user", "password-change");
+    private static final Set<String> ALLOWED_ROLES = Set.of("admin", "user", "observer", "password-change");
 
     @ConfigProperty(name = "app.jwt.secret")
     String secret;

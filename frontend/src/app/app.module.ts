@@ -54,6 +54,9 @@ import { AuctionHistoryComponent } from './pages/auction-history/auction-history
 import { NewspaperComponent } from './pages/newspaper/newspaper.component';
 
 
+import { TargetButtonComponent } from './shared/target-button/target-button.component';
+import { TargetsComponent } from './pages/targets/targets.component';
+
 export function initializeAuth(auth: AuthService) {
     return () => auth.init();
 }
@@ -61,6 +64,8 @@ export function initializeAuth(auth: AuthService) {
 @NgModule({
     declarations: [
         AppComponent,
+        TargetButtonComponent,
+        TargetsComponent,
         AdminComponent,
         MobileComponent,
         SummaryComponent,

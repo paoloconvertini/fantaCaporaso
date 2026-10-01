@@ -143,7 +143,7 @@ class AuthResourceTest {
                 .body("{\"username\":\"observer-user\",\"password\":\"observe1\"}")
                 .when().post("/api/auth/login").then().statusCode(200)
                 .body("participantId", nullValue())
-                .body("roles", hasItem("user"))
+                .body("roles", hasItem("observer"))
                 .extract().cookie("FANTASTA_AUTH");
 
         given().cookie("FANTASTA_AUTH", observerCookie)
@@ -154,8 +154,7 @@ class AuthResourceTest {
                 .contentType(ContentType.JSON)
                 .body("{}")
                 .when().post("/api/bids/withdraw")
-                .then().statusCode(400)
-                .body("message", containsString("non associato"));
+                .then().statusCode(403);
     }
 
     @Test

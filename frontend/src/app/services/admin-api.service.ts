@@ -160,6 +160,10 @@ export class AdminApiService {
     return this.http.post(`${this.base}/api/admin/users`, payload);
   }
 
+  associateObserver(username: string, participantId: number | null): Observable<void> {
+    return this.http.put<void>(`${this.base}/api/admin/users/${encodeURIComponent(username)}/observer-team`, { participantId });
+  }
+
   getUsers(): Observable<any[]> {
     return this.http.get<any[]>(`${this.base}/api/admin/users`);
   }

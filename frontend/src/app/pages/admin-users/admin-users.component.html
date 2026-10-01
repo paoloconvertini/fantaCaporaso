@@ -24,19 +24,20 @@
       </mat-form-field>
 
       <mat-checkbox class="observer-checkbox" color="primary" formControlName="observer">
-        Osservatore senza squadra
+        Osservatore (senza permesso di puntata)
       </mat-checkbox>
 
-      <ng-container *ngIf="!form.value.observer">
       <mat-form-field appearance="outline">
         <mat-label>Squadra esistente (opzionale)</mat-label>
         <mat-select formControlName="participantId">
+          <mat-option [value]="null">Nessuna squadra</mat-option>
           <mat-option *ngFor="let participant of participants" [value]="participant.id">
             {{ participant.name }}
           </mat-option>
         </mat-select>
       </mat-form-field>
 
+      <ng-container *ngIf="!form.value.observer">
       <p>Oppure crea un nuovo partecipante:</p>
       <mat-form-field appearance="outline">
         <mat-label>Nome nuova squadra</mat-label>
@@ -79,7 +80,15 @@
         </div>
         <div class="account-row" *ngFor="let user of users">
           <strong>@{{ user.username }}</strong>
-          <span>{{ user.participantName || (user.role === 'admin' ? 'Amministratore' : 'Non associata') }}</span>
+          <span *ngIf="user.role === 'observer' || (user.role === 'user' && !user.participantId); else teamName">
+            <mat-form-field appearance="outline"><mat-label>Squadra osservata</mat-label>
+              <mat-select [value]="user.participantId || null" (selectionChange)="associateObserver(user, $event.value)">
+                <mat-option [value]="null">Nessuna squadra</mat-option>
+                <mat-option *ngFor="let participant of participants" [value]="participant.id">{{ participant.name }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </span>
+          <ng-template #teamName><span>{{ user.participantName || 'Amministratore' }}</span></ng-template>
           <span class="status-chip" [class.warning]="user.mustChangePassword">
             {{ user.mustChangePassword ? 'Cambio richiesto' : 'Attivo' }}
           </span>

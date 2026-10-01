@@ -2,7 +2,7 @@ import { BehaviorSubject, of } from 'rxjs';
 import { MobileComponent } from './mobile.component';
 
 describe('MobileComponent', () => {
-  function component(): MobileComponent {
+  function component(observer = false): MobileComponent {
     const route = { snapshot: { queryParamMap: { get: () => null } } } as any;
     const api = {
       roleFilter$: new BehaviorSubject(''),
@@ -15,9 +15,17 @@ describe('MobileComponent', () => {
         openSlots: { DIFENSORE: 27 }
       })
     } as any;
-    const auth = { user: { participantId: 7 } } as any;
+    const auth = { user: { participantId: 7 }, isObserver: observer } as any;
     return new MobileComponent(route, api, auth);
   }
+
+  it('keeps an associated observer read-only even with a participant id', () => {
+    const page = component(true);
+    page.pid = 7;
+    page.round = { closed: false, allowedUsers: [] };
+    expect(page.isObserver).toBeTrue();
+    expect(page.isBidAllowed()).toBeFalse();
+  });
 
   it('allows a normal active round once the participant is known', () => {
     const page = component();

@@ -68,7 +68,7 @@ public class AuctionResource {
 
     @GET
     @Path("/round")
-    @RolesAllowed({"admin", "user"})
+    @RolesAllowed({"admin", "user", "observer"})
     public RoundDto getRound() {
         return RoundDto.toDto(service.get());
     }

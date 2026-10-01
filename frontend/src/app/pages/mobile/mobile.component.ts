@@ -56,7 +56,7 @@ export class MobileComponent implements OnInit, OnDestroy {
     constructor(private route: ActivatedRoute, private api: UserApiService, private auth: AuthService) {}
 
     ngOnInit(): void {
-        this.pid = Number(this.route.snapshot.queryParamMap.get('pid')) || this.auth.user?.participantId || null;
+        this.pid = this.auth.isObserver ? null : (Number(this.route.snapshot.queryParamMap.get('pid')) || this.auth.user?.participantId || null);
         if (this.pid) {
             this.loadParticipant();
             this.loadRound();
@@ -157,7 +157,7 @@ export class MobileComponent implements OnInit, OnDestroy {
     isBidAllowed(): boolean {
         // se c’è lista ammessi (spareggio), consenti solo se pid è incluso
         const allowed = this.round?.allowedUsers;
-        if (!this.pid || !this.round || this.round.closed || this.timeLeft === 0) return false;
+        if (this.auth.isObserver || !this.pid || !this.round || this.round.closed || this.timeLeft === 0) return false;
         if (Array.isArray(allowed) && allowed.length > 0) {
             return allowed.map((id: unknown) => Number(id)).includes(Number(this.pid));
         }
@@ -165,7 +165,7 @@ export class MobileComponent implements OnInit, OnDestroy {
     }
 
     get isObserver(): boolean {
-        return !this.pid;
+        return this.auth.isObserver || !this.pid;
     }
 
     get hasActiveBid(): boolean {

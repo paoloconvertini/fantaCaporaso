@@ -60,4 +60,14 @@ public class AdminResource {
     public Response users() {
         return Response.ok(appUserService.listUsers()).build();
     }
+    public static class ObserverAssociationRequest { public Long participantId; }
+
+    @PUT
+    @Path("/users/{username}/observer-team")
+    @RolesAllowed("admin")
+    public Response associateObserver(@PathParam("username") String username, ObserverAssociationRequest request) {
+        if (request == null) throw new jakarta.ws.rs.BadRequestException("Dati mancanti");
+        appUserService.associateObserver(username, request.participantId);
+        return Response.noContent().build();
+    }
 }

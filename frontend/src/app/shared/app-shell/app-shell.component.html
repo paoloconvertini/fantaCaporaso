@@ -15,6 +15,7 @@
             <a *ngIf="isAdmin" mat-list-item routerLink="/admin" (click)="closeMenuOnMobile()"><mat-icon>home</mat-icon> Dashboard asta</a>
             <a *ngIf="isUser" mat-list-item routerLink="/mobile" (click)="closeMenuOnMobile()"><mat-icon>gavel</mat-icon> Asta corrente</a>
             <a mat-list-item routerLink="/players" (click)="closeMenuOnMobile()"><mat-icon>sports_soccer</mat-icon> Svincolati</a>
+            <a *ngIf="auth.canUseTargets" mat-list-item routerLink="/targets" (click)="closeMenuOnMobile()"><mat-icon>star</mat-icon> I miei obiettivi</a>
             <a mat-list-item routerLink="/rosters" (click)="closeMenuOnMobile()"><mat-icon>groups_2</mat-icon> Rose</a>
             <a mat-list-item routerLink="/auction-history" (click)="closeMenuOnMobile()"><mat-icon>history</mat-icon> Storico puntate</a>
             <a *ngIf="isAdmin || isParticipant" mat-list-item routerLink="/rosa" (click)="closeMenuOnMobile()">
