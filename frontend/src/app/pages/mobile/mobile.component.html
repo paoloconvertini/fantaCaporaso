@@ -6,7 +6,7 @@
         <strong>{{ participant.name }}</strong>
         <small>{{ participant.remainingCredits }} crediti · Max {{ maxBidForCurrentRound }}</small>
       </div>
-      <span>IN ASTA</span>
+      <span>{{ isReservationPhase ? 'PRENOTAZIONI' : 'IN ASTA' }}</span>
     </div>
     <div class="round-timer" [class.urgent]="timeLeft !== null && timeLeft <= 5">
       <mat-icon>timer</mat-icon><strong>{{ timeLeft ?? '—' }}</strong><span>secondi</span>
@@ -39,7 +39,15 @@
       <span>Stai seguendo l’asta in modalità sola lettura.</span>
     </div>
 
-    <div class="bid-section" *ngIf="!isObserver">
+    <div class="observer-notice" *ngIf="!isObserver && round.reservationRequired">
+      <mat-icon>info</mat-icon>
+      <span *ngIf="isReservationPhase && !isReserved">Prenotandoti confermi un’offerta minima automatica secondo le regole dell’asta. Non potrai ritirarti.</span>
+      <span *ngIf="isReserved">Sei prenotato. L’offerta minima è registrata: puoi modificarla durante le offerte, ma non ritirarla.</span>
+      <span *ngIf="!isReservationPhase && !isReserved">Prenotazioni chiuse: non puoi offrire in questo round.</span>
+    </div>
+    <button *ngIf="!isObserver && isReservationPhase" mat-raised-button color="primary" class="bid-button"
+            [disabled]="!canReserve" (click)="reserve()">{{ isReserved ? 'Prenotazione confermata' : 'Prenota partecipazione' }}</button>
+    <div class="bid-section" *ngIf="!isObserver && !isReservationPhase">
       <mat-form-field>
         <input
                 matInput
@@ -63,7 +71,7 @@
       </button>
 
       <button
-              *ngIf="hasActiveBid"
+              *ngIf="hasActiveBid && !round.reservationRequired"
               class="withdraw-button"
               mat-stroked-button
               color="warn"
@@ -88,7 +96,7 @@
       Offerta inviata: <b>{{ lastBidAmount }}</b>
     </div>
     <div class="last-bid" *ngIf="!isObserver && round?.minimumBid && round.minimumBid > 1">
-      Offerta minima spareggio: <b>{{ round.minimumBid }}</b>
+      Offerta minima: <b>{{ round.minimumBid }}</b>
     </div>
   </mat-card>
 
@@ -115,11 +123,11 @@
   </mat-card>
 
   <mat-card class="list-card" *ngIf="round && !round.closed">
-    <h3>Chi sta puntando</h3>
+    <h3>{{ round.reservationRequired ? 'Partecipanti prenotati' : 'Chi sta puntando' }}</h3>
     <div *ngFor="let user of activeUsers" class="list-row">
       <span class="list-user">{{ user }}</span>
     </div>
-    <div *ngIf="activeUsers.length===0" class="muted">Nessuno ha ancora puntato.</div>
+    <div *ngIf="activeUsers.length===0" class="muted">{{ round.reservationRequired ? 'Nessuna prenotazione.' : 'Nessuno ha ancora puntato.' }}</div>
     <div *ngIf="activeUsers.length>0" class="muted">Gli importi saranno mostrati alla chiusura.</div>
   </mat-card>
 

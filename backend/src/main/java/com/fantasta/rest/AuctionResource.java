@@ -112,6 +112,24 @@ public class AuctionResource {
         }
     }
 
+    @POST
+    @Path("/round/reserve")
+    @RolesAllowed({"admin", "user"})
+    public RoundDto reserve(Map<String, String> body) {
+        try {
+            Long participantId = identity.hasRole("admin")
+                    ? (body == null || body.get("participantId") == null ? null : Long.valueOf(body.get("participantId")))
+                    : identity.getAttribute("participant_id");
+            RoundDto dto = service.reserveDto(participantId, body == null ? null : body.get("roundId"));
+            socket.broadcast("ROUND_UPDATED", dto);
+            return dto;
+        } catch (IllegalArgumentException e) {
+            throw new WebApplicationException(e.getMessage(), 400);
+        } catch (IllegalStateException e) {
+            throw new WebApplicationException(e.getMessage(), 409);
+        }
+    }
+
     // --- ADMIN ONLY ENDPOINTS ---
 
     @POST
@@ -134,6 +152,8 @@ public class AuctionResource {
     }
 
     private synchronized void scheduleAutoClose(RoundState s) {
+        // Un callback o recupero precedente non deve sostituire il timer di un nuovo round.
+        if (s == null || !service.isCurrentState(s)) return;
         if (autoCloseTimerId != null) {
             vertx.cancelTimer(autoCloseTimerId);
             autoCloseTimerId = null;
@@ -142,28 +162,34 @@ public class AuctionResource {
         if (s != null && !s.closed && s.endEpochMillis != null) {
             scheduledRoundId = s.roundId;
             String expectedRoundId = s.roundId;
-            long delay = Math.max(0L, s.endEpochMillis - System.currentTimeMillis());
+            String expectedPhase = s.phase;
+            Long expectedDeadline = s.endEpochMillis;
+            long delay = Math.max(1L, expectedDeadline - System.currentTimeMillis());
 
             autoCloseTimerId = vertx.setTimer(delay, id -> {
                 // Ogni accesso transazionale resta sul worker thread: il callback del
                 // timer gira sul thread I/O e non puo' aprire direttamente una JTA.
                 vertx.<ClosedRound>executeBlocking(promise -> {
                     try {
-                        RoundState closed = service.closeIfActive(expectedRoundId);
+                        RoundState closed = service.advanceIfActive(expectedRoundId, expectedPhase, expectedDeadline);
                         promise.complete(closed == null ? null : new ClosedRound(closed, service.toDto(closed)));
                     } catch (Throwable t) {
                         promise.fail(t);
                     }
                 }, false).onComplete(result -> {
+                    synchronized (AuctionResource.this) {
+                        if (java.util.Objects.equals(autoCloseTimerId, id)) {
+                            autoCloseTimerId = null;
+                            scheduledRoundId = null;
+                        }
+                    }
                     if (result.succeeded() && result.result() != null) {
-                        socket.broadcast("ROUND_CLOSED", result.result().dto());
-                        recordHistoryBestEffort(result.result().state());
+                        var next = result.result();
+                        socket.broadcast(next.dto().closed ? "ROUND_CLOSED" : "ROUND_UPDATED", next.dto());
+                        if (next.dto().closed) recordHistoryBestEffort(next.state());
+                        else scheduleAutoClose(next.state());
                     } else if (result.failed()) {
                         LOG.errorf(result.cause(), "Chiusura automatica fallita per il round %s", expectedRoundId);
-                    }
-                    if (expectedRoundId.equals(scheduledRoundId)) {
-                        autoCloseTimerId = null;
-                        scheduledRoundId = null;
                     }
                 });
             });
@@ -180,8 +206,9 @@ public class AuctionResource {
         }
         scheduledRoundId = null;
         RoundState s = service.close();
-        socket.broadcast("ROUND_CLOSED", RoundDto.toDto(s));
-        recordHistoryBestEffort(s);
+        socket.broadcast(s.closed ? "ROUND_CLOSED" : "ROUND_UPDATED", RoundDto.toDto(s));
+        if (s.closed) recordHistoryBestEffort(s);
+        else scheduleAutoClose(s);
         return RoundDto.toDto(s);
     }
 

@@ -355,3 +355,13 @@ Il database esistente usa ancora l'aggiornamento schema Hibernate. Dopo l'asta v
 La migrazione `database/migrations/20260930_market_departures.sql` aggiunge lo stato di import dei partiti alla configurazione e la sessione di partenza ai calciatori. Applicarla secondo la procedura DEV/PROD documentata prima del deploy. Le sessioni esistenti richiedono la conferma del nuovo passaggio dei partiti. L’endpoint admin `POST /api/admin/players/market-departures` accetta multipart `file` e `confirm` (false per anteprima).
 
 L'abbinamento dei proprietari accetta il nome completo del partecipante o il nome della squadra tra parentesi. Riconosce automaticamente le equivalenze confermate `Em Fallét` / `Em Fallet`, `Johnson Oil` / `johnsons oil` e `3/4 e 1 Gazzosa` / `34 e 1 Gazzosa`. Altre differenze restano segnalate per evitare abbinamenti a proprietari diversi.
+
+### Prenotazioni nei mercati di riparazione
+
+La configurazione mercato espone `prenotazioneAbilitata` (predefinita `false`) e `durataPrenotazioneSecondi` (predefinita 15, intero positivo). La funzione si applica ai nuovi round quando il mercato di riparazione è attivo; le modifiche alla configurazione non cambiano un round già avviato.
+
+Il round attraversa `RESERVATION` e `OFFERS`. `POST /api/round/reserve` riceve `roundId`; per i partecipanti la squadra deriva dall'identità autenticata, mentre l'amministratore può indicare `participantId`. Gli osservatori non possono prenotarsi. La prenotazione è idempotente e irrevocabile: registra subito l'offerta minima personale secondo le regole già applicate dall'asta, controllando crediti e posti disponibili. Gli importi restano riservati fino alla chiusura. Non vengono addebitati crediti prima dell'assegnazione.
+
+Alla scadenza si chiudono le prenotazioni e parte il normale timer delle offerte, riservate ai prenotati. Senza prenotazioni il round si chiude senza assegnazione; con più offerte minime uguali si usa lo spareggio attuale, senza ripetere la prenotazione. Il ritiro delle offerte è bloccato anche negli spareggi derivati. Il comando amministrativo di chiusura, durante `RESERVATION`, conclude le prenotazioni e avvia le offerte. Reset e correzioni amministrative restano strumenti di recupero.
+
+Fase, prenotati e scadenza sono persistiti nello stato JSON del round; il timer viene recuperato al riavvio. Prima di distribuire la versione, applicare con backup `database/migrations/20261001_auction_reservations.sql`. La migrazione aggiunge soltanto i due campi di configurazione e lascia la funzione disattivata.

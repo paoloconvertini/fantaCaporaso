@@ -118,4 +118,29 @@ describe('MobileComponent', () => {
 
     expect(page.automaticMinimumMessage).toBeNull();
   });
+  it('requires booking before offers and never lets an observer book', () => {
+    const page = component(); page.pid = 7;
+    page.round = { closed: false, reservationRequired: true, phase: 'RESERVATION', reservedUsers: [] };
+    expect(page.canReserve).toBeTrue();
+    expect(page.isBidAllowed()).toBeFalse();
+    page.round.reservedUsers = [7];
+    expect(page.canReserve).toBeFalse();
+    page.round.phase = 'OFFERS';
+    expect(page.isBidAllowed()).toBeTrue();
+    page.round.reservedUsers = [];
+    expect(page.isBidAllowed()).toBeFalse();
+    const observer = component(true); observer.pid = 7;
+    observer.round = { closed: false, phase: 'RESERVATION', reservedUsers: [] };
+    expect(observer.canReserve).toBeFalse();
+  });
+
+  it('rejects withdrawal of a booked offer even when bidding is allowed', () => {
+    const page = component(); page.pid = 7;
+    page.round = { closed: false, reservationRequired: true, phase: 'OFFERS', reservedUsers: [7] };
+    page.participant = { name: 'Mia squadra' }; page.activeUsers = ['Mia squadra'];
+    expect(page.isBidAllowed()).toBeTrue();
+    expect(() => page.withdrawBid()).not.toThrow();
+    expect(page.withdrawing).toBeFalse();
+  });
+
 });

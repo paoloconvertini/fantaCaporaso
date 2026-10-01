@@ -10,6 +10,8 @@ import java.util.Objects;
  */
 public class MercatoConfigDto {
     public boolean attiva;
+    public boolean prenotazioneAbilitata;
+    public int durataPrenotazioneSecondi = 15;
     public LocalDateTime fineSessione;
 
     public int maxPortieri;

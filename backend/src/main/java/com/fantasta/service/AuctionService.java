@@ -51,6 +51,10 @@ public class AuctionService {
         return state;
     }
 
+    public synchronized boolean isCurrentState(RoundState expected) {
+        return state == expected;
+    }
+
     @Transactional
     public RoundDto toDto(RoundState round) {
         return RoundDto.toDto(round);
@@ -65,6 +69,9 @@ public class AuctionService {
         }
         if (state == null) state = loadCurrentState();
         RoundState previous = state;
+        if (previous != null && !previous.closed && previous.reservationRequired && !previous.bids.isEmpty()) {
+            throw new IllegalStateException("Chiudi il round prenotato prima di avviarne un altro");
+        }
         RoundState s = new RoundState();
         s.roundId = UUID.randomUUID().toString();
         s.player = player;
@@ -96,6 +103,22 @@ public class AuctionService {
                     ? Collections.emptyMap() : previous.historyBids);
         }
 
+        if (tieBreakRound && previous.reservationRequired) {
+            s.reservationRequired = true;
+            s.reservedUsers = new LinkedHashSet<>(allowedUsers);
+        } else if (!tieBreakRound && mercatoService.isMercatoAttivo()) {
+            var config = mercatoService.requireConfiguredMarket();
+            if (config.prenotazioneAbilitata) {
+                if (duration == null || duration < 1 || config.durataPrenotazioneSecondi < 1) {
+                    throw new IllegalArgumentException("Prenotazione e offerte richiedono una durata positiva");
+                }
+                s.reservationRequired = true;
+                s.phase = "RESERVATION";
+                s.biddingDurationSeconds = duration;
+                s.durationSeconds = config.durataPrenotazioneSecondi;
+                s.endEpochMillis = System.currentTimeMillis() + s.durationSeconds * 1000L;
+            }
+        }
         this.state = s;
         persistCurrentState();
         return state;
@@ -132,6 +155,7 @@ public class AuctionService {
         if (participant == null) {
             throw new IllegalArgumentException("Partecipante non trovato: " + participantId);
         }
+        if (state.reservationRequired) throw new IllegalStateException("La prenotazione è irrevocabile: non puoi ritirare l’offerta");
         if (state.bids.remove(String.valueOf(participantId)) == null) {
             throw new IllegalArgumentException("Nessuna offerta da ritirare");
         }
@@ -142,10 +166,61 @@ public class AuctionService {
         return RoundDto.toDto(state);
     }
 
+    @Transactional
+    public synchronized RoundDto reserveDto(Long participantId, String roundId) {
+        if (state == null) state = loadCurrentState();
+        if (state == null || state.closed || !Objects.equals(state.roundId, roundId)
+                || !"RESERVATION".equals(state.phase) || state.endEpochMillis <= System.currentTimeMillis()) {
+            throw new IllegalStateException("Prenotazioni chiuse o round cambiato");
+        }
+        if (participantId == null) throw new IllegalArgumentException("Partecipante mancante");
+        if (state.reservedUsers.contains(participantId)) return RoundDto.toDto(state);
+        PlayerEntity player = dbService.findByNameTeam(state.player, state.playerTeam);
+        ParticipantEntity participant = ParticipantEntity.findById(participantId);
+        if (player == null || participant == null) throw new IllegalArgumentException("Partecipante o giocatore non trovato");
+        double minimum = minimumBidForParticipant(player, participant, state.minimumBid);
+        applyBid(participantId, minimum, true);
+        state.reservedUsers.add(participantId);
+        persistCurrentState();
+        entityManager.flush();
+        return RoundDto.toDto(state);
+    }
+
+    @Transactional
+    public synchronized RoundState advanceIfActive(String roundId, String expectedPhase, Long expectedDeadline) {
+        if (state == null) state = loadCurrentState();
+        if (state == null || state.closed || !Objects.equals(state.roundId, roundId)
+                || !Objects.equals(state.phase, expectedPhase) || !Objects.equals(state.endEpochMillis, expectedDeadline)) return null;
+        if ("RESERVATION".equals(state.phase)) return finishReservations();
+        return closeCurrentRound();
+    }
+
+    private RoundState finishReservations() {
+        state.phase = "OFFERS";
+        state.allowedUsers = new HashSet<>(state.reservedUsers);
+        state.durationSeconds = state.biddingDurationSeconds;
+        state.endEpochMillis = System.currentTimeMillis() + state.durationSeconds * 1000L;
+        if (state.reservedUsers.isEmpty()) return closeCurrentRound();
+        persistCurrentState();
+        entityManager.flush();
+        return state;
+    }
+
     private void applyBid(Long participantId, Double amount) {
+        applyBid(participantId, amount, false);
+    }
+
+    private void applyBid(Long participantId, Double amount, boolean reservation) {
         if (state == null || state.closed)
             throw new IllegalStateException("Round non attivo");
 
+        if (state.reservationRequired && !reservation) {
+            if (!"OFFERS".equals(state.phase)) throw new IllegalStateException("Prenotazioni ancora aperte");
+            if (state.endEpochMillis != null && state.endEpochMillis <= System.currentTimeMillis())
+                throw new IllegalStateException("Tempo delle offerte scaduto");
+            if (!state.reservedUsers.contains(participantId)) throw new IllegalArgumentException("Partecipante non prenotato");
+        }
+        if (amount == null || !Double.isFinite(amount)) throw new IllegalArgumentException("Importo non valido");
         if (participantId == null)
             throw new IllegalArgumentException("Partecipante mancante");
 
@@ -234,6 +309,7 @@ public class AuctionService {
 
     @Transactional
     public synchronized RoundState close() {
+        if (state != null && !state.closed && "RESERVATION".equals(state.phase)) return finishReservations();
         return closeCurrentRound();
     }
 

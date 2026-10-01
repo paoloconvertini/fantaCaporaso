@@ -35,6 +35,8 @@ export class MercatoComponent implements OnInit {
     ngOnInit(): void {
         this.form = this.fb.group({
             attiva: [false],
+            prenotazioneAbilitata: [false],
+            durataPrenotazioneSecondi: [15, [Validators.required, Validators.min(1), Validators.pattern(/^\d+$/)]],
             numeroMercato: [1, [Validators.required, Validators.min(1), Validators.max(3)]],
             maxPortieri: [0, [Validators.required, Validators.min(0)]],
             maxDifensori: [0, [Validators.required, Validators.min(0)]],
@@ -82,6 +84,8 @@ export class MercatoComponent implements OnInit {
                     this.mercatoAttivo = false;
                     this.form.reset({
                         attiva: false,
+                        prenotazioneAbilitata: false,
+                        durataPrenotazioneSecondi: 15,
                         numeroMercato: 1,
                         maxPortieri: 0,
                         maxDifensori: 0,

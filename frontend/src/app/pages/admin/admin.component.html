@@ -64,7 +64,7 @@
         <button mat-icon-button color="primary" (click)="start()" matTooltip="Avvia le offerte">
           <mat-icon>play_arrow</mat-icon>
         </button>
-        <button mat-icon-button color="warn" (click)="close()" matTooltip="Chiudi ora e assegna alla migliore offerta">
+        <button mat-icon-button color="warn" (click)="close()" [matTooltip]="round?.phase === 'RESERVATION' ? 'Chiudi prenotazioni e avvia offerte' : 'Chiudi ora e assegna alla migliore offerta'">
           <mat-icon>stop</mat-icon>
         </button>
         <button mat-icon-button (click)="reset()" matTooltip="Annulla il round corrente">
@@ -129,12 +129,12 @@
       <!-- Timer + Attivi se round aperto -->
       <div *ngIf="round && !round.closed; else bidsBlock" class="timer-and-actives">
         <div class="timer-card">
-          <div class="timer-label">Tempo</div>
+          <div class="timer-label">{{ round?.phase === 'RESERVATION' ? 'Prenotazioni' : 'Offerte' }}</div>
           <div class="timer-big">{{ timeLeft !== null ? (timeLeft + 's') : '—' }}</div>
         </div>
 
         <mat-card class="list-card actives-card">
-          <h3>Chi sta puntando</h3>
+          <h3>{{ round?.reservationRequired ? 'Partecipanti prenotati' : 'Chi sta puntando' }}</h3>
           <div *ngFor="let user of activeUsers" class="list-row">
             <span class="list-user">{{ user }}</span>
           </div>

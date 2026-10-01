@@ -10,6 +10,10 @@ public class RoundState {
     public Integer value;             // valore calciatore (Excel colonna E)
     public Integer purchaseSize;
     public boolean closed = false;
+    public boolean reservationRequired;
+    public String phase = "OFFERS";
+    public Set<Long> reservedUsers = new LinkedHashSet<>();
+    public Integer biddingDurationSeconds;
     public Double minimumBid;
     public Integer durationSeconds;
     public Long endEpochMillis;

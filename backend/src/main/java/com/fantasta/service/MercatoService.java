@@ -22,12 +22,17 @@ public class MercatoService {
         if (dto.numeroMercato < 1 || dto.numeroMercato > 3) {
             throw new IllegalArgumentException("Seleziona il mercato di riparazione 1, 2 o 3");
         }
+        if (dto.durataPrenotazioneSecondi < 1) {
+            throw new IllegalArgumentException("La durata della prenotazione deve essere almeno 1 secondo");
+        }
         MercatoConfigEntity cfg = MercatoConfigEntity.findAll().firstResult();
         if (cfg == null) {
             cfg = new MercatoConfigEntity();
         }
         boolean newSession = cfg.sessionCode == null || cfg.numeroMercato != dto.numeroMercato;
         cfg.attiva = dto.attiva;
+        cfg.prenotazioneAbilitata = dto.prenotazioneAbilitata;
+        cfg.durataPrenotazioneSecondi = dto.durataPrenotazioneSecondi;
         cfg.fineSessione = dto.fineSessione;
         cfg.numeroMercato = dto.numeroMercato;
         applyOfficialLimits(cfg);
@@ -45,6 +50,8 @@ public class MercatoService {
     private MercatoConfigDto toDto(MercatoConfigEntity e) {
         MercatoConfigDto dto = new MercatoConfigDto();
         dto.attiva = e.attiva;
+        dto.prenotazioneAbilitata = e.prenotazioneAbilitata;
+        dto.durataPrenotazioneSecondi = e.durataPrenotazioneSecondi;
         dto.fineSessione = e.fineSessione;
         dto.maxPortieri = e.maxPortieri;
         dto.maxDifensori = e.maxDifensori;

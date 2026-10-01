@@ -95,6 +95,10 @@ export class UserApiService {
     return this.http.post(`${this.base}/api/bids`, { participantId, amount });
   }
 
+  reserve(roundId: string): Observable<any> {
+    return this.http.post(`${this.base}/api/round/reserve`, { roundId });
+  }
+
   withdrawBid(): Observable<any> {
     return this.http.post(`${this.base}/api/bids/withdraw`, {});
   }
@@ -135,7 +139,7 @@ export class UserApiService {
                   this.roleFilter$.next(payload.role as RoleKey);
               }
 
-              if (t === 'ROUND_STARTED') {
+              if (t === 'ROUND_STARTED' || t === 'ROUND_UPDATED') {
                   this.applyRound(payload);
                   // Il payload rende immediata la UI; l'API la riallinea allo stato persistito.
                   this.refreshRound();

@@ -1,5 +1,7 @@
 export interface MercatoConfigDto {
     attiva: boolean;
+    prenotazioneAbilitata?: boolean;
+    durataPrenotazioneSecondi?: number;
     /** Campo legacy mantenuto per compatibilità; l'apertura è controllata da attiva. */
     fineSessione?: string;
     maxPortieri: number;

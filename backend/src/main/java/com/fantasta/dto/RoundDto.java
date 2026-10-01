@@ -13,6 +13,9 @@ public class RoundDto {
     public String playerTeam;
     public String playerRole;
     public boolean closed;
+    public boolean reservationRequired;
+    public String phase;
+    public List<Long> reservedUsers;
     public Double minimumBid;
     public Map<String, Integer> bids;   // chiave = nome partecipante
     public List<String> bidders;        // nomi visibili anche a round aperto, senza importi
@@ -35,6 +38,9 @@ public class RoundDto {
         dto.playerTeam = s.playerTeam;
         dto.playerRole = s.playerRole;
         dto.closed = s.closed;
+        dto.reservationRequired = s.reservationRequired;
+        dto.phase = s.phase;
+        dto.reservedUsers = s.reservedUsers == null ? Collections.emptyList() : new ArrayList<>(s.reservedUsers);
         dto.minimumBid = s.minimumBid;
         dto.durationSeconds = s.durationSeconds;
         dto.endEpochMillis = s.endEpochMillis;

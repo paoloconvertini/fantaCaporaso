@@ -22,6 +22,16 @@
             <span class="text-red-500 font-medium">🔴 Mercato chiuso</span>
         </ng-template>
 
+        <mat-card class="workflow-card">
+            <div>
+                <mat-slide-toggle formControlName="prenotazioneAbilitata" color="primary">Prenotazione prima delle offerte</mat-slide-toggle>
+                <p>Solo nei mercati di riparazione. Prenotarsi è irrevocabile e registra automaticamente l’offerta minima prevista dall’asta.</p>
+                <mat-form-field appearance="outline">
+                    <mat-label>Durata prenotazione (secondi)</mat-label>
+                    <input matInput type="number" min="1" step="1" formControlName="durataPrenotazioneSecondi">
+                </mat-form-field>
+            </div>
+        </mat-card>
         <div class="grid grid-cols-2 gap-4 mt-4">
             <mat-form-field appearance="outline">
                 <mat-label>Max Portieri</mat-label>

@@ -154,10 +154,44 @@ export class MobileComponent implements OnInit, OnDestroy {
 
 
     // ---------- Azioni ----------
+    reserving = false;
+
+    get isReservationPhase(): boolean {
+        return this.round?.phase === 'RESERVATION' && !this.round?.closed;
+    }
+
+    get isReserved(): boolean {
+        return (this.round?.reservedUsers || []).map(Number).includes(Number(this.pid));
+    }
+
+    get canReserve(): boolean {
+        return !this.isObserver && this.isReservationPhase && this.timeLeft !== 0 && !this.isReserved && !this.reserving;
+    }
+
+    reserve(): void {
+        if (!this.canReserve) return;
+        this.reserving = true;
+        this.api.reserve(this.round.roundId).subscribe({
+            next: round => {
+                this.reserving = false;
+                this.round = round;
+                this.activeUsers = [...(round?.bidders || [])];
+                this.status = 'Prenotazione confermata: offerta minima registrata, partecipazione irrevocabile.';
+                this.statusKind = 'success';
+            },
+            error: err => {
+                this.reserving = false;
+                this.status = typeof err?.error === 'string' ? err.error : (err?.error?.message || 'Prenotazione non riuscita');
+                this.statusKind = 'error';
+            }
+        });
+    }
+
     isBidAllowed(): boolean {
         // se c’è lista ammessi (spareggio), consenti solo se pid è incluso
         const allowed = this.round?.allowedUsers;
-        if (this.auth.isObserver || !this.pid || !this.round || this.round.closed || this.timeLeft === 0) return false;
+        if (this.auth.isObserver || !this.pid || !this.round || this.round.closed || this.timeLeft === 0 || this.isReservationPhase) return false;
+        if (this.round.reservationRequired && !this.isReserved) return false;
         if (Array.isArray(allowed) && allowed.length > 0) {
             return allowed.map((id: unknown) => Number(id)).includes(Number(this.pid));
         }
@@ -265,7 +299,7 @@ export class MobileComponent implements OnInit, OnDestroy {
     }
 
     withdrawBid(): void {
-        if (!this.hasActiveBid || !this.isBidAllowed() || this.withdrawing) return;
+        if (this.round?.reservationRequired || !this.hasActiveBid || !this.isBidAllowed() || this.withdrawing) return;
 
         this.withdrawing = true;
         this.api.withdrawBid().subscribe({

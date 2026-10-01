@@ -187,13 +187,12 @@ export class AdminComponent implements OnInit, OnDestroy {
                 this.round = res;
                 this.load();
                 this.refreshRemaining();
-                this.activeUsers = [];
-
-                if (this.timerInterval) {
-                    clearInterval(this.timerInterval);
+                if (res?.closed) {
+                    this.activeUsers = [];
+                    if (this.timerInterval) clearInterval(this.timerInterval);
                     this.timerInterval = null;
+                    this.timeLeft = null;
                 }
-                this.timeLeft = null;
             },
             error: (err) => {
                 this.showError('Errore chiusura round', err);
