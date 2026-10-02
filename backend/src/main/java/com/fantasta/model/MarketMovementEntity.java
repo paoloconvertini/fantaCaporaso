@@ -42,6 +42,7 @@ public class MarketMovementEntity extends PanacheEntity {
     public String sessionCode;
 
     public String operationCode;
+    public String auctionRoundId;
     public Double resultingRosterAmount;
     public Boolean countedRelease;
     public Boolean creditsPreserved;
@@ -50,5 +51,5 @@ public class MarketMovementEntity extends PanacheEntity {
     @Column(nullable = false)
     public LocalDateTime createdAt = LocalDateTime.now();
 
-    public enum Type { RELEASE, DEPARTED, EXCHANGE }
+    public enum Type { RELEASE, DEPARTED, EXCHANGE, MINI_PURCHASE, PURCHASE }
 }

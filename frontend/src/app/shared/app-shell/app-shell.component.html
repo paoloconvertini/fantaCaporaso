@@ -23,6 +23,7 @@
                 {{ isAdmin ? 'Gestione rose' : 'Rosa' }}
             </a>
             <ng-container *ngIf="isAdmin">
+                <a mat-list-item routerLink="/admin/mini-asta" (click)="closeMenuOnMobile()"><mat-icon>autorenew</mat-icon> Mini asta di sostituzione</a>
                 <a mat-list-item routerLink="/admin/mercato" (click)="closeMenuOnMobile()">
                     <mat-icon>storefront</mat-icon>
                     Mercato di riparazione

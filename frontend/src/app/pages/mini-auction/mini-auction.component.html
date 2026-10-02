@@ -1,0 +1,63 @@
+<section class="mini-page">
+  <span class="kicker">DOPO IL MERCATO DI RIPARAZIONE</span>
+  <h1>Mini asta di sostituzione</h1>
+  <p>Cessioni definitive, rimborso del costo pagato e sostituti nello stesso ruolo. La porta è un unico pacchetto da tre.</p>
+  <p class="error" role="alert" *ngIf="error">{{ error }}</p>
+  <p *ngIf="!loaded">Caricamento…</p>
+  <ng-container *ngIf="loaded && !session">
+    <div class="setup">
+      <mat-form-field appearance="outline"><mat-label>Nome mini asta</mat-label><input matInput [(ngModel)]="label" /></mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Asta di provenienza</mat-label>
+        <mat-select [(ngModel)]="selectedSource" (selectionChange)="chooseSource($event.value)" [disabled]="busy">
+          <mat-option *ngFor="let source of sources" [value]="source">{{ source.label }} · {{ source.purchases }} acquisti</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <p *ngIf="loadingCandidates">Caricamento degli acquisti verificati…</p>
+    <p class="notice" *ngIf="!sources.length">Nessun acquisto di un mercato di riparazione registrato.</p>
+    <section class="participants-step" aria-labelledby="participants-heading">
+      <h2 id="participants-heading"><span class="step-number">1</span> Scegli i fantallenatori coinvolti</h2>
+      <p>Seleziona tutte le squadre che partecipano alla mini asta.</p>
+      <div class="participant-choices">
+        <mat-checkbox *ngFor="let p of participants" [checked]="involvedParticipantIds.has(p.participantId)"
+                      (change)="toggleParticipant(p.participantId, $event.checked)">{{ p.participant }}</mat-checkbox>
+      </div>
+    </section>
+    <section class="players-step" aria-labelledby="players-heading" *ngIf="involvedParticipantIds.size">
+      <h2 id="players-heading"><span class="step-number">2</span> Scegli i calciatori da cedere</h2>
+      <p>{{ involvedParticipantIds.size }} squadre coinvolte</p>
+      <mat-form-field appearance="outline"><mat-label>Cerca nelle rose selezionate</mat-label><input matInput [(ngModel)]="query" /></mat-form-field>
+      <p class="notice">Sono mostrati soltanto i calciatori acquistati dalle squadre coinvolte nell’asta scelta, verificati automaticamente, compresi gli acquisti manuali o con un solo offerente. Selezionare un portiere include l’intero pacchetto da tre.</p>
+      <div class="candidate-list">
+        <section class="team-candidates" *ngFor="let p of involvedParticipants">
+          <h3>{{ p.participant }}</h3>
+          <div class="candidate" *ngFor="let r of playersFor(p.participantId)">
+            <mat-checkbox [checked]="selected.has(r.id)" (change)="toggle(r, $event.checked)"><strong>{{ r.player }}</strong> · {{ r.team }} · {{ r.role }}<small>Pagato {{ r.amount }}</small></mat-checkbox>
+          </div>
+          <p class="empty-team" *ngIf="!playersFor(p.participantId).length">Nessun calciatore corrisponde alla ricerca.</p>
+        </section>
+      </div>
+    </section>
+    <p class="notice" *ngIf="!involvedParticipantIds.size">Scegli prima almeno un fantallenatore per vedere i calciatori da cedere.</p>
+    <p>{{ selected.size }} calciatori selezionati</p>
+    <div class="actions"><button mat-raised-button color="primary" (click)="prepare()" [disabled]="busy || loadingCandidates || !selected.size || !selectedSource || !label">Prepara anteprima cessioni</button></div>
+  </ng-container>
+  <ng-container *ngIf="session">
+    <h2>{{ session.label }}</h2>
+    <p>{{ session.status === 'DRAFT' ? 'Anteprima: nessuna cessione ancora applicata' : 'Mini asta attiva: cessioni già applicate' }} · {{ session.sourceDate }}</p>
+    <div class="slot" *ngFor="let s of session.slots">
+      <div><strong>{{ s.participant }} · {{ s.role }}</strong><small>{{ s.releasedNames }}</small></div>
+      <div>Rimborso <b>{{ s.refund }}</b> · Minimo <b>{{ s.minimumBid }}</b><small>{{ s.filled ? 'Coperto: pagato ' + s.paidAmount : 'Da coprire' }}</small></div>
+    </div>
+    <div class="actions" *ngIf="session.status === 'DRAFT'">
+      <button mat-raised-button color="primary" (click)="activate()" [disabled]="busy">Conferma cessioni e avvia mini asta</button>
+      <button mat-stroked-button (click)="finish()" [disabled]="busy">Annulla preparazione</button>
+    </div>
+    <div class="actions" *ngIf="session.status === 'ACTIVE'">
+      <a mat-raised-button color="primary" routerLink="/admin">Vai alle chiamate dell’asta</a>
+      <button mat-stroked-button (click)="load()" [disabled]="busy">Aggiorna slot</button>
+      <button mat-stroked-button (click)="finish()" [disabled]="busy || outstanding > 0">Concludi mini asta</button>
+      <span>{{ outstanding }} slot ancora da coprire</span>
+    </div>
+  </ng-container>
+</section>

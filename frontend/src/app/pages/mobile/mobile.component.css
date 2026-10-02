@@ -209,3 +209,6 @@
 .bid-row small { color: #8ff0c3; font-size: .7rem; }
 .bid-row strong { min-width: 38px; text-align: center; padding: 4px 8px; border-radius: 999px; background: rgba(255,255,255,.1); }
 .bid-row.my-bid { background: rgba(95,223,170,.1); border-radius: 8px; }
+
+.mini-slot-choice { padding:14px; margin:12px 0; border:1px solid #69e6ad; border-radius:12px; background:rgba(105,230,173,.06); }
+.mini-slot-choice mat-form-field { width:100%; }

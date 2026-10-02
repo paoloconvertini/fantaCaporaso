@@ -6,7 +6,7 @@
 
   <section class="filters">
     <label><span>Calciatore</span><input type="search" [(ngModel)]="query" (input)="onSearch()" placeholder="Cerca per nome..." /></label>
-    <label><span>Tipo</span><select [(ngModel)]="type" (change)="load()"><option value="">Tutti</option><option value="EXCHANGE">Trasferimenti</option><option value="RELEASE">Svincoli</option><option value="DEPARTED">Partiti</option></select></label>
+    <label><span>Tipo</span><select [(ngModel)]="type" (change)="load()"><option value="">Tutti</option><option value="EXCHANGE">Trasferimenti</option><option value="RELEASE">Svincoli</option><option value="DEPARTED">Partiti</option><option value="PURCHASE">Acquisti asta</option><option value="MINI_PURCHASE">Acquisti mini asta</option></select></label>
     <label><span>Fantasquadra</span><select [(ngModel)]="participantId" (change)="load()"><option [ngValue]="null">Tutte</option><option *ngFor="let p of participants" [ngValue]="p.id">{{ p.name }}</option></select></label>
     <mat-slide-toggle class="reverted-toggle" [(ngModel)]="showReverted" (change)="load()">Mostra annullati</mat-slide-toggle>
   </section>
@@ -21,7 +21,8 @@
         <strong>{{ row.playerName }}</strong><small>{{ row.playerTeam }}</small>
       </div>
       <div class="route" *ngIf="row.type === 'EXCHANGE'"><span>{{ row.sourceParticipant }}</span><mat-icon>arrow_forward</mat-icon><span>{{ row.destinationParticipant || 'Destinazione non disponibile' }}</span></div>
-      <div class="route" *ngIf="row.type !== 'EXCHANGE'"><span>Uscita da {{ row.sourceParticipant }}</span></div>
+      <div class="route" *ngIf="row.type !== 'EXCHANGE' && row.type !== 'MINI_PURCHASE' && row.type !== 'PURCHASE'"><span>Uscita da {{ row.sourceParticipant }}</span></div>
+      <div class="route" *ngIf="(row.type === 'MINI_PURCHASE' || row.type === 'PURCHASE')"><span>Acquisto per {{ row.destinationParticipant }}</span></div>
       <div class="amounts"><span>Quota <b>{{ row.currentValue }}</b></span><span>Costo precedente <b>{{ row.previousRosterAmount }}</b></span><span *ngIf="row.refundedAmount">Rimborso <b>{{ row.refundedAmount }}</b></span></div>
       <div class="movement-actions"><time>{{ row.createdAt | date:'dd/MM/yyyy HH:mm' }}</time><span *ngIf="row.revertedAt" class="reverted">Annullato</span><button *ngIf="!row.revertedAt" mat-stroked-button color="warn" [disabled]="!row.canRevert" (click)="revert(row)"><mat-icon>undo</mat-icon> Revert</button></div>
     </article>

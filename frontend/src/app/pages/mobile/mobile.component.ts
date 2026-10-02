@@ -52,6 +52,34 @@ export class MobileComponent implements OnInit, OnDestroy {
     lastBidAmount: number | null = null;
 
     withdrawing = false;
+    miniSlots: any[] = [];
+    selectedMiniSlotId: number | null = null;
+    private miniRoundId: string | null = null;
+
+    get availableMiniSlots(): any[] {
+        return this.miniSlots.filter(s => !s.filled && s.role === this.round?.playerRole);
+    }
+    get selectedMiniSlot(): any {
+        return this.availableMiniSlots.find(s => s.id === this.selectedMiniSlotId);
+    }
+    get minimumBidForCurrentRound(): number {
+        return Math.max(Number(this.round?.minimumBid || 1), Number(this.selectedMiniSlot?.minimumBid || 1));
+    }
+    loadMiniSlots(): void {
+        if (!this.round?.miniSessionId || this.isObserver) { this.miniSlots = []; this.selectedMiniSlotId = null; return; }
+        const roundId = this.round.roundId;
+        if (this.miniRoundId !== roundId) { this.miniSlots = []; this.selectedMiniSlotId = null; this.miniRoundId = roundId; }
+        this.api.getMiniSlots().subscribe({
+            next: slots => {
+                if (this.round?.roundId !== roundId) return;
+                this.miniSlots = slots;
+                const locked = this.availableMiniSlots.find(s => s.bidSelected);
+                if (locked) this.selectedMiniSlotId = locked.id;
+                else if (!this.selectedMiniSlot) this.selectedMiniSlotId = this.availableMiniSlots.length === 1 ? this.availableMiniSlots[0].id : null;
+            },
+            error: () => { if (this.round?.roundId === roundId) { this.miniSlots = []; this.selectedMiniSlotId = null; } }
+        });
+    }
 
     constructor(private route: ActivatedRoute, private api: UserApiService, private auth: AuthService) {}
 
@@ -72,6 +100,7 @@ export class MobileComponent implements OnInit, OnDestroy {
 
         this.roundSub = this.api.round$.subscribe(round => {
             this.round = round;
+            this.loadMiniSlots();
             this.configureTimer();
             this.loadMarketStats();
             if (!round) {
@@ -102,7 +131,7 @@ export class MobileComponent implements OnInit, OnDestroy {
     loadParticipant() {
         if (!this.pid) return;
         this.api.getParticipant(this.pid).subscribe({
-            next: res => { this.participant = res; },
+            next: res => { this.participant = res; this.loadMiniSlots(); },
             error: () => { this.status = 'Errore nel caricamento partecipante'; }
         });
     }
@@ -121,6 +150,7 @@ export class MobileComponent implements OnInit, OnDestroy {
         this.api.getRound().subscribe({
             next: (res: any) => {
                 this.round = res || null;
+                this.loadMiniSlots();
                 this.configureTimer();
                 this.activeUsers = this.round?.closed
                     ? Object.keys(this.round?.bids || {})
@@ -158,6 +188,7 @@ export class MobileComponent implements OnInit, OnDestroy {
         // se c’è lista ammessi (spareggio), consenti solo se pid è incluso
         const allowed = this.round?.allowedUsers;
         if (this.auth.isObserver || !this.pid || !this.round || this.round.closed || this.timeLeft === 0) return false;
+        if (this.round?.miniSessionId && !this.selectedMiniSlot) return false;
         if (Array.isArray(allowed) && allowed.length > 0) {
             return allowed.map((id: unknown) => Number(id)).includes(Number(this.pid));
         }
@@ -194,6 +225,7 @@ export class MobileComponent implements OnInit, OnDestroy {
     }
 
     get maxBidForCurrentRound(): number {
+        if (this.round?.miniSessionId) return Number(this.selectedMiniSlot?.maximumBid || 0);
         const singlePlayerMax = Number(this.participant?.maxBid ?? this.participant?.remainingCredits ?? 0);
         const purchaseSize = Math.max(1, Number(this.round?.purchaseSize || 1));
         return singlePlayerMax + purchaseSize - 1;
@@ -225,13 +257,13 @@ export class MobileComponent implements OnInit, OnDestroy {
 
         // blocco client-side in caso di spareggio e non ammesso
         if (!this.isBidAllowed()) {
-            this.status = 'Spareggio in corso: non sei tra gli ammessi a rilanciare';
+            this.status = 'Non sei abilitato a offrire oppure devi scegliere uno slot';
             this.statusKind = 'error';
             return;
         }
 
         const v = Number(this.amount);
-        const minimumBid = Number(this.round?.minimumBid || 1);
+        const minimumBid = this.minimumBidForCurrentRound;
         if (!Number.isFinite(v) || v < minimumBid) {
             this.status = `Offerta minima ${minimumBid}`;
             this.statusKind = 'error';
@@ -249,7 +281,9 @@ export class MobileComponent implements OnInit, OnDestroy {
             return;
         }
 
-        this.api.sendBid(this.pid, v).subscribe({
+        const request = this.round?.miniSessionId
+            ? this.api.sendBid(this.pid, v, this.selectedMiniSlotId!) : this.api.sendBid(this.pid, v);
+        request.subscribe({
             next: () => {
                 this.lastBidAmount = v;            // feedback immediato
                 this.status = '';

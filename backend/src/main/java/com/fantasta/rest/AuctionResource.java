@@ -85,7 +85,7 @@ public class AuctionResource {
             if (!identity.hasRole("admin") && participantId == null) {
                 throw new IllegalArgumentException("Utente non associato a una squadra");
             }
-            return service.bidDto(participantId, dto.amount);
+            return service.bidDto(participantId, dto.amount, dto.miniSlotId);
         } catch (IllegalArgumentException e) {
             throw new WebApplicationException(e.getMessage(), 400);
         } catch (IllegalStateException e) {

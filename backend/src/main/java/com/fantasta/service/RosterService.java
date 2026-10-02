@@ -48,6 +48,11 @@ public class RosterService {
     @Inject
     MarketRestrictionService marketRestrictionService;
 
+    private void requireNoActiveMini() {
+        if (MiniAuctionSessionEntity.count("status", MiniAuctionSessionEntity.Status.ACTIVE) > 0)
+            throw new BadRequestException("Concludere prima la mini asta: le rose sono collegate agli slot di sostituzione");
+    }
+
     /** Massimali per ruolo, letti da properties/env (default: 3-8-8-6) */
     public int max(Role role) {
         String v;
@@ -101,6 +106,7 @@ public class RosterService {
 
     @Transactional
     public synchronized RosterSwapResult swap(RosterSwapRequest request) {
+        requireNoActiveMini();
         if (request == null || request.sourceParticipantId == null || request.destinationParticipantId == null
                 || request.sourcePlayerIds == null || request.destinationPlayerIds == null) {
             throw new BadRequestException("Dati dello scambio incompleti");
@@ -221,6 +227,7 @@ public class RosterService {
 
     @Transactional
     public RosterImportResult importFromExcel(InputStream in, boolean confirm) {
+        if (confirm) requireNoActiveMini();
         List<String> errors = new ArrayList<>();
         int inserted = 0;
         int teamsCreated = 0;
@@ -294,6 +301,7 @@ public class RosterService {
      */
     @Transactional
     public MarketRosterImportResult reconcileMarketRosters(InputStream in, boolean confirm) {
+        if (confirm) requireNoActiveMini();
         mercatoService.requireUpdatedQuotes();
         Map<Long, ParticipantEntity> desiredOwnerByPlayer = new HashMap<>();
         Map<Long, Double> historicalCosts = new HashMap<>();
@@ -673,6 +681,7 @@ public class RosterService {
 
     @Transactional
     public com.fantasta.dto.ReleaseResultDto svincola(Long participantId, SvincoloRequest req) {
+        requireNoActiveMini();
         return svincola(participantId, req, UUID.randomUUID().toString());
     }
 

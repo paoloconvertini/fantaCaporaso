@@ -407,3 +407,40 @@ Le assegnazioni manuali mostrano una conferma con giocatore, partecipante e cost
 In amministrazione, **Cerca calciatore** cerca per nome e ruolo tra gli svincolati attivi chiamabili, inclusi quelli già saltati nel giro. **Chiama** registra la scelta nella cronologia del giro e aggiorna il ruolo; le offerte partono solo con **Avvia offerte**. La selezione è riservata agli amministratori e viene rifiutata durante un round aperto. I portieri seguono le verifiche dei pacchetti da tre e delle porte già assegnate. Non modifica rose, crediti o gli altri skip.
 
 API amministrative: `GET /api/random/search?q=...&role=...` (massimo 50 risultati, almeno due caratteri) e `POST /api/random/select` con `{ "playerId": 123 }`. La selezione restituisce 400 per un calciatore non disponibile e 409 durante un round aperto.
+
+### Mini asta di sostituzione dopo il mercato di riparazione
+
+La pagina admin `/admin/mini-asta` prepara una sessione distinta. L’asta di provenienza è scelta dal registro degli acquisti (la più recente viene selezionata inizialmente); non occorre inserire codici né confermare manualmente la provenienza. Il gestore seleziona prima i fantallenatori coinvolti e vede soltanto i loro acquisti cedibili, raggruppati per squadra. Deselezionare una squadra elimina le sue cessioni selezionate. Il backend controlla nuovamente la provenienza sia alla preparazione sia alla conferma. I portieri sono disponibili solo se tutti e tre appartengono agli acquisti della sessione scelta; nell’anteprima è indicato il costo complessivo.
+
+`roster_acquisition` registra ogni nuovo acquisto con riga rosa, giocatore, proprietario, costo, sessione e gruppo di acquisto, inclusi gli acquisti manuali e con un solo offerente. I calciatori già presenti prima dell’asta, le assegnazioni esterne al mercato di riparazione e gli acquisti della mini asta sono esclusi dal relativo elenco cedibili.
+
+La preparazione non modifica le rose. **Conferma cessioni e avvia mini asta** applica tutte le cessioni definitivamente in una sola transazione, dopo aver ricontrollato proprietari, ruoli, costi e finanziabilità. Il rimborso è il costo pagato, recuperato togliendo le righe rosa dalla spesa; `totalCredits` non viene aumentato. Ogni cessione crea uno slot del medesimo ruolo, con minimo `rimborso + 1`; una porta crea un solo slot per tre portieri. Servono almeno un credito aggiuntivo per ogni sostituzione e i crediti necessari per gli eventuali altri posti già vuoti. Una squadra con zero residuo non può attivare una sostituzione.
+
+Durante la sessione attiva la dashboard usa i consueti ricerca/estrazione, avvio, timer e spareggio, ma ammette solo le squadre con slot aperti di quel ruolo. Il partecipante sceglie lo slot nella schermata `/mobile`: il massimo conserva i minimi di tutti gli altri slot e un credito per ogni ulteriore posto libero. Lo slot è bloccato dopo un’offerta accettata fino al ritiro; lo spareggio conserva il collegamento. Le offerte rimangono private fino alla chiusura. Con un solo offerente viene addebitato il minimo personale (o quello maggiore dello spareggio), secondo il flusso dell’asta attuale. I portieri usano il minimo dello slot, non la quotazione della nuova porta.
+
+La vittoria assegna il sostituto e chiude lo slot nella stessa transazione. Sconfitta, ritiro, reset e round senza offerte mantengono la cessione e lo slot aperto. La sessione non può essere conclusa finché rimangono slot da riempire. La preparazione può essere annullata prima delle cessioni. Una sessione attiva non prevede annullamento delle cessioni o ripristino del calciatore originario.
+
+Per evitare disallineamenti, durante la mini asta sono bloccate assegnazioni manuali, scambi, svincoli ordinari, import confermati delle rose e annullamenti dei movimenti. I movimenti della mini asta sono registrati come `RELEASE` (operazione `MINI_RELEASE`, non conteggiata nelle cessioni del mercato ordinario) e `MINI_PURCHASE`; non sono annullabili singolarmente. Lo storico delle offerte usa un codice sessione proprio.
+
+API: `GET /api/mini-auctions/current` per gli autenticati; `GET /api/mini-auctions/mine` per gli slot della squadra dell’account user (eventuale `participantId` è accettato soltanto per admin); `GET /api/mini-auctions/sources`, `GET /api/mini-auctions/candidates?sourceSessionCode=...&sourceDate=...`, `POST /prepare`, `POST /{id}/activate` e `POST /{id}/finish` sono riservati agli admin. `POST /api/bids` accetta il campo opzionale `miniSlotId`, obbligatorio alla prima offerta della mini asta; i round ordinari conservano il contratto precedente. Il DTO round aggiunge `miniSessionId`, senza pubblicare i collegamenti tra offerte e slot.
+
+Applicare `database/migrations/20261002_mini_auction.sql` dopo backup e prima del deploy: crea sessioni e slot persistenti, impedisce più preparazioni/sessioni aperte contemporaneamente e aggiorna il CHECK dei tipi di movimento. Migrazione applicata soltanto a DEV dopo backup `backups/fantasta-dev-before-mini-20261002.dump`. Nessuna mini asta né cessione reale viene creata automaticamente e PROD non è stato modificato per questa funzione. L’app continua a usare una sola istanza backend come lo stack d’asta esistente.
+
+
+#### Ribaltamento PROD → DEV e recupero provenienza del 2 ottobre 2026
+
+Per le prove è stata ripristinata in DEV una copia aggiornata di PROD: 16 squadre, 659 calciatori e 400 righe rosa. Rose, partecipanti e account sono stati confrontati integralmente tramite hash ordinati. Sono conservati i dump `backups/fantasta-prod-for-dev-refresh-20261002.dump` e `backups/fantasta-dev-before-prod-refresh-20261002.dump`, e il vecchio database `fantasta_dev_before_refresh_20261002` nel solo container DEV. Nessuna modifica a PROD. Il ribaltamento include gli account: le credenziali DEV ora corrispondono alla copia PROD.
+
+La provenienza dei 98 acquisti del 1 ottobre è stata verificata confrontando le rose pre-asta (302 righe, backup `fantasta-before-deploy-20261001-104804.dump`) con la copia PROD e con `player_owner_history`. La differenza includeva anche Neto, sostituzione di Grabara precedente all’asta: Neto è esplicitamente escluso dal backfill. I restanti 98 acquisti coincidono esattamente con le nuove proprietà registrate il 1 ottobre.
+
+Dopo il ribaltamento sono applicate soltanto a DEV le migrazioni `20261002_mini_auction.sql`, `20261002_roster_acquisition.sql` e `20261002_backfill_repair_acquisitions.sql`. Prima di un futuro deploy PROD servono backup e le stesse migrazioni: il backfill è limitato agli ID e alla sessione verificati e rifiuta una provenienza cambiata. Queste migrazioni aggiungono schema e provenienza; non applicano cessioni, non cambiano crediti né password. Il vecchio script `clone-prod-to-dev.sh` resta riservato alla clonazione iniziale su DEV vuoto; per questo ribaltamento esplicitamente richiesto è stata preparata e verificata una copia separata, poi rinominata senza eliminare il database precedente.
+
+### Annullamento assegnazioni d'asta
+L'admin può annullare gli acquisti dalla pagina Movimenti, incluse assegnazioni manuali,
+offerente unico e pacchetti portieri. Viene rimosso l'intero acquisto e restituito quanto pagato;
+il giocatore torna disponibile. Gli acquisti mini riaprono lo slot e conservano il minimo,
+senza annullare la cessione iniziale. Una mini conclusa viene riaperta se non ne esiste un'altra.
+L'annullamento è bloccato con round aperto, modifiche successive o costo/rosa non coerenti.
+Applicare `20261002_purchase_revert.sql` dopo le migrazioni mini/acquisizioni/backfill:
+registra anche i 98 acquisti verificati del primo ottobre. Le rose importate senza prova
+individuale di acquisto non vengono presentate come assegnazioni annullabili.

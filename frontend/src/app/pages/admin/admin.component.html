@@ -2,7 +2,7 @@
 
   <section class="auction-preflight">
     <div>
-      <span class="section-kicker">ASTA INIZIALE</span>
+      <span class="section-kicker">{{ round?.miniSessionId ? 'MINI ASTA DI SOSTITUZIONE' : 'ASTA' }}</span>
       <h1>Cabina di regia</h1>
       <p>Scegli un ruolo, estrai la prossima chiamata e avvia le offerte. Puoi chiudere il timer in ogni momento.</p>
     </div>
@@ -12,6 +12,8 @@
       <a mat-flat-button routerLink="/admin/users"><mat-icon>manage_accounts</mat-icon> Configura partecipanti</a>
     </div>
   </section>
+
+  <a mat-stroked-button routerLink="/admin/mini-asta"><mat-icon>autorenew</mat-icon> Gestisci mini asta</a>
 
   <div class="auction-steps" aria-label="Flusso asta">
     <span><b>1</b> Scegli ruolo</span><mat-icon>arrow_forward</mat-icon>

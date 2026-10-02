@@ -23,6 +23,8 @@ import { NewspaperComponent } from './pages/newspaper/newspaper.component';
 
 import { TargetsComponent } from './pages/targets/targets.component';
 
+import { MiniAuctionComponent } from './pages/mini-auction/mini-auction.component';
+
 const routes: Routes = [
     { path: 'login', component: LoginComponent },
     {
@@ -31,6 +33,7 @@ const routes: Routes = [
         canActivate: [AuthGuard],
         children: [
             { path: '', component: HomeComponent, pathMatch: 'full' },
+            { path: 'admin/mini-asta', component: MiniAuctionComponent, canActivate: [AdminOnlyGuard] },
             { path: 'admin', component: AdminComponent, canActivate: [AdminOnlyGuard] },
             { path: 'rosters', component: RostersComponent },
             { path: 'players', component: PlayersComponent },

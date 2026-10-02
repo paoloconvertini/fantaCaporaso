@@ -91,8 +91,12 @@ export class UserApiService {
   }
 
   // 🔹 BIDS
-  sendBid(participantId: number, amount: number): Observable<any> {
-    return this.http.post(`${this.base}/api/bids`, { participantId, amount });
+  getMiniSlots(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.base}/api/mini-auctions/mine`);
+  }
+
+  sendBid(participantId: number, amount: number, miniSlotId?: number): Observable<any> {
+    return this.http.post(`${this.base}/api/bids`, miniSlotId == null ? { participantId, amount } : { participantId, amount, miniSlotId });
   }
 
   withdrawBid(): Observable<any> {

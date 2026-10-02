@@ -118,4 +118,30 @@ describe('MobileComponent', () => {
 
     expect(page.automaticMinimumMessage).toBeNull();
   });
+  it('uses the chosen mini slot budget and requires a role match', () => {
+    const page = component();
+    page.pid = 7;
+    page.round = { miniSessionId: 1, playerRole: 'DIFENSORE', closed: false, allowedUsers: [7], minimumBid: 1 };
+    page.participant = { maxBid: 119 };
+    page.miniSlots = [
+      { id: 1, role: 'DIFENSORE', filled: false, minimumBid: 8, maximumBid: 106 },
+      { id: 2, role: 'ATTACCANTE', filled: false, minimumBid: 13, maximumBid: 111 }
+    ];
+    expect(page.isBidAllowed()).toBeFalse();
+    page.selectedMiniSlotId = 1;
+    expect(page.minimumBidForCurrentRound).toBe(8);
+    expect(page.maxBidForCurrentRound).toBe(106);
+    expect(page.isBidAllowed()).toBeTrue();
+    page.selectedMiniSlotId = 2;
+    expect(page.isBidAllowed()).toBeFalse();
+  });
+
+  it('uses the higher round minimum in a mini auction tie break', () => {
+    const page = component();
+    page.round = { miniSessionId: 1, playerRole: 'DIFENSORE', minimumBid: 11 };
+    page.miniSlots = [{ id: 1, role: 'DIFENSORE', filled: false, minimumBid: 8, maximumBid: 50 }];
+    page.selectedMiniSlotId = 1;
+    expect(page.minimumBidForCurrentRound).toBe(11);
+  });
+
 });

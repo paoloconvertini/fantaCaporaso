@@ -175,7 +175,7 @@ class MarketRepairServiceTest {
 
     @Test
     @TestTransaction
-    void manualTransferIsAuditedButNewPurchaseIsNot() {
+    void manualTransferAndNewPurchaseAreAudited() {
         configureMarket(1, true);
         ParticipantEntity source = participant("Audit origine");
         ParticipantEntity destination = participant("Audit destinazione");
@@ -196,7 +196,7 @@ class MarketRepairServiceTest {
 
         PlayerEntity purchased = player("Audit acquisto", 5, true);
         auctionService.adminAssign(purchased.id, destination.id, 1D);
-        assertEquals(0, MarketMovementEntity.count("player", purchased));
+        assertEquals(1, MarketMovementEntity.count("player = ?1 and type = ?2", purchased, MarketMovementEntity.Type.PURCHASE));
     }
 
     @Test

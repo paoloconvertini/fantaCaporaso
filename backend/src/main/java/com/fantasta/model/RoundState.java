@@ -3,6 +3,8 @@ package com.fantasta.model;
 import java.util.*;
 
 public class RoundState {
+    public Long miniSessionId;
+    public Map<String, Long> miniBidSlots = new LinkedHashMap<>();
     public String roundId;
     public String player;
     public String playerTeam;

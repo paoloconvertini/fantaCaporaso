@@ -18,7 +18,8 @@ public class AuctionHistoryService {
         if (round == null || round.winner == null || round.roundId == null
                 || round.historyBids == null || round.historyBids.size() < 2
                 || round.competitiveOriginRoundId == null
-                || AuctionHistoryEntity.count("roundId", round.roundId) > 0) return;
+                || AuctionHistoryEntity.count("roundId", round.roundId) > 0
+                || MarketMovementEntity.count("auctionRoundId = ?1 and revertedAt is not null", round.roundId) > 0) return;
 
         AuctionHistoryEntity history = new AuctionHistoryEntity();
         history.roundId = round.roundId;

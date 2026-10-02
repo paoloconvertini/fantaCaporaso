@@ -43,7 +43,7 @@ public class RosterMovementService {
         dto.sessionCode = row.sessionCode;
         dto.createdAt = row.createdAt;
         dto.revertedAt = row.revertedAt;
-        dto.canRevert = row.revertedAt == null && !hasLaterMovement(row);
+        dto.canRevert = row.revertedAt == null && !isMiniRelease(row) && !hasLaterMovement(row);
         return dto;
     }
 
@@ -51,6 +51,9 @@ public class RosterMovementService {
     public void revert(Long movementId) {
         MarketMovementEntity selected = MarketMovementEntity.findById(movementId);
         if (selected == null) throw new BadRequestException("Movimento non trovato");
+        if (isMiniRelease(selected)) throw new BadRequestException("Le cessioni della mini asta sono definitive; non annullare movimenti singoli");
+        if (!isPurchase(selected) && MiniAuctionSessionEntity.count("status", MiniAuctionSessionEntity.Status.ACTIVE) > 0)
+            throw new BadRequestException("Concludere prima la mini asta");
         List<MarketMovementEntity> rows = selected.operationCode == null
                 ? List.of(selected)
                 : MarketMovementEntity.list("operationCode = ?1 order by id desc", selected.operationCode);
@@ -67,9 +70,19 @@ public class RosterMovementService {
         rows.forEach(row -> row.revertedAt = now);
     }
 
+    private boolean isMiniRelease(MarketMovementEntity row) {
+        return row.operationCode != null && row.operationCode.startsWith("MINI_RELEASE:");
+    }
+
     private void validateRevert(MarketMovementEntity row) {
         RosterEntity current = RosterEntity.find("player", row.player).firstResult();
-        if (row.type == MarketMovementEntity.Type.EXCHANGE) {
+        if (isPurchase(row)) {
+            RosterAcquisitionEntity acquisition = acquisition(row);
+            if (current == null || !current.participant.id.equals(row.participant.id)
+                    || acquisition == null || !current.id.equals(acquisition.rosterEntryId)
+                    || !java.util.Objects.equals(current.amount, row.resultingRosterAmount))
+                throw new BadRequestException(row.player.name + ": assegnazione modificata dopo l’acquisto");
+        } else if (row.type == MarketMovementEntity.Type.EXCHANGE) {
             if (current == null || row.destinationParticipant == null
                     || !current.participant.id.equals(row.destinationParticipant.id)) {
                 throw new BadRequestException(row.player.name + ": non appartiene più alla squadra di destinazione");
@@ -79,7 +92,39 @@ public class RosterMovementService {
         }
     }
 
+    private boolean isPurchase(MarketMovementEntity row) {
+        return row.type == MarketMovementEntity.Type.PURCHASE || row.type == MarketMovementEntity.Type.MINI_PURCHASE;
+    }
+
+    private RosterAcquisitionEntity acquisition(MarketMovementEntity row) {
+        return RosterAcquisitionEntity.find("player = ?1 and participant = ?2 and sessionCode = ?3 order by acquiredAt desc", row.player, row.participant, row.sessionCode).firstResult();
+    }
+
     private void applyRevert(MarketMovementEntity row) {
+        if (isPurchase(row)) {
+            RosterAcquisitionEntity acquisition = acquisition(row);
+            RosterEntity current = RosterEntity.findById(acquisition.rosterEntryId);
+            current.delete(); row.player.assigned = false;
+            if (acquisition.ownerHistoryCreated) PlayerOwnerHistoryEntity.delete(
+                    "player = ?1 and participant = ?2", row.player, row.participant);
+            if (row.auctionRoundId != null) {
+                for (AuctionHistoryEntity history : AuctionHistoryEntity.<AuctionHistoryEntity>list("roundId", row.auctionRoundId)) {
+                    AuctionHistoryBidEntity.delete("history", history); history.delete();
+                }
+            }
+            acquisition.delete();
+            if (row.type == MarketMovementEntity.Type.MINI_PURCHASE) {
+                Long slotId = Long.valueOf(row.operationCode.split(":")[1]);
+                MiniAuctionSlotEntity slot = MiniAuctionSlotEntity.findById(slotId);
+                slot.filled = false; slot.acquiredPlayerId = null; slot.paidAmount = null; slot.filledAt = null;
+                if (slot.session.status == MiniAuctionSessionEntity.Status.CLOSED) {
+                    if (MiniAuctionSessionEntity.count("status in ?1", java.util.List.of(MiniAuctionSessionEntity.Status.ACTIVE, MiniAuctionSessionEntity.Status.DRAFT)) > 0)
+                        throw new BadRequestException("Un’altra mini asta è già aperta");
+                    slot.session.status = MiniAuctionSessionEntity.Status.ACTIVE; slot.session.closedAt = null;
+                }
+            }
+            return;
+        }
         if (row.type == MarketMovementEntity.Type.EXCHANGE) {
             RosterEntity current = RosterEntity.find("player", row.player).firstResult();
             if (Boolean.TRUE.equals(row.creditsPreserved)) {

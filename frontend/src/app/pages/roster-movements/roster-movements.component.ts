@@ -55,7 +55,7 @@ export class RosterMovementsComponent implements OnInit {
   }
 
   typeLabel(type: string): string {
-    return ({ RELEASE: 'Svincolo', DEPARTED: 'Partito', EXCHANGE: 'Trasferimento' } as any)[type] || type;
+    return ({ RELEASE: 'Svincolo', DEPARTED: 'Partito', EXCHANGE: 'Trasferimento', PURCHASE: 'Acquisto asta', MINI_PURCHASE: 'Acquisto mini asta' } as any)[type] || type;
   }
 
   revert(row: any): void {
@@ -64,13 +64,15 @@ export class RosterMovementsComponent implements OnInit {
       width: '390px',
       data: {
         title: 'Annulla movimento',
-        message: `Vuoi ripristinare ${row.playerName} e annullare l’intera operazione collegata?`
+        message: row.type === 'PURCHASE' || row.type === 'MINI_PURCHASE'
+          ? `Annullare l’acquisto di ${row.playerName}? Verranno liberati tutti i calciatori dell’operazione e restituiti i crediti pagati. Nella mini asta lo slot torna da riempire.`
+          : `Vuoi ripristinare ${row.playerName} e annullare l’intera operazione collegata?`
       }
     }).afterClosed().subscribe(confirmed => {
       if (!confirmed) return;
       this.adminApi.revertRosterMovement(row.id).subscribe({
         next: () => { this.snackBar.open('Movimento annullato', 'Chiudi', { duration: 3000 }); this.load(); },
-        error: error => this.snackBar.open(error?.error?.error || 'Revert non riuscito', 'Chiudi', { duration: 4000 })
+        error: error => this.snackBar.open(error?.error?.message || error?.error?.error || 'Revert non riuscito', 'Chiudi', { duration: 4000 })
       });
     });
   }

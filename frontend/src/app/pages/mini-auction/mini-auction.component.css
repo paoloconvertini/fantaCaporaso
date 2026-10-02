@@ -1,0 +1,20 @@
+.mini-page { max-width:1000px; margin:auto; padding:24px; color:#e8f3ef; }
+.kicker { color:#69e6ad; font-size:12px; font-weight:700; letter-spacing:.1em; }
+h1 { margin:8px 0 12px; } p { line-height:1.5; }
+.setup { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; }
+.notice { padding:14px; border:1px solid #738b7e; border-radius:12px; background:#163126; }
+.candidate-list { max-height:400px; overflow:auto; border:1px solid #34483e; border-radius:12px; }
+.candidate { padding:12px; border-bottom:1px solid #34483e; }
+small { display:block; margin-top:5px; color:#adc4bb; }
+.slot { display:flex; flex-wrap:wrap; justify-content:space-between; gap:12px; padding:16px; margin:10px 0; border-radius:12px; background:#14291f; }
+.actions { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin:20px 0; }
+.error { color:#ffb4ad; }
+:host ::ng-deep .mat-checkbox-layout { white-space:normal; }
+@media(max-width:600px) { .mini-page { padding:16px; } .actions button,.actions a { width:100%; white-space:normal; } }
+
+.participants-step, .players-step { margin-top:24px; }
+.step-number { display:inline-grid; place-items:center; width:28px; height:28px; margin-right:8px; border-radius:50%; background:#69e6ad; color:#08251a; font-size:16px; }
+.participant-choices { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; padding:16px; border:1px solid #34483e; border-radius:12px; background:#14291f; }
+.team-candidates h3 { position:sticky; top:0; margin:0; padding:12px; background:#203b2e; color:#69e6ad; }
+.empty-team { padding:0 12px; color:#adc4bb; }
+.players-step > mat-form-field { width:100%; }

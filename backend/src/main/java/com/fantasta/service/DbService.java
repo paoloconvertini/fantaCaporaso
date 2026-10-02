@@ -290,10 +290,40 @@ public class DbService {
             rosterEntry.persist();
             packagePlayer.assigned = true;
             packagePlayer.persist();
-            marketRestrictionService.rememberCurrentOwner(packagePlayer, participant);
             created.add(rosterEntry);
         }
+        recordAcquisitions(created);
         return created;
+    }
+
+    private void recordAcquisitions(List<RosterEntity> entries) {
+        if (entries.isEmpty()) return;
+        var market = mercatoService.getConfig();
+        MiniAuctionSessionEntity mini = MiniAuctionSessionEntity.find("status", MiniAuctionSessionEntity.Status.ACTIVE).firstResult();
+        String group = UUID.randomUUID().toString();
+        String code = mini != null ? mini.code : market != null && market.sessionCode != null
+                ? market.sessionCode : "unscoped:" + group;
+        for (RosterEntity entry : entries) {
+            RosterAcquisitionEntity acquisition = new RosterAcquisitionEntity();
+            acquisition.rosterEntryId = entry.id; acquisition.player = entry.player;
+            acquisition.participant = entry.participant; acquisition.paidAmount = entry.amount;
+            acquisition.sessionCode = code; acquisition.purchaseGroupCode = group;
+            acquisition.repairMarket = mini == null && market != null && market.attiva;
+            acquisition.ownerHistoryCreated = PlayerOwnerHistoryEntity.count("player = ?1 and participant = ?2", entry.player, entry.participant) == 0;
+            marketRestrictionService.rememberCurrentOwner(entry.player, entry.participant);
+            acquisition.persist();
+            if (mini == null) {
+                MarketMovementEntity movement = new MarketMovementEntity();
+                movement.participant = entry.participant; movement.player = entry.player;
+                movement.type = MarketMovementEntity.Type.PURCHASE;
+                movement.currentValue = entry.amount; movement.previousRosterAmount = 0;
+                movement.resultingRosterAmount = entry.amount; movement.sessionCode = code;
+                movement.operationCode = "PURCHASE:" + group;
+                movement.playerNameSnapshot = entry.player.name; movement.playerTeamSnapshot = entry.player.team;
+                movement.destinationParticipantSnapshot = entry.participant.name;
+                movement.countedRelease = false; movement.persist();
+            }
+        }
     }
 
     /** Restituisce il pacchetto nell'ordine titolare, riserve. */

@@ -32,6 +32,7 @@ import { MobileRostersComponent } from './pages/mobile/mobile-rosters/mobile-ros
 import { UploadPlayersComponent } from './pages/upload-players/upload-players.component';
 import { UploadRostersComponent } from './pages/upload-rosters/upload-rosters.component';
 import { SearchCallDialogComponent } from './dialogs/search-call-dialog.component';
+import { MiniAuctionComponent } from './pages/mini-auction/mini-auction.component';
 import { ManualAssignDialogComponent } from './dialogs/manual-assign-dialog.component';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -77,6 +78,7 @@ export function initializeAuth(auth: AuthService) {
         UploadPlayersComponent,
         UploadRostersComponent,
         ManualAssignDialogComponent,
+        MiniAuctionComponent,
         SearchCallDialogComponent,
         ToolbarComponent,
         AppShellComponent,

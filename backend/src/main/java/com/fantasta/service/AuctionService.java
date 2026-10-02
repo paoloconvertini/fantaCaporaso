@@ -43,6 +43,48 @@ public class AuctionService {
     @Inject
     EntityManager entityManager;
 
+    @Inject
+    MiniAuctionService miniAuctions;
+
+    @Transactional
+    public synchronized MiniAuctionSessionEntity prepareMini(String label, String code, java.time.LocalDate date,
+                                                             List<Long> rosterIds) {
+        requireNoOpenRound();
+        return miniAuctions.prepare(label, code, date, rosterIds);
+    }
+
+    @Transactional
+    public synchronized MiniAuctionSessionEntity activateMini(Long id) {
+        requireNoOpenRound();
+        MiniAuctionSessionEntity session = miniAuctions.activate(id);
+        socket.broadcast("SUMMARY_UPDATED", Map.of("reason", "mini_releases"));
+        return session;
+    }
+
+    @Transactional
+    public synchronized void finishMini(Long id) {
+        requireNoOpenRound();
+        miniAuctions.finish(id);
+        socket.broadcast("SUMMARY_UPDATED", Map.of("reason", "mini_finished"));
+    }
+
+    @Inject RosterMovementService rosterMovements;
+
+    @Transactional
+    public synchronized void revertMovement(Long movementId) {
+        try { requireNoOpenRound(); }
+        catch (IllegalStateException e) { throw new jakarta.ws.rs.BadRequestException(e.getMessage()); }
+        rosterMovements.revert(movementId);
+        state = null; clearCurrentState();
+        socket.broadcast("ROUND_UPDATED", Map.of("reason", "assignment_reverted"));
+        socket.broadcast("SUMMARY_UPDATED", Map.of("reason", "assignment_reverted"));
+    }
+
+    private void requireNoOpenRound() {
+        RoundState current = get();
+        if (current != null && !current.closed) throw new IllegalStateException("Concludi o annulla prima il round attivo");
+    }
+
     @Transactional
     public synchronized PlayerEntity selectCalledPlayer(Long playerId) {
         RoundState current = get();
@@ -94,6 +136,28 @@ public class AuctionService {
                 : null;
         s.tieUsers = null;
         s.auctionSessionCode = auctionSessionCode(previous);
+        MiniAuctionSessionEntity mini = miniAuctions.active();
+        if (mini != null) {
+            if (previous != null && !previous.closed) throw new IllegalStateException("Round già attivo");
+            if (!dbService.callable(calledPlayer)) throw new IllegalArgumentException("Svincolato non disponibile");
+            Set<Long> eligible = miniAuctions.eligible(mini.id, calledPlayer.role);
+            if (s.allowedUsers != null) eligible.retainAll(s.allowedUsers);
+            if (eligible.isEmpty()) throw new IllegalArgumentException("Nessun partecipante con uno slot aperto di questo ruolo");
+            s.miniSessionId = mini.id; s.auctionSessionCode = mini.code; s.allowedUsers = eligible;
+            double miniBase = calledPlayer.role == Role.PORTIERE ? 3D : 1D;
+            s.minimumBid = miniBase;
+            if (previous != null && previous.tieUsers != null && !previous.tieUsers.isEmpty()
+                    && Objects.equals(previous.miniSessionId, mini.id) && allowedUsers != null) {
+                s.minimumBid = Math.max(miniBase, previous.bids.values().stream().mapToDouble(Double::doubleValue).max().orElse(0D) + 1D);
+            }
+            if (previous != null && Objects.equals(previous.miniSessionId, mini.id)
+                    && previous.tieUsers != null && !previous.tieUsers.isEmpty()) {
+                if (!Objects.equals(previous.player, player) || !Objects.equals(previous.playerTeam, team))
+                    throw new IllegalArgumentException("Completare o annullare prima lo spareggio della mini asta");
+                s.miniBidSlots = new LinkedHashMap<>(previous.miniBidSlots);
+            }
+        }
+
         s.previousAssignment = lastAssignment(previous);
         s.lastAssignment = s.previousAssignment;
         boolean tieBreakRound = allowedUsers != null && !allowedUsers.isEmpty()
@@ -113,13 +177,18 @@ public class AuctionService {
 
     @Transactional
     public synchronized RoundState bid(Long participantId, Double amount) {
-        applyBid(participantId, amount);
+        applyBid(participantId, amount, null);
         return state;
     }
 
     @Transactional
     public synchronized RoundDto bidDto(Long participantId, Double amount) {
-        applyBid(participantId, amount);
+        return bidDto(participantId, amount, null);
+    }
+
+    @Transactional
+    public synchronized RoundDto bidDto(Long participantId, Double amount, Long miniSlotId) {
+        applyBid(participantId, amount, miniSlotId);
         RoundDto dto = RoundDto.toDto(state);
         // Il monitor deve coprire anche l'UPDATE effettivo. Senza flush, il commit
         // avverrebbe dopo il rilascio del monitor e richieste HTTP concorrenti
@@ -145,13 +214,14 @@ public class AuctionService {
             throw new IllegalArgumentException("Nessuna offerta da ritirare");
         }
 
+        if (state.miniBidSlots != null) state.miniBidSlots.remove(String.valueOf(participantId));
         persistCurrentState();
         entityManager.flush();
         socket.broadcast("BID_WITHDRAWN", Map.of("user", participant.name));
         return RoundDto.toDto(state);
     }
 
-    private void applyBid(Long participantId, Double amount) {
+    private void applyBid(Long participantId, Double amount, Long miniSlotId) {
         if (state == null || state.closed)
             throw new IllegalStateException("Round non attivo");
 
@@ -164,13 +234,22 @@ public class AuctionService {
 
         if (state.allowedUsers != null && !state.allowedUsers.isEmpty()) {
             if (!state.allowedUsers.contains(participantId)) {
-                throw new IllegalArgumentException("Spareggio in corso: solo i partecipanti in parità possono offrire");
+                throw new IllegalArgumentException("Questo round è riservato ai partecipanti abilitati");
             }
         }
         Role role = Role.fromString(state.playerRole);
         if (role == null) throw new IllegalArgumentException("Ruolo non valido");
         PlayerEntity auctionPlayer = dbService.findByNameTeam(state.player, state.playerTeam);
         if (auctionPlayer == null) throw new IllegalArgumentException("Giocatore non trovato");
+        if (state.miniSessionId != null) {
+            Long lockedSlot = state.miniBidSlots.get(String.valueOf(participantId));
+            if (miniSlotId == null) miniSlotId = lockedSlot;
+            if (lockedSlot != null && !lockedSlot.equals(miniSlotId))
+                throw new IllegalArgumentException("Ritira l'offerta prima di cambiare slot");
+            miniAuctions.validateBid(state.miniSessionId, miniSlotId, participantId, auctionPlayer, amount);
+            if (amount < state.minimumBid) throw new IllegalArgumentException("Offerta minima round: " + state.minimumBid);
+            state.miniBidSlots.put(String.valueOf(participantId), miniSlotId);
+        } else {
         int purchaseSize = dbService.purchaseSize(auctionPlayer);
         double minimumBid = minimumBidForParticipant(auctionPlayer, p,
                 state.minimumBid != null ? state.minimumBid : 1D);
@@ -190,6 +269,8 @@ public class AuctionService {
         int max = rosterService.max(role);
         if (current + purchaseSize > max)
             throw new IllegalArgumentException("Quota piena per ruolo " + role);
+
+        }
 
         // ✅ aggiorna stato round
         state.bids.put(String.valueOf(p.id), amount);
@@ -278,13 +359,18 @@ public class AuctionService {
         if (state == null) throw new IllegalStateException("Nessun round attivo");
         if (state.closed) return state;
 
-        state.closed = true;
         Double max = state.bids.values().stream().mapToDouble(i -> i).max().orElse(0D);
 
         var top = state.bids.entrySet().stream()
                 .filter(e -> Objects.equals(e.getValue(), max))
                 .toList();
 
+        if (state.miniSessionId != null && top.size() == 1) {
+            var winning = top.get(0);
+            miniAuctions.validateBid(state.miniSessionId, state.miniBidSlots.get(winning.getKey()),
+                    Long.valueOf(winning.getKey()), dbService.findByNameTeam(state.player, state.playerTeam), winning.getValue());
+        }
+        state.closed = true;
         state.tieUsers = null;
         if (state.historyBids == null) state.historyBids = new LinkedHashMap<>();
         if (state.competitiveOriginRoundId == null && state.bids != null && state.bids.size() >= 2) {
@@ -301,13 +387,22 @@ public class AuctionService {
             PlayerEntity player = dbService.findByNameTeam(state.player, state.playerTeam);
             double chargedAmount = e.getValue();
             if (state.bids.size() == 1 && player != null) {
-                chargedAmount = minimumBidForParticipant(player, p, baseMinimumBid(player));
+                chargedAmount = state.miniSessionId == null
+                        ? minimumBidForParticipant(player, p, baseMinimumBid(player))
+                        : Math.max(state.minimumBid, miniAuctions.requireSlot(state.miniSessionId,
+                                state.miniBidSlots.get(e.getKey()), id, player.role).minimumBid);
             }
             state.winner = new Winner(id, p != null ? p.name : ("??-" + id), chargedAmount);
 
             // 🔹 Salvataggio su DB
             if (p != null && player != null) {
-                dbService.markAssigned(state.roundId, player, p.id, chargedAmount);
+                if (state.miniSessionId != null) miniAuctions.fill(state.miniSessionId,
+                        state.miniBidSlots.get(e.getKey()), p.id, player, chargedAmount, state.roundId);
+                else dbService.markAssigned(state.roundId, player, p.id, chargedAmount);
+                MarketMovementEntity purchase = MarketMovementEntity.find(
+                        "player = ?1 and type in ?2 and revertedAt is null order by createdAt desc, id desc",
+                        player, List.of(MarketMovementEntity.Type.PURCHASE, MarketMovementEntity.Type.MINI_PURCHASE)).firstResult();
+                if (purchase != null) for (MarketMovementEntity movement : MarketMovementEntity.<MarketMovementEntity>list("operationCode", purchase.operationCode)) movement.auctionRoundId = state.roundId;
                 state.lastAssignment = assignmentSummary(player, p, chargedAmount);
             }
         } else {
@@ -346,6 +441,7 @@ public class AuctionService {
 
     @Transactional
     public synchronized RoundState manualAssign(Long participantId, String playerName, String team, Double amount) {
+        if (miniAuctions.active() != null) throw new IllegalStateException("Usare il round della mini asta; completare prima tutti gli slot");
         if (participantId == null || playerName == null) {
             throw new IllegalArgumentException("Dati mancanti per assegnazione manuale");
         }
@@ -449,6 +545,7 @@ public class AuctionService {
      */
     @Transactional
     public synchronized RoundState adminAssign(Long playerId, Long participantId, Double amount) {
+        if (miniAuctions.active() != null) throw new IllegalStateException("Usare il round della mini asta; completare prima tutti gli slot");
         if (playerId == null || participantId == null || amount == null || amount <= 0) {
             throw new IllegalArgumentException("Giocatore, partecipante e importo sono obbligatori");
         }
@@ -586,6 +683,7 @@ public class AuctionService {
 
     @Transactional
     public synchronized AuctionSessionCloseDto closeAuction() {
+        if (miniAuctions.active() != null) throw new IllegalStateException("Usare il round della mini asta; completare prima tutti gli slot");
         if (state == null) state = loadCurrentState();
         if (state != null && !state.closed) {
             throw new IllegalStateException("Concludi o annulla prima il round attivo");

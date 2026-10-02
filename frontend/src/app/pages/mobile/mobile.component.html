@@ -6,7 +6,7 @@
         <strong>{{ participant.name }}</strong>
         <small>{{ participant.remainingCredits }} crediti · Max {{ maxBidForCurrentRound }}</small>
       </div>
-      <span>IN ASTA</span>
+      <span>{{ round.miniSessionId ? 'MINI ASTA' : 'IN ASTA' }}</span>
     </div>
     <div class="round-timer" [class.urgent]="timeLeft !== null && timeLeft <= 5">
       <mat-icon>timer</mat-icon><strong>{{ timeLeft ?? '—' }}</strong><span>secondi</span>
@@ -39,6 +39,18 @@
       <span>Stai seguendo l’asta in modalità sola lettura.</span>
     </div>
 
+    <div class="mini-slot-choice" *ngIf="round.miniSessionId && !isObserver">
+      <p>Scegli lo slot dello stesso ruolo da coprire. Le cessioni sono definitive.</p>
+      <mat-form-field appearance="outline" *ngIf="availableMiniSlots.length">
+        <mat-label>Slot da coprire</mat-label>
+        <mat-select [(ngModel)]="selectedMiniSlotId" [disabled]="hasActiveBid">
+          <mat-option *ngFor="let slot of availableMiniSlots" [value]="slot.id">{{ slot.releasedNames }} · Min {{ slot.minimumBid }} · Max {{ slot.maximumBid }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <p *ngIf="!availableMiniSlots.length">Non hai slot aperti per questo ruolo.</p>
+      <p *ngIf="selectedMiniSlot">Minimo <b>{{ minimumBidForCurrentRound }}</b> · Massimo <b>{{ maxBidForCurrentRound }}</b>, conservando i minimi degli altri slot.</p>
+      <small *ngIf="hasActiveBid">Per cambiare slot, ritira prima l’offerta.</small>
+    </div>
     <div class="bid-section" *ngIf="!isObserver">
       <mat-form-field>
         <input
@@ -47,7 +59,7 @@
                 type="number"
                 placeholder="La tua offerta"
                 [(ngModel)]="amount"
-                [min]="round?.minimumBid || 1"
+                [min]="minimumBidForCurrentRound"
                 [max]="maxBidForCurrentRound"
         />
       </mat-form-field>
@@ -88,8 +100,13 @@
       Offerta inviata: <b>{{ lastBidAmount }}</b>
     </div>
     <div class="last-bid" *ngIf="!isObserver && round?.minimumBid && round.minimumBid > 1">
-      Offerta minima spareggio: <b>{{ round.minimumBid }}</b>
+      Offerta minima round: <b>{{ round.minimumBid }}</b>
     </div>
+  </mat-card>
+
+  <mat-card class="list-card" *ngIf="miniSlots.length && (!round || round.closed)">
+    <h3>I tuoi slot della mini asta</h3>
+    <p *ngFor="let slot of miniSlots">{{ slot.role }} · {{ slot.releasedNames }} · {{ slot.filled ? 'Coperto' : 'Da coprire: minimo ' + slot.minimumBid }}</p>
   </mat-card>
 
   <mat-card class="list-card participant-card" *ngIf="participant && (!round || round.closed)">

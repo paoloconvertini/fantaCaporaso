@@ -14,6 +14,7 @@ import java.util.List;
 @RolesAllowed("admin")
 public class RosterMovementResource {
     @Inject RosterMovementService service;
+    @Inject com.fantasta.service.AuctionService auction;
 
     @GET
     public List<RosterMovementDto> list(@QueryParam("q") String query,
@@ -26,6 +27,6 @@ public class RosterMovementResource {
     @POST
     @Path("/{id}/revert")
     public void revert(@PathParam("id") Long id) {
-        service.revert(id);
+        auction.revertMovement(id);
     }
 }
