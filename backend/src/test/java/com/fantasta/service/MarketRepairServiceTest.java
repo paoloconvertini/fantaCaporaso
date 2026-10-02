@@ -245,6 +245,45 @@ class MarketRepairServiceTest {
 
     @Test
     @TestTransaction
+    void marketImportExcludesAbsentFreePlayersButPreservesValidReleases() throws Exception {
+        configureMarket(1, false);
+        PlayerEntity obsolete = player("Vecchio libero escluso", 6, true);
+        PlayerEntity released = player("Ceduto valido mantenuto", 9, true);
+        MarketMovementEntity release = new MarketMovementEntity();
+        release.player = released;
+        release.participant = participant("Ex proprietario valido");
+        release.type = MarketMovementEntity.Type.RELEASE;
+        release.currentValue = 9;
+        release.previousRosterAmount = 1;
+        release.sessionCode = "test-market-1";
+        release.persist();
+
+        MarketPlayerImportResult preview = dbService.previewMarketPlayersFromExcel(
+                new ByteArrayInputStream(workbook()));
+        assertTrue(preview.departedFree.stream().anyMatch(row -> row.playerId.equals(obsolete.id)));
+        assertFalse(preview.departedFree.stream().anyMatch(row -> row.playerId.equals(released.id)));
+        assertTrue(obsolete.active);
+
+        dbService.updateMarketPlayersFromExcel(new ByteArrayInputStream(workbook()));
+        assertFalse(obsolete.active);
+        assertNotNull(obsolete.deletedAt);
+        assertTrue(released.active);
+        assertEquals(0, RosterEntity.count("player", obsolete));
+    }
+
+    @Test
+    @TestTransaction
+    void explicitlyDepartedPlayerIsNotReactivatedEvenIfListed() throws Exception {
+        configureMarket(1, false);
+        PlayerEntity departed = player("Aggiornato mercato", 10, false);
+        departed.departureSessionCode = "test-market-1";
+        dbService.updateMarketPlayersFromExcel(new ByteArrayInputStream(workbook()));
+        assertFalse(departed.active);
+        assertEquals(10D, departed.valore);
+    }
+
+    @Test
+    @TestTransaction
     void releaseIsBlockedUntilQuotesAreConfirmed() {
         configureMarket(1, false);
         ParticipantEntity participant = participant("Mercato bloccato");

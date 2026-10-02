@@ -45,6 +45,14 @@ export class AdminApiService {
     return this.http.post(`${this.base}/api/random/mode`, { mode, role });
   }
 
+  searchCallPlayers(query: string, role: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.base}/api/random/search`, { params: { q: query, role } });
+  }
+
+  selectCallPlayer(playerId: number): Observable<any> {
+    return this.http.post(`${this.base}/api/random/select`, { playerId });
+  }
+
   randomNext(): Observable<any> {
     return this.http.post(`${this.base}/api/random/next`, {});
   }

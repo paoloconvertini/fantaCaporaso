@@ -22,19 +22,28 @@
 
   <!-- CONTROLLI DI RUOLO E DURATA -->
   <div class="role-controls">
+    <div class="call-controls">
     <mat-button-toggle-group [(ngModel)]="role" (change)="changeRole()" class="role-toggle">
       <mat-button-toggle value="PORTIERE" aria-label="Portieri">P</mat-button-toggle>
       <mat-button-toggle value="DIFENSORE" aria-label="Difensori">D</mat-button-toggle>
       <mat-button-toggle value="CENTROCAMPISTA" aria-label="Centrocampisti">C</mat-button-toggle>
       <mat-button-toggle value="ATTACCANTE" aria-label="Attaccanti">A</mat-button-toggle>
 
-      <button mat-icon-button color="primary" (click)="drawNextPlayer()" matTooltip="Estrai la prossima chiamata" [disabled]="!role || !auctionReady">
-        <mat-icon>shuffle</mat-icon>
-      </button>
-      <button mat-icon-button color="warn" (click)="closeAuction()" matTooltip="Concludi l'intera sessione">
-        <mat-icon>gavel</mat-icon>
-      </button>
     </mat-button-toggle-group>
+
+    <div class="call-actions" aria-label="Scegli il calciatore da chiamare">
+      <button mat-stroked-button class="draw-player-button" (click)="drawNextPlayer()" [disabled]="!role || !auctionReady">
+        <mat-icon>shuffle</mat-icon> Estrai
+      </button>
+      <button mat-flat-button class="search-player-button" (click)="openPlayerSearch()" [disabled]="!canSearchPlayer">
+        <mat-icon>search</mat-icon> Cerca calciatore
+      </button>
+    </div>
+    </div>
+
+    <button mat-icon-button color="warn" (click)="closeAuction()" matTooltip="Concludi l'intera sessione" aria-label="Concludi l'intera sessione">
+      <mat-icon>gavel</mat-icon>
+    </button>
 
     <div class="duration">
       <mat-icon>timer</mat-icon>
@@ -141,11 +150,6 @@
           <div *ngIf="activeUsers.length===0" class="muted">Nessuno ha ancora puntato</div>
           <div *ngIf="activeUsers.length>0" class="muted">Gli importi saranno visibili alla chiusura.</div>
         </mat-card>
-        <mat-card class="previous-assignment" *ngIf="round?.previousAssignment">
-          <small>Ultima assegnazione</small>
-          <strong>{{ round.previousAssignment.player }} · {{ round.previousAssignment.playerTeam }}</strong>
-          <span>{{ round.previousAssignment.winner }} — <b>{{ round.previousAssignment.amount }} crediti</b></span>
-        </mat-card>
       </div>
 
       <!-- Puntate se round chiuso -->
@@ -169,6 +173,12 @@
           </div>
         </mat-card>
       </ng-template>
+
+      <mat-card class="previous-assignment" *ngIf="latestAssignment as assignment">
+        <small>Ultima assegnazione</small>
+        <strong>{{ assignment.player }} · {{ assignment.playerTeam }}</strong>
+        <span>{{ assignment.winner }} — <b>{{ assignment.amount }} {{ assignment.amount === 1 ? 'credito' : 'crediti' }}</b></span>
+      </mat-card>
 
       <!-- Overlay vincitore -->
       <div *ngIf="showWinnerOverlay && winnerPayload" class="winner-overlay">

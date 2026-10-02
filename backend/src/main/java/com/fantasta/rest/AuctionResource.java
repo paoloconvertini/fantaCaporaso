@@ -2,7 +2,6 @@ package com.fantasta.rest;
 
 import com.fantasta.dto.BidDto;
 import com.fantasta.dto.ManualAssignDto;
-import com.fantasta.dto.AdminAssignmentDto;
 import com.fantasta.dto.RoundDto;
 import com.fantasta.model.RoundState;
 import com.fantasta.service.AuctionService;
@@ -249,14 +248,6 @@ public class AuctionResource {
             return null;
         }, false).onFailure(error -> LOG.debugf(error,
                 "Storico puntate non salvato per il round %s", round == null ? null : round.roundId));
-    }
-
-    @PUT
-    @Path("/admin/assignments/{playerId}")
-    @RolesAllowed("admin")
-    public Response adminAssign(@PathParam("playerId") Long playerId, AdminAssignmentDto dto) {
-        service.adminAssign(playerId, dto.participantId, dto.amount);
-        return Response.ok(Map.of("message", "Assegnazione aggiornata")).build();
     }
 
     @POST

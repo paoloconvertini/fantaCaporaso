@@ -67,7 +67,7 @@
 
 .role-controls {
     display: flex;
-    justify-content: space-between;
+    flex-wrap: wrap;
     align-items: center;
     gap: 12px;
     margin-top: 6px;
@@ -587,3 +587,28 @@ mat-icon.big-icon {
 .automatic-minimum { display: flex; align-items: center; gap: 6px; margin-top: 8px; color: #8ff0c3; font-size: .85rem; }
 .automatic-minimum mat-icon { width: 18px; height: 18px; font-size: 18px; }
 .previous-assignment { display:grid; gap:3px; padding:12px!important; border:1px solid rgba(105,230,173,.22); background:rgba(105,230,173,.07)!important; }.previous-assignment small { color:#91a69f; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:.08em; }.previous-assignment strong { color:#fff; }.previous-assignment span { color:#c5d8d1; }.previous-assignment b { color:#69e6ad; }
+
+/* Ruolo ed entrambe le modalità di chiamata condividono lo stesso gruppo. */
+.call-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 12px;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 14px;
+    background: rgba(255,255,255,.035);
+}
+.call-actions { display: flex; align-items: center; gap: 8px; }
+.call-actions button { min-height: 44px; border-radius: 10px; font-weight: 700; }
+.call-actions mat-icon { margin-right: 6px; }
+.draw-player-button { color: #e8f3ef; border-color: rgba(255,255,255,.25); }
+.search-player-button { color: #08251a; background: #69e6ad; }
+.search-player-button:hover:not([disabled]) { background: #86efbf; }
+.call-actions button[disabled] { color: #89948f; background: #29312f; }
+.role-controls > .duration { margin-left: auto; }
+@media (max-width: 600px) {
+    .call-controls { width: 100%; box-sizing: border-box; justify-content: center; gap: 10px; }
+    .call-actions { width: 100%; }
+    .call-actions button { flex: 1; padding: 0 10px; }
+}

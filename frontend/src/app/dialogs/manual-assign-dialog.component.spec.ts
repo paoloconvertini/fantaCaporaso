@@ -31,7 +31,7 @@ describe('ManualAssignDialogComponent', () => {
     component.amount = 35;
     component.save();
 
-    expect(dialogRef.close).toHaveBeenCalledWith({ playerId: 10, participantId: 2, amount: 35 });
+    expect(dialogRef.close).toHaveBeenCalledWith({ playerId: 10, playerName: 'Giocatore', playerTeam: 'Roma', participantId: 2, amount: 35 });
   });
 
   it('shows only participants returned as eligible for the selected player', () => {

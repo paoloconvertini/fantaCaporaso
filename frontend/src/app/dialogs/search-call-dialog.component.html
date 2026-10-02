@@ -1,0 +1,26 @@
+<h2 mat-dialog-title>Cerca calciatore da chiamare</h2>
+<mat-dialog-content class="dialog-content">
+  <p>Scegli uno svincolato, anche già saltato. Poi premi “Avvia offerte” nella pagina dell’asta.</p>
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Nome calciatore</mat-label>
+    <input matInput [(ngModel)]="query" (ngModelChange)="searchPlayers()" [disabled]="selecting" placeholder="Almeno 2 caratteri" />
+  </mat-form-field>
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Ruolo</mat-label>
+    <mat-select [(ngModel)]="role" (selectionChange)="searchPlayers()" [disabled]="selecting">
+      <mat-option value="">Tutti i ruoli</mat-option>
+      <mat-option value="PORTIERE">Portieri</mat-option>
+      <mat-option value="DIFENSORE">Difensori</mat-option>
+      <mat-option value="CENTROCAMPISTA">Centrocampisti</mat-option>
+      <mat-option value="ATTACCANTE">Attaccanti</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <p *ngIf="loading">Ricerca in corso…</p>
+  <p role="alert" *ngIf="error">{{ error }}</p>
+  <p *ngIf="!loading && query.trim().length >= 2 && !players.length && !error">Nessun calciatore chiamabile trovato.</p>
+  <div class="search-result" *ngFor="let player of players">
+    <div><strong>{{ player.name }}</strong><small>{{ player.team }} · {{ player.role }} · Quotazione {{ player.value }}</small></div>
+    <button mat-stroked-button color="primary" (click)="select(player)" [disabled]="selecting">Chiama</button>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end"><button mat-button mat-dialog-close [disabled]="selecting">Annulla</button></mat-dialog-actions>

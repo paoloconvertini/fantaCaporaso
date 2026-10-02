@@ -90,8 +90,16 @@
         <mat-card><strong>Aggiornati</strong><span>{{ quotesResult.updated?.length || 0 }}</span></mat-card>
         <mat-card><strong>Nuovi</strong><span>{{ quotesResult.newPlayers?.length || 0 }}</span></mat-card>
         <mat-card><strong>Assenti dal listino in rosa</strong><span>{{ quotesResult.departedInRosters?.length || 0 }}</span></mat-card>
-        <mat-card><strong>Assenti dal listino liberi</strong><span>{{ quotesResult.departedFree?.length || 0 }}</span></mat-card>
+        <mat-card><strong>Liberi da escludere dall’asta</strong><span>{{ quotesResult.departedFree?.length || 0 }}</span></mat-card>
     </div>
+
+    <mat-card class="detail-card" *ngIf="quotesResult?.departedFree?.length">
+        <h4>Svincolati assenti dal listone</h4>
+        <p>La conferma esclude questi giocatori dagli svincolati e dalle chiamate d’asta. Le cessioni valide dei partecipanti restano disponibili.</p>
+        <div class="detail-row" *ngFor="let player of quotesResult.departedFree">
+            <span><strong>{{ player.name }}</strong> — {{ player.oldTeam }}</span>
+        </div>
+    </mat-card>
 
     <mat-card class="detail-card" *ngIf="quotesResult?.departedInRosters?.length">
         <h4>Calciatori non trovati nel nuovo file ma ancora in rosa</h4>

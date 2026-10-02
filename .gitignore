@@ -13,3 +13,8 @@ frontend/dist/
 /config/*.env
 !/config/*.env.example
 !/config/*.local.env.example
+
+# Private archive-job reports, source files and previews
+/.local/archive-job/
+
+/scripts/archive-job/__pycache__/

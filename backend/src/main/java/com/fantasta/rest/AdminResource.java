@@ -1,6 +1,10 @@
 package com.fantasta.rest;
 
 import com.fantasta.dto.CreateUserRequest;
+import com.fantasta.model.RoundState;
+import com.fantasta.dto.AdminAssignmentDto;
+import com.fantasta.service.AuctionService;
+import com.fantasta.service.AuctionHistoryService;
 import com.fantasta.service.AppUserService;
 import com.fantasta.util.ParticipantsLoader;
 import io.quarkus.logging.Log;
@@ -21,6 +25,12 @@ public class AdminResource {
 
     @Inject
     AppUserService appUserService;
+
+    @Inject
+    AuctionService auctionService;
+
+    @Inject
+    AuctionHistoryService auctionHistoryService;
 
     /**
      * Inserisce i partecipanti iniziali dal classpath
@@ -60,6 +70,30 @@ public class AdminResource {
     public Response users() {
         return Response.ok(appUserService.listUsers()).build();
     }
+    @PUT
+    @Path("/assignments/{playerId}")
+    @RolesAllowed("admin")
+    public Response adminAssign(@PathParam("playerId") Long playerId, AdminAssignmentDto dto) {
+        if (dto == null) throw new BadRequestException("Dati mancanti");
+        RoundState round;
+        try {
+            round = auctionService.adminAssign(playerId, dto.participantId, dto.amount);
+        } catch (IllegalArgumentException error) {
+            throw new BadRequestException(error.getMessage());
+        } catch (IllegalStateException error) {
+            throw new WebApplicationException(error.getMessage(), 409);
+        }
+        if (round != null) {
+            try {
+                auctionHistoryService.record(round);
+            } catch (Exception error) {
+                Log.warn("Assegnazione completata, salvataggio storico fallito", error);
+            }
+        }
+        return Response.ok(java.util.Map.of("message", "Assegnazione aggiornata",
+                "assignment", auctionService.get().lastAssignment)).build();
+    }
+
     public static class ObserverAssociationRequest { public Long participantId; }
 
     @PUT

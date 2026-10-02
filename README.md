@@ -146,7 +146,7 @@ Lo stack espone per default il reverse proxy su `127.0.0.1:8088` e PostgreSQL su
 
 ## Accesso pubblico con Cloudflare
 
-La pagina istituzionale statica si trova in `landing-page/` ed e' destinata a Cloudflare Pages sul dominio principale `fantacaporaso.it`. Non dipende dai container locali e mostra lo stato di mercato chiuso anche quando il Mac e' spento. Il sottodominio `asta.fantacaporaso.it` resta riservato all'applicazione d'asta pubblicata tramite Cloudflare Tunnel.
+La pagina istituzionale statica si trova in `landing-page/` ed e' destinata a Cloudflare Pages sul dominio principale `fantacaporaso.it`. Non dipende dai container locali. Lo stato e il pulsante di accesso sono statici: vanno aggiornati e pubblicati quando si apre o si chiude il mercato; non seguono automaticamente la configurazione del database. Il sottodominio `asta.fantacaporaso.it` resta riservato all'applicazione d'asta pubblicata tramite Cloudflare Tunnel.
 
 La conclusione dell'intera sessione avviene dal comando admin `Concludi sessione`, distinto dalla chiusura del singolo round. Il comando rifiuta round ancora attivi, salva una sola fotografia finale delle rose, pulisce giro/skip e genera in background l'archivio statico completo in `backend/target/auction-archive/storico/`. Le sessioni precedenti restano consultabili e la pagina consente la ricerca per calciatore.
 
@@ -311,6 +311,8 @@ L'analisi è distinta per ruolo e ordinata per quotazione decrescente (somma del
 
 L'app mostra un avviso globale per l'asta del 1 ottobre 2026: il 30 settembre indica “domani”, il 1 ottobre “oggi” e dal 2 ottobre scompare. La data segue il fuso Europe/Rome e viene ricontrollata ogni minuto, anche nelle pagine già aperte. Il testo è definito in `frontend/src/app/app.component.ts`.
 
+L’app d’asta non mostra più il banner temporaneo del 1 ottobre, per lasciare spazio alla schermata anche su mobile.
+
 La pagina pubblica `landing-page/index.html` indica separatamente la prossima asta del 1 ottobre 2026. Questa data statica va aggiornata per le sessioni successive; pubblicare su Cloudflare Pages mantenendo lo storico pubblico già presente.
 
 Il riepilogo pubblico pre-asta è in `landing-page/riepilogo/index.html`, raggiungibile dalla home a `/riepilogo/`. Contiene soltanto nomi delle squadre, crediti residui e posti liberi per ruolo, estratti da PROD mediante l'API autenticata `/api/participant/summary`. I posti sono calcolati sottraendo i conteggi in rosa dai massimali PROD (3/8/8/6). È una fotografia statica datata, senza credenziali o accesso pubblico alle API e senza aggiornamenti durante l'asta; per aggiornarla occorre rileggere PROD, rigenerare la pagina e pubblicare insieme agli asset e allo storico esistenti.
@@ -355,3 +357,53 @@ Il database esistente usa ancora l'aggiornamento schema Hibernate. Dopo l'asta v
 La migrazione `database/migrations/20260930_market_departures.sql` aggiunge lo stato di import dei partiti alla configurazione e la sessione di partenza ai calciatori. Applicarla secondo la procedura DEV/PROD documentata prima del deploy. Le sessioni esistenti richiedono la conferma del nuovo passaggio dei partiti. L’endpoint admin `POST /api/admin/players/market-departures` accetta multipart `file` e `confirm` (false per anteprima).
 
 L'abbinamento dei proprietari accetta il nome completo del partecipante o il nome della squadra tra parentesi. Riconosce automaticamente le equivalenze confermate `Em Fallét` / `Em Fallet`, `Johnson Oil` / `johnsons oil` e `3/4 e 1 Gazzosa` / `34 e 1 Gazzosa`. Altre differenze restano segnalate per evitare abbinamenti a proprietari diversi.
+
+## Controllo settimanale dell’archivio Drive
+
+`config/archive-job.json` identifica esclusivamente Classifiche, Coppa Italia e Statistiche dell’archivio FantaCaporaso 2026–2027. Mercato Ottobre è escluso. Il job usa Codex CLI autenticato con ChatGPT e il plugin Google Drive collegato: non richiede l’avvio di Docker o PROD. Richiede macOS, l’utente collegato, il Mac acceso e la connessione disponibile. Per le esecuzioni locali non serve tenere aperta questa chat; una connessione scaduta o revocata richiede un nuovo accesso.
+
+Installare il LaunchAgent con `./scripts/install-archive-job.sh`. Il programma valida il fuso del Mac (`Europe/Rome`), installa `~/Library/LaunchAgents/it.fantacaporaso.archive-preview.plist` e pianifica ogni martedì alle 09:00. Non esegue il job all’installazione. macOS può recuperare una scadenza persa durante il sonno al risveglio; il Mac deve restare sveglio per garantire l’orario esatto. Le esecuzioni consumano l’utilizzo Codex dell’account autenticato.
+
+Comandi operativi:
+
+```bash
+./scripts/run-archive-job.sh --check-only  # Accesso, inventario e differenze; niente contenuti o nuove pagine
+./scripts/run-archive-job.sh               # Prepara l’anteprima, senza pubblicazione
+./scripts/preview-archive-job.sh           # Ultima anteprima completa, http://127.0.0.1:8787
+./scripts/preview-archive-job.sh --review  # Candidato con anomalie da controllare; Ctrl-C per fermare il server
+launchctl print gui/$(id -u)/it.fantacaporaso.archive-preview
+```
+
+Il runner crea uno spazio di lavoro temporaneo isolato, copiando il sito e l’ultima anteprima completata. Il prompt già approvato è in `scripts/archive-job/prompt.md`: consente soltanto aggiornamenti dell’anteprima delle pagine `/classifiche/`, `/risultati/`, `/coppa-italia/`, `/statistiche/` e relativi dati/asset. Il ramo principale, le credenziali, i database, l’asta e il sito pubblicato non vengono modificati. La prima preparazione acquisisce l’intero inventario; le successive confrontano ID, nome, MIME e data di modifica, riutilizzando sorgenti invariati. Le immagini statistiche possono essere mostrate originali e ingrandibili, senza estrarre valori non verificabili. Nella Coppa non ancora iniziata gli 0–0 sono segnaposto “Da giocare”. Le tabelle finanziarie dei workbook non vengono pubblicate.
+
+Stato, sorgenti, log e rapporti sono privati e ignorati da Git, in `.local/archive-job/`. `last-run.json` indica l’ultimo esito; `runs/<id>/workspace/report.md` contiene il rapporto; `latest-preview` punta all’ultima anteprima completa. Un controllo `--check-only` non aggiorna l’inventario di riferimento. Un errore, un inventario incompleto o un file rimosso non sostituisce l’anteprima valida né avanza la baseline: viene segnalato `needs_attention`. Una preparazione con anomalie può conservare un candidato consultabile con `--review`; `review-preview` resta separato dall’ultima anteprima completa e dalla baseline. Il blocco `flock` impedisce esecuzioni sovrapposte. Il tempo massimo è configurato nel JSON (predefinito 30 minuti). Se un riferimento di download temporaneo non è materializzabile ma Drive resta leggibile, il runner supporta una compatibilità inline esplicitamente limitata a 1 MiB per file: la risposta viene materializzata automaticamente tra i sorgenti privati; mai nelle pagine pubbliche. Il limite è `legacyInlineMaxBytes` nel JSON. Non sono previste notifiche email o pubblicazione automatica: il gestore consulta il rapporto e approva separatamente il rilascio.
+
+Per sospendere il job: `launchctl bootout gui/$(id -u)/it.fantacaporaso.archive-preview`; per riattivarlo eseguire l’installer. Il programma di test `python3 scripts/archive-job/test_run.py` verifica differenze, isolamento degli output, mantenimento della baseline in caso di errore e blocco delle esecuzioni sovrapposte, senza chiamare Drive o Codex.
+
+### Recupero storico pubblico del mercato del 1 ottobre 2026
+
+I reset tra chiamate frammentavano `auctionSessionCode`. Le nuove chiamate e le assegnazioni manuali usano ora il codice del mercato attivo, che resta invariato attraverso reset e skip. Nessuna modifica ai contratti API o allo schema DB.
+
+`scripts/history/prepare-public-history.py <cartella-output>` prepara una fotografia pubblica delle 63 aste competitive verificate del 1 ottobre 2026, interrogando PROD in sola lettura. La cartella deve già contenere una copia completa del sito pubblico (home, riepilogo, storico e asset). Il comando conserva le altre sessioni pubblicate e indica “Aggiornato il”, senza dichiarare concluso il mercato. Blocca il recupero se il numero di aste cambia: il filtro di data e il codice mercato sono specifici di questo recupero, non un raggruppamento automatico dei mercati futuri.
+
+Pubblicare separatamente questa cartella sul progetto Cloudflare Pages `fantacaporaso`, ramo `main`. La pubblicazione statica non richiede il riavvio dell’app d’asta. Il normale archivio delle sessioni concluse resta gestito da “Concludi l’intera sessione”; la correzione backend richiede il consueto deploy con mercato e round inattivi.
+
+### Correzione assegnazione manuale e svincolati — 2 ottobre 2026
+
+`PUT /api/admin/assignments/{playerId}` è ora dichiarato in `AdminResource`, sotto `/api/admin`, evitando il 404 causato dalla selezione della risorsa REST più specifica. Mantiene payload, ruolo admin e verifiche di capienza/crediti; assegna o corregge il costo e salva lo storico competitivo quando risolve il round corrente.
+
+L’import di mercato disattiva i vecchi svincolati assenti dal file confermato, lasciando intatte le rose. Conserva gli assenti con una cessione `RELEASE` valida della stessa sessione: il primo listone Drive precede le cessioni. I giocatori esplicitamente marcati partiti della sessione non vengono riattivati da successivi import. L’anteprima elenca i liberi da escludere prima della conferma.
+
+Per il mercato di ottobre il riferimento definitivo è il PDF “03 Mercato di Ottobre (Listone Liberi)”, con 268 giocatori, non il primo Excel dei 200 liberi. Patric e Milik sono esclusi come partiti su indicazione del gestore. Il confronto completo è in `docs/reviews/2026-10-02-svincolati.md`; la migrazione puntuale `database/migrations/20261002_reconcile_market_free_players.sql` richiede backup e verifica della sessione prima dell’applicazione. Riconciliazione applicata anche a PROD il 2 ottobre 2026 dopo backup validato: 62 svincolati disattivati, Patric e Milik marcati partiti; rose, partecipanti e account verificati identici prima e dopo.
+
+Lo stato round persistito in DEV può contenere quattro campi residui della prenotazione sospesa (`reservationRequired`, `phase`, `reservedUsers`, `biddingDurationSeconds`). Il caricamento scarta solo questi campi noti, mantenendo gli altri dati del round e la validazione degli ulteriori campi sconosciuti. Non abilita la prenotazione né cambia i payload HTTP. Il test HTTP dell’assegnazione manuale usa anche questo stato legacy, per verificare il caso reale presente in DEV.
+
+Dopo un’assegnazione manuale riuscita del giocatore mostrato, la schermata admin estrae automaticamente il successivo anche se non era stato avviato un round. La risposta HTTP e la notifica WebSocket condividono il controllo del giocatore corrente e il blocco delle estrazioni concorrenti: non producono una doppia estrazione. Le correzioni fuori turno e gli errori di assegnazione mantengono la chiamata corrente.
+
+Le assegnazioni manuali mostrano una conferma con giocatore, partecipante e costo. Il campo opzionale `lastAssignment` nello stato round e nel DTO conserva l’ultimo esito, sia manuale sia d’asta; il riepilogo admin resta visibile anche tra le chiamate e dopo il ricaricamento. `previousAssignment` resta disponibile per compatibilità. Un’assegnazione fuori turno aggiorna il riepilogo senza chiudere né cambiare le offerte dell’altro round attivo. Nessuna migrazione di schema necessaria: lo stato è JSON persistito.
+
+### Ricerca della chiamata in asta
+
+In amministrazione, **Cerca calciatore** cerca per nome e ruolo tra gli svincolati attivi chiamabili, inclusi quelli già saltati nel giro. **Chiama** registra la scelta nella cronologia del giro e aggiorna il ruolo; le offerte partono solo con **Avvia offerte**. La selezione è riservata agli amministratori e viene rifiutata durante un round aperto. I portieri seguono le verifiche dei pacchetti da tre e delle porte già assegnate. Non modifica rose, crediti o gli altri skip.
+
+API amministrative: `GET /api/random/search?q=...&role=...` (massimo 50 risultati, almeno due caratteri) e `POST /api/random/select` con `{ "playerId": 123 }`. La selezione restituisce 400 per un calciatore non disponibile e 409 durante un round aperto.

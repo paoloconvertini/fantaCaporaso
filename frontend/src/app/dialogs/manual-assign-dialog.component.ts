@@ -86,6 +86,8 @@ export class ManualAssignDialogComponent {
         if (!this.selectedPlayer || !this.selectedParticipantId || this.amount < this.minimumAmount) return;
         this.dialogRef.close({
             playerId: this.selectedPlayer.id,
+            playerName: this.selectedPlayer.name,
+            playerTeam: this.selectedPlayer.team,
             participantId: this.selectedParticipantId,
             amount: this.amount
         });

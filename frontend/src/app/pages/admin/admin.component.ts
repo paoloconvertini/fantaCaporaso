@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { AdminApiService } from '../../services/admin-api.service';
+import { SearchCallDialogComponent } from '../../dialogs/search-call-dialog.component';
 import { ManualAssignDialogComponent } from '../../dialogs/manual-assign-dialog.component';
 import {Round} from "../../models/round.model";
 import {MatSnackBar} from "@angular/material/snack-bar";
@@ -28,6 +29,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     remainingCount = 0;
     value = 0;
     loadingAssign = false;
+    private drawingNextPlayer = false;
     skipping = false;
     participantCount = 0;
     availablePlayers = 0;
@@ -44,6 +46,30 @@ export class AdminComponent implements OnInit, OnDestroy {
         private dialog: MatDialog,
         private snackBar: MatSnackBar
     ) {}
+
+    searchingPlayer = false;
+
+    get canSearchPlayer(): boolean {
+        return this.auctionReady && !this.drawingNextPlayer && !this.searchingPlayer
+            && !(this.round && !this.round.closed);
+    }
+
+    openPlayerSearch() {
+        if (!this.canSearchPlayer) return;
+        this.searchingPlayer = true;
+        this.dialog.open(SearchCallDialogComponent, { width: '620px', maxWidth: '95vw' })
+            .afterClosed().subscribe(selected => {
+                this.searchingPlayer = false;
+                if (!selected) return;
+                this.player = selected.name;
+                this.team = selected.team;
+                this.prole = selected.role;
+                this.role = selected.role;
+                this.value = selected.value;
+                this.refreshRemaining();
+                this.snackBar.open(`${selected.name} pronto: premi Avvia offerte`, 'OK', { duration: 4000 });
+            });
+    }
 
     toggleSummary(open?: boolean) {
         this.summaryOpen = (open !== undefined) ? open : !this.summaryOpen;
@@ -160,7 +186,7 @@ export class AdminComponent implements OnInit, OnDestroy {
                     const closedId = payload.roundId || null;
                     if (!closedId || this.lastHandledClosedRoundId !== closedId) {
                         this.lastHandledClosedRoundId = closedId;
-                        this.loadNextPlayer();
+                        this.advanceAssignedPlayer(payload.player, payload.playerTeam);
                     }
                 }
             }
@@ -199,6 +225,10 @@ export class AdminComponent implements OnInit, OnDestroy {
                 this.showError('Errore chiusura round', err);
             }
         });
+    }
+
+    get latestAssignment(): any {
+        return this.round?.lastAssignment || this.round?.previousAssignment || null;
     }
 
     get sortedBids() {
@@ -420,10 +450,20 @@ export class AdminComponent implements OnInit, OnDestroy {
                     result.playerId,
                     result.participantId,
                     result.amount
-                ).subscribe(() => {
+                ).subscribe(response => {
+                    const assignment = response?.assignment;
+                    if (assignment) {
+                        this.round = this.round || { closed: true, bids: {} };
+                        this.round.lastAssignment = assignment;
+                    }
+                    const message = assignment
+                        ? `${assignment.player} assegnato a ${assignment.winner} per ${assignment.amount} ${assignment.amount === 1 ? 'credito' : 'crediti'}`
+                        : 'Assegnazione completata';
+                    this.snackBar.open(message, 'Chiudi', { duration: 4000 });
                     this.load();
                     this.refreshRemaining();
                     this.loadingAssign = false;
+                    this.advanceAssignedPlayer(result.playerName, result.playerTeam);
                 }, (err) => {
                     this.loadingAssign = false;
                     this.showError('Errore assegnazione manuale', err);
@@ -449,7 +489,15 @@ export class AdminComponent implements OnInit, OnDestroy {
         });
     }
 
+    private advanceAssignedPlayer(player: string, team: string): void {
+        if (this.player === player && this.team === team) {
+            this.loadNextPlayer();
+        }
+    }
+
     private loadNextPlayer(): void {
+        if (this.drawingNextPlayer || this.searchingPlayer) return;
+        this.drawingNextPlayer = true;
         this.adminApi.randomNext().subscribe({
             next: (d) => {
                 if (!d) {
@@ -463,9 +511,11 @@ export class AdminComponent implements OnInit, OnDestroy {
                     this.prole = d.role || '';
                     this.value = d.value || 0;
                 }
+                this.drawingNextPlayer = false;
                 this.refreshRemaining();
             },
             error: (err) => {
+                this.drawingNextPlayer = false;
                 this.showError('Errore estrazione giocatore', err);
             }
         });

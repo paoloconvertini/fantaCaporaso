@@ -44,6 +44,15 @@ public class AuctionService {
     EntityManager entityManager;
 
     @Transactional
+    public synchronized PlayerEntity selectCalledPlayer(Long playerId) {
+        RoundState current = get();
+        if (current != null && !current.closed) {
+            throw new IllegalStateException("Concludi il round attivo prima di cambiare chiamata");
+        }
+        return dbService.selectCallable(playerId);
+    }
+
+    @Transactional
     public synchronized RoundState get() {
         if (state == null) {
             state = loadCurrentState();
@@ -84,9 +93,9 @@ public class AuctionService {
                 ? new HashSet<>(allowedUsers)
                 : null;
         s.tieUsers = null;
-        s.auctionSessionCode = previous != null && previous.auctionSessionCode != null
-                ? previous.auctionSessionCode : UUID.randomUUID().toString();
+        s.auctionSessionCode = auctionSessionCode(previous);
         s.previousAssignment = lastAssignment(previous);
+        s.lastAssignment = s.previousAssignment;
         boolean tieBreakRound = allowedUsers != null && !allowedUsers.isEmpty()
                 && previous != null && previous.tieUsers != null && !previous.tieUsers.isEmpty();
         if (tieBreakRound) {
@@ -299,6 +308,7 @@ public class AuctionService {
             // 🔹 Salvataggio su DB
             if (p != null && player != null) {
                 dbService.markAssigned(state.roundId, player, p.id, chargedAmount);
+                state.lastAssignment = assignmentSummary(player, p, chargedAmount);
             }
         } else {
             // Parità: spareggio
@@ -377,7 +387,7 @@ public class AuctionService {
         if (state == null) {
             state = new RoundState();
             state.roundId = UUID.randomUUID().toString();
-            state.auctionSessionCode = UUID.randomUUID().toString();
+            state.auctionSessionCode = auctionSessionCode(null);
         }
         state.player = playerName;
         state.playerTeam = team;
@@ -388,6 +398,7 @@ public class AuctionService {
             state.historyBids = new LinkedHashMap<>();
         }
         state.winner = new Winner(p.id, p.name, amount);
+        state.lastAssignment = assignmentSummary(player, p, amount);
         state.closed = true;
         state.tieUsers = null;
         state.allowedUsers = null;
@@ -398,8 +409,28 @@ public class AuctionService {
         return state;
     }
 
+    private String auctionSessionCode(RoundState previous) {
+        var market = mercatoService.getConfig();
+        if (market != null && market.attiva && market.sessionCode != null) {
+            return market.sessionCode;
+        }
+        return previous != null && previous.auctionSessionCode != null
+                ? previous.auctionSessionCode : UUID.randomUUID().toString();
+    }
+
+    private AssignmentSummary assignmentSummary(PlayerEntity player, ParticipantEntity participant, double amount) {
+        AssignmentSummary summary = new AssignmentSummary();
+        summary.player = player.name;
+        summary.playerTeam = player.team;
+        summary.playerRole = player.role.name();
+        summary.winner = participant.name;
+        summary.amount = amount;
+        return summary;
+    }
+
     private AssignmentSummary lastAssignment(RoundState previous) {
         if (previous == null) return null;
+        if (previous.lastAssignment != null) return previous.lastAssignment;
         if (previous.closed && previous.winner != null) {
             AssignmentSummary summary = new AssignmentSummary();
             summary.player = previous.player;
@@ -417,7 +448,7 @@ public class AuctionService {
      * un acquisto esistente. La spesa e il rimborso derivano sempre dalle righe rosa.
      */
     @Transactional
-    public synchronized void adminAssign(Long playerId, Long participantId, Double amount) {
+    public synchronized RoundState adminAssign(Long playerId, Long participantId, Double amount) {
         if (playerId == null || participantId == null || amount == null || amount <= 0) {
             throw new IllegalArgumentException("Giocatore, partecipante e importo sono obbligatori");
         }
@@ -437,8 +468,16 @@ public class AuctionService {
         if (state == null) {
             state = loadCurrentState();
         }
-        if (state != null && Objects.equals(state.player, player.name)
-                && Objects.equals(state.playerTeam, player.team)) {
+        if (state == null) {
+            state = new RoundState();
+            state.roundId = UUID.randomUUID().toString();
+            state.auctionSessionCode = auctionSessionCode(null);
+            state.closed = true;
+        }
+        state.lastAssignment = assignmentSummary(player, participant, amount);
+        boolean currentRound = state != null && Objects.equals(state.player, player.name)
+                && Objects.equals(state.playerTeam, player.team);
+        if (currentRound) {
             state.winner = new Winner(participant.id, participant.name, amount);
             state.closed = true;
             state.tieUsers = null;
@@ -446,7 +485,10 @@ public class AuctionService {
             persistCurrentState();
             socket.broadcast("ROUND_CLOSED", RoundDto.toDto(state));
         }
+        persistCurrentState();
+        if (!currentRound) socket.broadcast("ROUND_UPDATED", Map.of("reason", "manual_assignment"));
         socket.broadcast("SUMMARY_UPDATED", Map.of("reason", "admin_assignment_corrected"));
+        return currentRound ? state : null;
     }
 
     private void validateNewAssignment(ParticipantEntity participant, PlayerEntity player, double amount) {
@@ -616,7 +658,13 @@ public class AuctionService {
         }
 
         try {
-            return objectMapper.readValue(entity.stateJson, RoundState.class);
+            var saved = objectMapper.readTree(entity.stateJson);
+            if (saved instanceof com.fasterxml.jackson.databind.node.ObjectNode round) {
+                // Campi salvati dai test della prenotazione, ora sospesa.
+                // La compatibilità riguarda solo lo stato persistito, non i payload API.
+                round.remove(List.of("reservationRequired", "phase", "reservedUsers", "biddingDurationSeconds"));
+            }
+            return objectMapper.treeToValue(saved, RoundState.class);
         } catch (JsonProcessingException e) {
             throw new IllegalStateException("Impossibile leggere lo stato round salvato", e);
         }

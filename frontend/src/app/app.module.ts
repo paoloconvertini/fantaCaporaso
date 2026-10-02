@@ -31,6 +31,7 @@ import { MobilePlayersComponent } from './pages/mobile/mobile-players/mobile-pla
 import { MobileRostersComponent } from './pages/mobile/mobile-rosters/mobile-rosters.component';
 import { UploadPlayersComponent } from './pages/upload-players/upload-players.component';
 import { UploadRostersComponent } from './pages/upload-rosters/upload-rosters.component';
+import { SearchCallDialogComponent } from './dialogs/search-call-dialog.component';
 import { ManualAssignDialogComponent } from './dialogs/manual-assign-dialog.component';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -76,6 +77,7 @@ export function initializeAuth(auth: AuthService) {
         UploadPlayersComponent,
         UploadRostersComponent,
         ManualAssignDialogComponent,
+        SearchCallDialogComponent,
         ToolbarComponent,
         AppShellComponent,
         RosaComponent,

@@ -34,6 +34,46 @@ class AuctionServiceTest {
 
     @Test
     @TestTransaction
+    void marketSessionSurvivesRoundResetAndSkip() {
+        cleanAuctionData();
+        MercatoConfigEntity.deleteAll();
+        MercatoConfigEntity market = new MercatoConfigEntity();
+        market.attiva = true;
+        market.numeroMercato = 1;
+        market.sessionCode = java.util.UUID.randomUUID().toString();
+        market.partitiImportati = true;
+        market.quotazioniAggiornate = true;
+        market.persist();
+        PlayerEntity first = player("Primo mercato stabile", "Roma", Role.DIFENSORE, 8);
+        PlayerEntity second = player("Secondo mercato stabile", "Roma", Role.DIFENSORE, 8);
+        assertEquals(market.sessionCode, auctionService.start(first.name, first.team,
+                first.role.name(), null, "NONE", 8, null).auctionSessionCode);
+        auctionService.reset();
+        assertEquals(market.sessionCode, auctionService.start(second.name, second.team,
+                second.role.name(), null, "NONE", 8, null).auctionSessionCode);
+        auctionService.resetForSkip();
+        assertEquals(market.sessionCode, auctionService.start(first.name, first.team,
+                first.role.name(), null, "NONE", 8, null).auctionSessionCode);
+    }
+
+    @Test
+    @TestTransaction
+    void manualAssignmentUsesMarketSessionAfterReset() {
+        cleanAuctionData();
+        MercatoConfigEntity.deleteAll();
+        MercatoConfigEntity market = new MercatoConfigEntity();
+        market.attiva = true;
+        market.numeroMercato = 1;
+        market.sessionCode = java.util.UUID.randomUUID().toString();
+        market.persist();
+        ParticipantEntity owner = participant("Manuale mercato stabile", 500);
+        PlayerEntity player = player("Manuale sessione stabile", "Roma", Role.DIFENSORE, 8);
+        assertEquals(market.sessionCode, auctionService.manualAssign(owner.id,
+                player.name, player.team, 1D).auctionSessionCode);
+    }
+
+    @Test
+    @TestTransaction
     void cannotConcludeSessionWhileRoundIsActive() {
         cleanAuctionData();
         player("Round ancora attivo", "Roma", Role.DIFENSORE, 8);
@@ -77,7 +117,37 @@ class AuctionServiceTest {
         assertEquals(participant.id, roster.participant.id);
         assertEquals(7D, roster.amount);
         assertTrue(player.assigned);
-        assertNull(auctionService.get());
+        assertEquals(player.name, auctionService.get().lastAssignment.player);
+        assertEquals(participant.name, auctionService.get().lastAssignment.winner);
+        assertEquals(7D, auctionService.get().lastAssignment.amount);
+    }
+
+    @Test
+    @TestTransaction
+    void manualSummaryPersistsWithoutChangingAnotherActiveRound() {
+        cleanAuctionData();
+        ParticipantEntity owner = participant("Ultima manuale", 500);
+        PlayerEntity manual = player("Assegnato fuori turno", "Roma", Role.DIFENSORE, 8);
+        PlayerEntity called = player("Round da conservare", "Inter", Role.DIFENSORE, 8);
+        RoundState active = auctionService.start(called.name, called.team, called.role.name(), 30, "NONE", 8, null);
+        String roundId = active.roundId;
+        Long end = active.endEpochMillis;
+        auctionService.adminAssign(manual.id, owner.id, 3D);
+        RoundState result = auctionService.get();
+        assertFalse(result.closed);
+        assertEquals(called.name, result.player);
+        assertEquals(roundId, result.roundId);
+        assertEquals(end, result.endEpochMillis);
+        assertTrue(result.bids.isEmpty());
+        assertEquals(manual.name, result.lastAssignment.player);
+        assertEquals(owner.name, result.lastAssignment.winner);
+        assertEquals(3D, result.lastAssignment.amount);
+        assertTrue(((AuctionRoundStateEntity) AuctionRoundStateEntity.findById("current"))
+                .stateJson.contains("Assegnato fuori turno"));
+        auctionService.close();
+        RoundState next = auctionService.start(called.name, called.team, called.role.name(), 30, "NONE", 8, null);
+        assertEquals(manual.name, next.previousAssignment.player);
+        assertEquals(manual.name, next.lastAssignment.player);
     }
 
     @Test

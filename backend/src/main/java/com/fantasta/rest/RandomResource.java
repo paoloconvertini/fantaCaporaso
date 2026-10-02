@@ -30,6 +30,36 @@ public class RandomResource {
     @Inject
     RoundSocket socket;
 
+    @GET
+    @Path("/search")
+    @RolesAllowed("admin")
+    public Response search(@QueryParam("q") String query, @QueryParam("role") String role) {
+        Role filter = Role.fromString(role);
+        if (role != null && !role.isBlank() && filter == null)
+            return Response.status(400).entity(Map.of("error", "Ruolo non valido")).build();
+        return Response.ok(db.searchCallable(query, filter).stream().map(this::calledPlayer).toList()).build();
+    }
+
+    @POST
+    @Path("/select")
+    @RolesAllowed("admin")
+    public Response select(Map<String, Long> body) {
+        try {
+            PlayerEntity player = auctionService.selectCalledPlayer(body == null ? null : body.get("playerId"));
+            selector.setRole(player.role);
+            return Response.ok(calledPlayer(player)).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(400).entity(Map.of("error", e.getMessage())).build();
+        } catch (IllegalStateException e) {
+            return Response.status(409).entity(Map.of("error", e.getMessage())).build();
+        }
+    }
+
+    private Map<String, Object> calledPlayer(PlayerEntity player) {
+        return Map.of("id", player.id, "name", player.name, "team", player.team,
+                "role", player.role.name(), "value", player.valore == null ? 0 : player.valore);
+    }
+
     /**
      * 🔹 Imposta il ruolo (solo admin)
      */

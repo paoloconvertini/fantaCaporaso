@@ -20,6 +20,7 @@ public class RoundState {
     public String tieBreak;           // NONE | FIRST | RANDOM
     public Set<Long> allowedUsers;
     public AssignmentSummary previousAssignment;
+    public AssignmentSummary lastAssignment;
     public String auctionSessionCode;
     public String competitiveOriginRoundId;
     public Map<String, Double> historyBids = new LinkedHashMap<>();

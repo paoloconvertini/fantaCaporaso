@@ -10,6 +10,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
 import java.util.*;
+import java.time.Instant;
 import java.util.concurrent.ThreadLocalRandom;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -174,6 +175,37 @@ public class DbService {
         return picked;
     }
 
+
+    public boolean callable(PlayerEntity player) {
+        if (player == null || !Boolean.TRUE.equals(player.active)
+                || RosterEntity.count("player.id", player.id) > 0) return false;
+        if (player.role != Role.PORTIERE) return true;
+        try {
+            return goalkeeperPackage(player).size() == 3;
+        } catch (IllegalStateException e) {
+            return false;
+        }
+    }
+
+    public List<PlayerEntity> searchCallable(String text, Role role) {
+        if (text == null || text.trim().length() < 2) return List.of();
+        String needle = text.trim().toLowerCase(Locale.ROOT);
+        return PlayerEntity.<PlayerEntity>list("active = true order by name").stream()
+                .filter(p -> role == null || p.role == role)
+                .filter(p -> p.name.toLowerCase(Locale.ROOT).contains(needle))
+                .filter(this::callable).limit(50).toList();
+    }
+
+    @Transactional
+    public PlayerEntity selectCallable(Long playerId) {
+        PlayerEntity player = playerId == null ? null : PlayerEntity.findById(playerId);
+        if (!callable(player)) throw new IllegalArgumentException("Calciatore non disponibile per la chiamata");
+        GiroPickEntity pick = new GiroPickEntity();
+        pick.giro = ensureCurrentGiro();
+        pick.player = player;
+        pick.persist();
+        return player;
+    }
 
     /** Ultimo giocatore pescato nel giro che NON è stato assegnato (per “indietro”). */
     public PlayerEntity lastUnassignedPick(Long giroId) {
@@ -488,6 +520,13 @@ public class DbService {
             player.persist();
         }
 
+        // Il listone non deve lasciare acquistabili i vecchi svincolati assenti.
+        for (MarketPlayerChangeDto excluded : result.departedFree) {
+            PlayerEntity player = PlayerEntity.findById(excluded.playerId);
+            player.active = false;
+            player.deletedAt = Instant.now();
+        }
+
         mercatoService.markQuotesUpdated();
         return result;
     }
@@ -516,9 +555,16 @@ public class DbService {
             if (!existing.active || rows.containsKey(norm(existing.name))) continue;
             MarketPlayerChangeDto change = change(existing, null, ownerNames(existing));
             if (change.assigned) result.departedInRosters.add(change);
-            else result.departedFree.add(change);
+            else if (!hasValidRelease(existing, session)) result.departedFree.add(change);
         }
         return result;
+    }
+
+    private boolean hasValidRelease(PlayerEntity player, String session) {
+        if (Objects.equals(player.departureSessionCode, session)) return false;
+        return MarketMovementEntity.count(
+                "player = ?1 and sessionCode = ?2 and type = ?3 and revertedAt is null",
+                player, session, MarketMovementEntity.Type.RELEASE) > 0;
     }
 
     private MarketPlayerChangeDto change(PlayerEntity existing, ExcelRow row, List<String> owners) {
