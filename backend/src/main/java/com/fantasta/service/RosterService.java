@@ -605,14 +605,19 @@ public class RosterService {
                     throw new IllegalStateException("Il template FantaMaster contiene una squadra non presente: " + teamName);
                 }
 
-                List<RosterEntity> roster = RosterEntity.list("participant = ?1 order by player.role, player.name", participant);
+                int remaining = participantService.remainingCreditsById(participant.id, participant.totalCredits);
+                sheet.getRow(0).getCell(0).setCellValue(teamName + " (" + remaining + " MILIONI)");
+                List<RosterEntity> roster = RosterEntity.list("participant = ?1", participant);
+                roster.sort(Comparator.comparing((RosterEntity entry) -> entry.player.role)
+                        .thenComparing(entry -> entry.player.name));
                 int rowIndex = 2;
                 for (RosterEntity entry : roster) {
                     Row row = sheet.createRow(rowIndex++);
                     row.createCell(0).setCellValue(entry.player.name);
                     row.createCell(1).setCellValue(entry.player.team);
                     row.createCell(2).setCellValue(fantaMasterRole(entry.player.role));
-                    row.createCell(3).setCellValue(entry.amount == null ? 0 : entry.amount);
+                    row.createCell(3).setCellValue(java.math.BigDecimal.valueOf(entry.amount == null ? 0D : entry.amount)
+                            .stripTrailingZeros().toPlainString());
                 }
             }
 

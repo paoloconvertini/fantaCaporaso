@@ -93,7 +93,7 @@ class RosterFantaMasterServiceTest {
 
             var sheet = workbook.getSheet("4. Corto Muso");
             assertNotNull(sheet);
-            assertEquals("Corto Muso (500 MILIONI)", sheet.getRow(0).getCell(0).getStringCellValue());
+            assertEquals("Corto Muso (483 MILIONI)", sheet.getRow(0).getCell(0).getStringCellValue());
             assertEquals("Nome", sheet.getRow(1).getCell(0).getStringCellValue());
             assertTrue(sheet.getMergedRegions().contains(new CellRangeAddress(0, 0, 0, 3)));
             assertEquals(originalMergedRegions, sheet.getMergedRegions());
@@ -102,7 +102,7 @@ class RosterFantaMasterServiceTest {
             int playerRow = findRow(sheet, "Giocatore round trip");
             assertTrue(playerRow >= 2);
             assertEquals("D", sheet.getRow(playerRow).getCell(2).getStringCellValue());
-            assertEquals(17D, sheet.getRow(playerRow).getCell(3).getNumericCellValue());
+            assertEquals("17", sheet.getRow(playerRow).getCell(3).getStringCellValue());
             assertEquals(2, playerRow);
             assertEquals(2, sheet.getLastRowNum());
         }
@@ -114,6 +114,37 @@ class RosterFantaMasterServiceTest {
         RosterEntity restored = RosterEntity.find("participant = ?1 and player = ?2", participant, player).firstResult();
         assertNotNull(restored);
         assertEquals(17D, restored.amount);
+    }
+
+    @Test
+    @TestTransaction
+    void exportsActualResidualsAndOriginalCellTypesInGoalkeeperFirstOrder() throws Exception {
+        removeAuthenticationTestParticipants();
+        createLeagueParticipants();
+        ParticipantEntity participant = ParticipantEntity.find("name", "Corto Muso").firstResult();
+        participant.totalCredits = 81;
+        for (Role role : new Role[]{Role.ATTACCANTE, Role.CENTROCAMPISTA, Role.DIFENSORE, Role.PORTIERE}) {
+            PlayerEntity player = new PlayerEntity();
+            player.name = "Export " + role; player.team = "Roma"; player.role = role;
+            player.valore = 1D; player.active = true; player.assigned = true; player.persist();
+            RosterEntity entry = new RosterEntity(); entry.participant = participant;
+            entry.player = player; entry.amount = 17D; entry.persist();
+        }
+        try (var workbook = WorkbookFactory.create(new ByteArrayInputStream(service.exportFantaMaster()))) {
+            var sheet = workbook.getSheet("4. Corto Muso");
+            assertEquals("Corto Muso (13 MILIONI)", sheet.getRow(0).getCell(0).getStringCellValue());
+            String[] roles = {"P", "D", "C", "A"};
+            for (int i = 0; i < roles.length; i++) {
+                assertEquals(roles[i], sheet.getRow(i + 2).getCell(2).getStringCellValue());
+                for (int column = 0; column < 4; column++)
+                    assertEquals(org.apache.poi.ss.usermodel.CellType.STRING, sheet.getRow(i + 2).getCell(column).getCellType());
+                assertEquals("17", sheet.getRow(i + 2).getCell(3).getStringCellValue());
+            }
+        }
+        participant.totalCredits = 68;
+        try (var workbook = WorkbookFactory.create(new ByteArrayInputStream(service.exportFantaMaster()))) {
+            assertEquals("Corto Muso (0 MILIONI)", workbook.getSheet("4. Corto Muso").getRow(0).getCell(0).getStringCellValue());
+        }
     }
 
     private void createLeagueParticipants() {
