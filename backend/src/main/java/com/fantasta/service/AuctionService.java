@@ -725,8 +725,8 @@ public class AuctionService {
         }
 
         // Pulisce giro e skip
-        GiroEntity.deleteAll();
         SkipEntity.deleteAll();
+        GiroEntity.deleteAll();
         state = null;
         clearCurrentState();
         socket.broadcast("SUMMARY_UPDATED", Map.of("reason", "auction_closed", "sessionId", session.id));

@@ -565,6 +565,7 @@ class AuctionServiceTest {
         mini.sourceSessionCode = market.sessionCode; mini.sourceDate = java.time.LocalDate.now();
         mini.status = MiniAuctionSessionEntity.Status.CLOSED; mini.persist();
         AuctionHistoryEntity miniHistory = closingHistory(other, owner, mini.code);
+        var giro = createGiroWithSkip(first);
         long entries = RosterEntity.count();
         double spent = participantService.spentCreditsById(owner.id);
         var result = auctionService.closeAuction();
@@ -580,6 +581,14 @@ class AuctionServiceTest {
         assertEquals(entries, RosterEntity.count());
         assertEquals(spent, participantService.spentCreditsById(owner.id));
         assertTrue(auctionService.closeAuction().alreadyClosed());
+        assertEquals(0L, GiroEntity.count("id", giro));
+        assertEquals(0L, SkipEntity.count());
+    }
+
+    private Long createGiroWithSkip(PlayerEntity player) {
+        GiroEntity giro = new GiroEntity(); giro.persist();
+        SkipEntity skip = new SkipEntity(); skip.giro = giro; skip.player = player; skip.persist();
+        return giro.id;
     }
 
     private AuctionHistoryEntity closingHistory(PlayerEntity player, ParticipantEntity owner, String code) {
