@@ -313,7 +313,7 @@ L'app mostra un avviso globale per l'asta del 1 ottobre 2026: il 30 settembre in
 
 L’app d’asta non mostra più il banner temporaneo del 1 ottobre, per lasciare spazio alla schermata anche su mobile.
 
-La pagina pubblica `landing-page/index.html` indica separatamente la prossima asta del 1 ottobre 2026. Questa data statica va aggiornata per le sessioni successive; pubblicare su Cloudflare Pages mantenendo lo storico pubblico già presente.
+La pagina pubblica `landing-page/index.html` mostra il mercato chiuso e il pulsante asta disabilitato, senza collegamento all’applicazione. Per le sessioni successive aggiornare stato, data e accesso; pubblicare su Cloudflare Pages mantenendo lo storico pubblico e il riepilogo già presenti.
 
 Il riepilogo pubblico pre-asta è in `landing-page/riepilogo/index.html`, raggiungibile dalla home a `/riepilogo/`. Contiene soltanto nomi delle squadre, crediti residui e posti liberi per ruolo, estratti da PROD mediante l'API autenticata `/api/participant/summary`. I posti sono calcolati sottraendo i conteggi in rosa dai massimali PROD (3/8/8/6). È una fotografia statica datata, senza credenziali o accesso pubblico alle API e senza aggiornamenti durante l'asta; per aggiornarla occorre rileggere PROD, rigenerare la pagina e pubblicare insieme agli asset e allo storico esistenti.
 
