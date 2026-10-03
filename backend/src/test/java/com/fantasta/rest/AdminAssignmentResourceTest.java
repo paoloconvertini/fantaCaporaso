@@ -19,14 +19,14 @@ class AdminAssignmentResourceTest {
     @Inject AuctionService auctionService;
 
     @Test
-    void adminHttpRouteCanReturnAnAlreadyClosedAuction() {
+    void adminHttpRouteCanReturnAnAlreadyClosedAuctionAndRetryPendingPublication() throws Exception {
         auctionService.reset();
         String code = java.util.UUID.randomUUID().toString();
         Long sessionId = QuarkusTransaction.requiringNew().call(() -> {
             AuctionHistorySessionEntity session = new AuctionHistorySessionEntity();
             session.sessionCode = code; session.label = "HTTP chiusura";
             session.closedAt = java.time.LocalDateTime.now(); session.rosterSnapshotId = 123L;
-            session.publishStatus = "LOCAL_ONLY"; session.publishAttempts = 0; session.persist();
+            session.publishStatus = "PENDING"; session.publishAttempts = 0; session.persist();
             AuctionRoundStateEntity state = new AuctionRoundStateEntity(); state.id = "current";
             state.stateJson = "{\"closed\":true,\"auctionSessionCode\":\"" + code + "\"}";
             state.persist(); return session.id;
@@ -41,6 +41,13 @@ class AdminAssignmentResourceTest {
                     .body("sessionCode", equalTo(code)).body("alreadyClosed", equalTo(true));
             given().contentType(ContentType.JSON).body("{}")
                     .post("/api/admin/close-auction").then().statusCode(401);
+            String status = "PENDING";
+            for (int attempt = 0; attempt < 50 && "PENDING".equals(status); attempt++) {
+                Thread.sleep(50);
+                status = QuarkusTransaction.requiringNew().call(() ->
+                        AuctionHistorySessionEntity.<AuctionHistorySessionEntity>findById(sessionId).publishStatus);
+            }
+            assertNotEquals("PENDING", status);
         } finally {
             auctionService.reset();
             QuarkusTransaction.requiringNew().run(() -> AuctionHistorySessionEntity.deleteById(sessionId));

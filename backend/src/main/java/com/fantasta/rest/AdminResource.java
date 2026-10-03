@@ -42,11 +42,11 @@ public class AdminResource {
 
     @POST
     @Path("/close-auction")
-    @Transactional
     @RolesAllowed("admin")
     public Response closeAuction() {
         var result = auctionService.closeAuction();
-        if (!result.alreadyClosed()) {
+        // Il servizio ha già confermato la transazione prima che il worker legga lo snapshot.
+        if (!result.alreadyClosed() || "PENDING".equals(result.publishStatus()) || "FAILED".equals(result.publishStatus())) {
             vertx.executeBlocking(() -> {
                 auctionArchiveService.generateAndPublishBestEffort(result.id());
                 return null;

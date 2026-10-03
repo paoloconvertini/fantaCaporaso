@@ -447,6 +447,6 @@ individuale di acquisto non vengono presentate come assegnazioni annullabili.
 
 ### Chiusura ufficiale del mercato di riparazione
 
-La rotta amministrativa `POST /api/admin/close-auction` è gestita da `AdminResource` e richiede il ruolo admin.
+La rotta amministrativa `POST /api/admin/close-auction` è gestita da `AdminResource` e richiede il ruolo admin. La generazione dello storico pubblico parte dopo la conferma della transazione; ripetere la chiusura ritenta una pubblicazione in attesa o fallita senza creare un altro snapshot.
 
 Prima di concludere l'asta, completare e chiudere la mini asta eventualmente attiva. La chiusura salva una fotografia delle rose finali, archivia la sessione con il codice del mercato e disattiva il mercato impostandone la data di fine. Include i round delle mini aste collegate e riconcilia gli storici precedenti con codice separato tramite calciatore, assegnatario e giorno dell'acquisto verificato. Gli storici già archiviati non vengono riattribuiti. La chiusura ripetuta restituisce la sessione già conclusa; rose, costi, crediti e puntate restano conservati.
