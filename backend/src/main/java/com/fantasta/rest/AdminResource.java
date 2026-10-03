@@ -5,6 +5,7 @@ import com.fantasta.model.RoundState;
 import com.fantasta.dto.AdminAssignmentDto;
 import com.fantasta.service.AuctionService;
 import com.fantasta.service.AuctionHistoryService;
+import com.fantasta.service.AuctionArchiveService;
 import com.fantasta.service.AppUserService;
 import com.fantasta.util.ParticipantsLoader;
 import io.quarkus.logging.Log;
@@ -14,6 +15,7 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import io.vertx.core.Vertx;
 
 @Path("/api/admin")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -31,6 +33,28 @@ public class AdminResource {
 
     @Inject
     AuctionHistoryService auctionHistoryService;
+
+    @Inject
+    AuctionArchiveService auctionArchiveService;
+
+    @Inject
+    Vertx vertx;
+
+    @POST
+    @Path("/close-auction")
+    @Transactional
+    @RolesAllowed("admin")
+    public Response closeAuction() {
+        var result = auctionService.closeAuction();
+        if (!result.alreadyClosed()) {
+            vertx.executeBlocking(() -> {
+                auctionArchiveService.generateAndPublishBestEffort(result.id());
+                return null;
+            }, false).onFailure(error -> Log.debugf(error,
+                    "Archivio statico non generato per la sessione %s", result.sessionCode()));
+        }
+        return Response.ok(result).build();
+    }
 
     /**
      * Inserisce i partecipanti iniziali dal classpath

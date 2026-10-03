@@ -53,9 +53,6 @@ public class AuctionResource {
     @Inject
     AuctionHistoryService auctionHistoryService;
 
-    @Inject
-    AuctionArchiveService auctionArchiveService;
-
     @PostConstruct
     void recoverPersistedTimer() {
         vertx.executeBlocking(() -> service.get())
@@ -248,22 +245,6 @@ public class AuctionResource {
             return null;
         }, false).onFailure(error -> LOG.debugf(error,
                 "Storico puntate non salvato per il round %s", round == null ? null : round.roundId));
-    }
-
-    @POST
-    @Path("/admin/close-auction")
-    @Transactional
-    @RolesAllowed("admin")
-    public Response closeAuction() {
-        var result = service.closeAuction();
-        if (!result.alreadyClosed()) {
-            vertx.executeBlocking(() -> {
-                auctionArchiveService.generateAndPublishBestEffort(result.id());
-                return null;
-            }, false).onFailure(error -> LOG.debugf(error,
-                    "Archivio statico non generato per la sessione %s", result.sessionCode()));
-        }
-        return Response.ok(result).build();
     }
 
 }
