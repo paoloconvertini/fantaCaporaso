@@ -689,31 +689,40 @@ public class AuctionService {
             throw new IllegalStateException("Concludi o annulla prima il round attivo");
         }
 
-        if (state == null || state.auctionSessionCode == null) {
+        var market = mercatoService.getConfig();
+        boolean closingMarket = market != null && market.attiva && market.sessionCode != null;
+        if (!closingMarket && (state == null || state.auctionSessionCode == null)) {
             AuctionHistorySessionEntity latest = AuctionHistorySessionEntity.find(
                     "order by closedAt desc").firstResult();
             if (latest != null) return closeDto(latest, true);
             throw new IllegalStateException("Nessuna sessione d'asta da concludere");
         }
 
+        String sessionCode = closingMarket ? market.sessionCode : state.auctionSessionCode;
         AuctionHistorySessionEntity existing = AuctionHistorySessionEntity.find(
-                "sessionCode", state.auctionSessionCode).firstResult();
+                "sessionCode", sessionCode).firstResult();
         if (existing != null) return closeDto(existing, true);
 
         AuctionHistorySessionEntity session = new AuctionHistorySessionEntity();
-        session.sessionCode = state.auctionSessionCode;
-        var market = mercatoService.getConfig();
-        session.label = market != null && market.attiva
+        session.sessionCode = sessionCode;
+        session.label = closingMarket
                 ? "Mercato di riparazione " + market.numeroMercato
                 : "Asta iniziale";
         session.closedAt = LocalDateTime.now();
         session.rosterSnapshotId = System.currentTimeMillis();
         session.publishStatus = "PENDING";
         session.publishAttempts = 0;
+        if (closingMarket) consolidateMarketHistory(sessionCode);
         session.persistAndFlush();
 
         List<RosterEntity> roster = RosterEntity.listAll();
         RosterService.createRoster(session.rosterSnapshotId, roster);
+
+        if (closingMarket) {
+            market.attiva = false;
+            market.fineSessione = session.closedAt;
+            mercatoService.updateConfig(market);
+        }
 
         // Pulisce giro e skip
         GiroEntity.deleteAll();
@@ -722,6 +731,27 @@ public class AuctionService {
         clearCurrentState();
         socket.broadcast("SUMMARY_UPDATED", Map.of("reason", "auction_closed", "sessionId", session.id));
         return closeDto(session, false);
+    }
+
+    private void consolidateMarketHistory(String marketCode) {
+        Set<String> codes = new HashSet<>();
+        codes.add(marketCode);
+        MiniAuctionSessionEntity.<MiniAuctionSessionEntity>list("sourceSessionCode", marketCode)
+                .forEach(mini -> codes.add(mini.code));
+        List<RosterAcquisitionEntity> acquisitions = RosterAcquisitionEntity.list("sessionCode", marketCode);
+        Set<String> archivedCodes = new HashSet<>();
+        AuctionHistorySessionEntity.<AuctionHistorySessionEntity>listAll()
+                .forEach(session -> archivedCodes.add(session.sessionCode));
+        for (AuctionHistoryEntity history : AuctionHistoryEntity.<AuctionHistoryEntity>listAll()) {
+            if (archivedCodes.contains(history.sessionCode)) continue;
+            boolean verifiedLegacyPurchase = acquisitions.stream().anyMatch(acquisition ->
+                    Objects.equals(acquisition.player.id, history.playerId)
+                            && Objects.equals(acquisition.participant.id, history.winnerParticipantId)
+                            && acquisition.acquiredAt.toLocalDate().equals(history.closedAt.toLocalDate()));
+            if (codes.contains(history.sessionCode) || verifiedLegacyPurchase) {
+                history.sessionCode = marketCode;
+            }
+        }
     }
 
     private AuctionSessionCloseDto closeDto(AuctionHistorySessionEntity session, boolean alreadyClosed) {

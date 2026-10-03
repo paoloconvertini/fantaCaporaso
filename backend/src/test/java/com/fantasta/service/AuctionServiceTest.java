@@ -539,6 +539,59 @@ class AuctionServiceTest {
         assertEquals(participant.id, closed.winner.participantId);
     }
 
+    @Test
+    @TestTransaction
+    void closesMarketIncludingVerifiedLegacyRoundsAndItsMiniAuctionOnly() {
+        cleanAuctionData();
+        MercatoConfigEntity.deleteAll();
+        MercatoConfigEntity market = new MercatoConfigEntity();
+        market.attiva = true; market.numeroMercato = 1;
+        market.sessionCode = java.util.UUID.randomUUID().toString(); market.persist();
+        ParticipantEntity owner = participant("Chiusura mercato", 500);
+        PlayerEntity first = player("Primo storico legacy", "Roma", Role.DIFENSORE, 8);
+        PlayerEntity second = player("Secondo storico legacy", "Roma", Role.DIFENSORE, 8);
+        auctionService.manualAssign(owner.id, first.name, first.team, 1D);
+        auctionService.manualAssign(owner.id, second.name, second.team, 1D);
+        AuctionHistoryEntity firstHistory = closingHistory(first, owner, java.util.UUID.randomUUID().toString());
+        AuctionHistoryEntity secondHistory = closingHistory(second, owner, java.util.UUID.randomUUID().toString());
+        AuctionHistoryEntity previousDate = closingHistory(first, owner, java.util.UUID.randomUUID().toString());
+        previousDate.closedAt = previousDate.closedAt.minusDays(1);
+        String previousCode = previousDate.sessionCode;
+        PlayerEntity other = player("Altro mercato", "Roma", Role.DIFENSORE, 8);
+        AuctionHistoryEntity unrelated = closingHistory(other, owner, java.util.UUID.randomUUID().toString());
+        String unrelatedCode = unrelated.sessionCode;
+        MiniAuctionSessionEntity mini = new MiniAuctionSessionEntity();
+        mini.code = java.util.UUID.randomUUID().toString(); mini.label = "Mini conclusa";
+        mini.sourceSessionCode = market.sessionCode; mini.sourceDate = java.time.LocalDate.now();
+        mini.status = MiniAuctionSessionEntity.Status.CLOSED; mini.persist();
+        AuctionHistoryEntity miniHistory = closingHistory(other, owner, mini.code);
+        long entries = RosterEntity.count();
+        double spent = participantService.spentCreditsById(owner.id);
+        var result = auctionService.closeAuction();
+        assertEquals(market.sessionCode, result.sessionCode());
+        assertEquals("Mercato di riparazione 1", result.label());
+        assertEquals(market.sessionCode, firstHistory.sessionCode);
+        assertEquals(market.sessionCode, secondHistory.sessionCode);
+        assertEquals(market.sessionCode, miniHistory.sessionCode);
+        assertEquals(previousCode, previousDate.sessionCode);
+        assertEquals(unrelatedCode, unrelated.sessionCode);
+        assertFalse(market.attiva);
+        assertNotNull(market.fineSessione);
+        assertEquals(entries, RosterEntity.count());
+        assertEquals(spent, participantService.spentCreditsById(owner.id));
+        assertTrue(auctionService.closeAuction().alreadyClosed());
+    }
+
+    private AuctionHistoryEntity closingHistory(PlayerEntity player, ParticipantEntity owner, String code) {
+        AuctionHistoryEntity history = new AuctionHistoryEntity();
+        history.roundId = java.util.UUID.randomUUID().toString(); history.sessionCode = code;
+        history.playerId = player.id; history.playerName = player.name; history.playerTeam = player.team;
+        history.playerRole = player.role.name(); history.playerValue = 8;
+        history.winnerParticipantId = owner.id; history.winnerName = owner.name;
+        history.winningAmount = 1D; history.bidderCount = 2; history.closedAt = java.time.LocalDateTime.now();
+        history.persist(); return history;
+    }
+
     private void cleanAuctionData() {
         auctionService.reset();
     }

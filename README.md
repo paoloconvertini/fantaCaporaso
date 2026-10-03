@@ -444,3 +444,7 @@ L'annullamento è bloccato con round aperto, modifiche successive o costo/rosa n
 Applicare `20261002_purchase_revert.sql` dopo le migrazioni mini/acquisizioni/backfill:
 registra anche i 98 acquisti verificati del primo ottobre. Le rose importate senza prova
 individuale di acquisto non vengono presentate come assegnazioni annullabili.
+
+### Chiusura ufficiale del mercato di riparazione
+
+Prima di concludere l'asta, completare e chiudere la mini asta eventualmente attiva. La chiusura salva una fotografia delle rose finali, archivia la sessione con il codice del mercato e disattiva il mercato impostandone la data di fine. Include i round delle mini aste collegate e riconcilia gli storici precedenti con codice separato tramite calciatore, assegnatario e giorno dell'acquisto verificato. Gli storici già archiviati non vengono riattribuiti. La chiusura ripetuta restituisce la sessione già conclusa; rose, costi, crediti e puntate restano conservati.
