@@ -583,11 +583,13 @@ class AuctionServiceTest {
         assertTrue(auctionService.closeAuction().alreadyClosed());
         assertEquals(0L, GiroEntity.count("id", giro));
         assertEquals(0L, SkipEntity.count());
+        assertEquals(0L, GiroPickEntity.count());
     }
 
     private Long createGiroWithSkip(PlayerEntity player) {
         GiroEntity giro = new GiroEntity(); giro.persist();
         SkipEntity skip = new SkipEntity(); skip.giro = giro; skip.player = player; skip.persist();
+        GiroPickEntity pick = new GiroPickEntity(); pick.giro = giro; pick.player = player; pick.persist();
         return giro.id;
     }
 

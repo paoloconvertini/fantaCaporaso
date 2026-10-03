@@ -725,6 +725,7 @@ public class AuctionService {
         }
 
         // Pulisce giro e skip
+        GiroPickEntity.deleteAll();
         SkipEntity.deleteAll();
         GiroEntity.deleteAll();
         state = null;
