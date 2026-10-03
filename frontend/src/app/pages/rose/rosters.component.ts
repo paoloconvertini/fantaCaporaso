@@ -55,8 +55,22 @@ export class RostersComponent implements OnInit {
                 link.click();
                 URL.revokeObjectURL(url);
             },
-            error: () => this.snackBar.open('Errore esportazione rose', 'Chiudi', { duration: 3500 })
+            error: error => this.showExportError(error.error)
         });
+    }
+
+    private async showExportError(body: unknown): Promise<void> {
+        let message = 'Errore esportazione rose';
+        try {
+            const response: unknown = body instanceof Blob ? JSON.parse(await body.text()) : body;
+            if (response && typeof response === 'object') {
+                const detail = (response as { message?: unknown }).message;
+                if (typeof detail === 'string' && detail.trim()) message = detail;
+            }
+        } catch {
+            // Mantiene il messaggio generico quando la risposta non contiene JSON valido.
+        }
+        this.snackBar.open(message, 'Chiudi');
     }
 
     editValue(player: Player): void {

@@ -584,6 +584,13 @@ public class RosterService {
 
     @Transactional
     public byte[] exportFantaMaster() {
+        List<RosterEntity> zeroCostEntries = RosterEntity.list("amount is null or amount = 0 order by participant.name, player.name");
+        if (!zeroCostEntries.isEmpty()) {
+            throw new BadRequestException("Export FantaMaster bloccato: non accetta calciatori con costo 0. Correggi i costi di: "
+                    + zeroCostEntries.stream()
+                    .map(entry -> entry.participant.name + " — " + entry.player.name)
+                    .collect(Collectors.joining("; ")));
+        }
         InputStream template = Thread.currentThread().getContextClassLoader()
                 .getResourceAsStream(FANTAMASTER_ROSTERS_TEMPLATE);
         if (template == null) {

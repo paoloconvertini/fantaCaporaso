@@ -147,6 +147,28 @@ class RosterFantaMasterServiceTest {
         }
     }
 
+    @Test
+    @TestTransaction
+    void blocksExportAndListsAllPlayersWhoseCostsWouldBeZero() {
+        removeAuthenticationTestParticipants();
+        createLeagueParticipants();
+        ParticipantEntity participant = ParticipantEntity.find("name", "GenSim e 2 Monelli").firstResult();
+        for (String name : new String[]{"Bleve", "Penev"}) {
+            PlayerEntity player = new PlayerEntity();
+            player.name = name; player.team = "Lecce"; player.role = Role.PORTIERE;
+            player.valore = 1D; player.active = true; player.assigned = true; player.persist();
+            RosterEntity entry = new RosterEntity(); entry.participant = participant;
+            entry.player = player; entry.amount = 0D; entry.persist();
+        }
+        var error = assertThrows(jakarta.ws.rs.BadRequestException.class, service::exportFantaMaster);
+        assertTrue(error.getMessage().contains("GenSim e 2 Monelli — Bleve"));
+        assertTrue(error.getMessage().contains("GenSim e 2 Monelli — Penev"));
+        assertTrue(error.getMessage().contains("costo 0"));
+        assertEquals(2, RosterEntity.count("participant", participant));
+        RosterEntity bleve = RosterEntity.find("participant = ?1 and player.name = ?2", participant, "Bleve").firstResult();
+        assertEquals(0D, bleve.amount);
+    }
+
     private void createLeagueParticipants() {
         for (String name : new String[]{
                 "34 e 1 Gazzosa", "ASTON BIRRA", "Atletico ma non troppo", "Corto Muso",
