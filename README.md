@@ -463,6 +463,6 @@ L’avvio di un round restituisce HTTP 400 per dati o disponibilità non validi 
 
 ### Pagina pubblica con asta chiusa
 
-Con mercato e round chiusi, `./scripts/close-auction-site.sh` spegne backend e frontend prod e serve una pagina statica “Asta chiusa” su `https://asta.fantacaporaso.it`, lasciando attivi soltanto il proxy e il tunnel pubblico. PostgreSQL non viene modificato. La pagina riusa la grafica della home, con link a home, storico e riepilogo; le API e i WebSocket restituiscono 503. Il pulsante asta della home resta disabilitato.
+Con mercato e round chiusi, `./scripts/close-auction-site.sh` spegne backend e frontend prod e serve una pagina statica “Asta chiusa” su `https://asta.fantacaporaso.it`, lasciando attivi soltanto il proxy e il tunnel pubblico. PostgreSQL non viene modificato. La pagina riusa la grafica della home, con link a home e storico; le API e i WebSocket restituiscono 503. Il pulsante asta della home resta disabilitato.
 
 L’overlay `docker-compose.closed.yml` monta `deploy/nginx/closed.conf` e la cartella statica `landing-page`. `./scripts/start-auction.sh` riavvia lo stack con la configurazione ordinaria, rimuovendo l’overlay della pagina chiusa. `./scripts/stop-auction.sh` spegne anche proxy e tunnel: usarlo solo quando non serve mantenere la pagina pubblica. Durante la modalità chiusa `status-auction.sh` segnala backend spento, come previsto.
