@@ -1,0 +1,3410 @@
+{
+  "updatedAt": "2026-10-05T17:00:20+02:00",
+  "teamCount": 16,
+  "rosteredCount": 400,
+  "freeCount": 167,
+  "players": [
+    {
+      "name": "Abankwah",
+      "club": "Udinese",
+      "role": "DIFENSORE",
+      "owner": "YOUNG BOYS UNITED"
+    },
+    {
+      "name": "Aboukhlal",
+      "club": "Torino",
+      "role": "ATTACCANTE",
+      "owner": "YOUNG BOYS UNITED"
+    },
+    {
+      "name": "Adams",
+      "club": "Torino",
+      "role": "ATTACCANTE",
+      "owner": "YOUNG BOYS UNITED"
+    },
+    {
+      "name": "Adams A",
+      "club": "Venezia",
+      "role": "ATTACCANTE",
+      "owner": "johnsons oil"
+    },
+    {
+      "name": "Addai",
+      "club": "Como",
+      "role": "ATTACCANTE",
+      "owner": "MessiMale"
+    },
+    {
+      "name": "Adopo",
+      "club": "Cagliari",
+      "role": "CENTROCAMPISTA",
+      "owner": "S.S. 30Lance"
+    },
+    {
+      "name": "Adorante",
+      "club": "Venezia",
+      "role": "ATTACCANTE",
+      "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "Adzic",
+      "club": "Sassuolo",
+      "role": "CENTROCAMPISTA",
+      "owner": "VIKING 84"
+    },
+    {
+      "name": "Akanji",
+      "club": "Inter",
+      "role": "DIFENSORE",
+      "owner": "SOLO LEVELING"
+    },
+    {
+      "name": "Akarakiri",
+      "club": "Cagliari",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Akinsanmiro",
+      "club": "Monza",
+      "role": "CENTROCAMPISTA",
+      "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Akpoguma",
+      "club": "Frosinone",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Alaba",
+      "club": "Udinese",
+      "role": "DIFENSORE",
+      "owner": "GenSim e 2 Monelli"
+    },
+    {
+      "name": "Alajbegovic",
+      "club": "Juventus",
+      "role": "ATTACCANTE",
+      "owner": "SOLO LEVELING"
+    },
+    {
+      "name": "Ale Gomes",
+      "club": "Venezia",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Alex Valle",
+      "club": "Como",
+      "role": "DIFENSORE",
+      "owner": "VIKING 84"
+    },
+    {
+      "name": "Alhassane",
+      "club": "Bologna",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Alisson Santos",
+      "club": "Napoli",
+      "role": "CENTROCAMPISTA",
+      "owner": "Ruverpool"
+    },
+    {
+      "name": "Almqvist",
+      "club": "Parma",
+      "role": "ATTACCANTE",
+      "owner": "S.S. 30Lance"
+    },
+    {
+      "name": "Amey",
+      "club": "Frosinone",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Amondarain",
+      "club": "Bologna",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Amorim",
+      "club": "Genoa",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Anguissa",
+      "club": "Napoli",
+      "role": "CENTROCAMPISTA",
+      "owner": "KECAVOLI"
+    },
+    {
+      "name": "Antov",
+      "club": "Monza",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Arena A",
+      "club": "Roma",
+      "role": "ATTACCANTE",
+      "owner": null
+    },
+    {
+      "name": "Arizala",
+      "club": "Udinese",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Assane Diao",
+      "club": "Como",
+      "role": "ATTACCANTE",
+      "owner": "VIKING 84"
+    },
+    {
+      "name": "Atta",
+      "club": "Fiorentina",
+      "role": "CENTROCAMPISTA",
+      "owner": "DanPao Salisburgo FC"
+    },
+    {
+      "name": "Aurelio",
+      "club": "Cagliari",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Badiashile",
+      "club": "Napoli",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Bakola",
+      "club": "Sassuolo",
+      "role": "CENTROCAMPISTA",
+      "owner": "ASTON BIRRA"
+    },
+    {
+      "name": "Bakoune",
+      "club": "Monza",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Baldanzi",
+      "club": "Genoa",
+      "role": "CENTROCAMPISTA",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "Balentien",
+      "club": "Milan",
+      "role": "ATTACCANTE",
+      "owner": null
+    },
+    {
+      "name": "Balerdi",
+      "club": "Roma",
+      "role": "DIFENSORE",
+      "owner": "VIKING 84"
+    },
+    {
+      "name": "Ballabio",
+      "club": "Monza",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Barella",
+      "club": "Inter",
+      "role": "CENTROCAMPISTA",
+      "owner": "VIKING 84"
+    },
+    {
+      "name": "Bartesaghi",
+      "club": "Milan",
+      "role": "DIFENSORE",
+      "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "Basic",
+      "club": "Venezia",
+      "role": "CENTROCAMPISTA",
+      "owner": "SOLO LEVELING"
+    },
+    {
+      "name": "Bastoni",
+      "club": "Inter",
+      "role": "DIFENSORE",
+      "owner": "34 e 1 Gazzosa"
+    },
+    {
+      "name": "Baturina",
+      "club": "Como",
+      "role": "CENTROCAMPISTA",
+      "owner": "YOUNG BOYS UNITED"
+    },
+    {
+      "name": "Bayo",
+      "club": "Udinese",
+      "role": "ATTACCANTE",
+      "owner": "34 e 1 Gazzosa"
+    },
+    {
+      "name": "Belahyane",
+      "club": "Lazio",
+      "role": "CENTROCAMPISTA",
+      "owner": "KECAVOLI"
+    },
+    {
+      "name": "Belghali",
+      "club": "Torino",
+      "role": "DIFENSORE",
+      "owner": "johnsons oil"
+    },
+    {
+      "name": "Bella-Kotchap",
+      "club": "Venezia",
+      "role": "DIFENSORE",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "Bellanova",
+      "club": "Atalanta",
+      "role": "DIFENSORE",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "Berardi",
+      "club": "Sassuolo",
+      "role": "ATTACCANTE",
+      "owner": "S.S. 30Lance"
+    },
+    {
+      "name": "Berardi L",
+      "club": "Venezia",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Berisha M",
+      "club": "Lecce",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Bernabe'",
+      "club": "Parma",
+      "role": "CENTROCAMPISTA",
+      "owner": "johnsons oil"
+    },
+    {
+      "name": "Bernardeschi",
+      "club": "Bologna",
+      "role": "CENTROCAMPISTA",
+      "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "Bernasconi",
+      "club": "Atalanta",
+      "role": "DIFENSORE",
+      "owner": "YOUNG BOYS UNITED"
+    },
+    {
+      "name": "Bertola",
+      "club": "Udinese",
+      "role": "DIFENSORE",
+      "owner": "GenSim e 2 Monelli"
+    },
+    {
+      "name": "Beto",
+      "club": "Fiorentina",
+      "role": "ATTACCANTE",
+      "owner": "Em Fallet"
+    },
+    {
+      "name": "Beukema",
+      "club": "Napoli",
+      "role": "DIFENSORE",
+      "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "Bijlow",
+      "club": "Genoa",
+      "role": "PORTIERE",
+      "owner": "MessiMale"
+    },
+    {
+      "name": "Biraghi",
+      "club": "Torino",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Birindelli",
+      "club": "Monza",
+      "role": "DIFENSORE",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "Birligea",
+      "club": "Frosinone",
+      "role": "ATTACCANTE",
+      "owner": "Ruverpool"
+    },
+    {
+      "name": "Bisseck",
+      "club": "Inter",
+      "role": "DIFENSORE",
+      "owner": "johnsons oil"
+    },
+    {
+      "name": "Bleve",
+      "club": "Lecce",
+      "role": "PORTIERE",
+      "owner": "GenSim e 2 Monelli"
+    },
+    {
+      "name": "Bobcek",
+      "club": "Frosinone",
+      "role": "ATTACCANTE",
+      "owner": "KECAVOLI"
+    },
+    {
+      "name": "Boga",
+      "club": "Juventus",
+      "role": "ATTACCANTE",
+      "owner": "MessiMale"
+    },
+    {
+      "name": "Boloca",
+      "club": "Sassuolo",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Bondo",
+      "club": "Milan",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Bonny",
+      "club": "Inter",
+      "role": "ATTACCANTE",
+      "owner": "johnsons oil"
+    },
+    {
+      "name": "Bordon",
+      "club": "Lazio",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Bovio",
+      "club": "Inter",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Bowie",
+      "club": "Sassuolo",
+      "role": "ATTACCANTE",
+      "owner": "YOUNG BOYS UNITED"
+    },
+    {
+      "name": "Bracaglia",
+      "club": "Frosinone",
+      "role": "DIFENSORE",
+      "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Braganca",
+      "club": "Torino",
+      "role": "CENTROCAMPISTA",
+      "owner": "34 e 1 Gazzosa"
+    },
+    {
+      "name": "Bremer",
+      "club": "Juventus",
+      "role": "DIFENSORE",
+      "owner": "DanPao Salisburgo FC"
+    },
+    {
+      "name": "Brescianini",
+      "club": "Fiorentina",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Britschgi",
+      "club": "Parma",
+      "role": "DIFENSORE",
+      "owner": "johnsons oil"
+    },
+    {
+      "name": "Buongiorno",
+      "club": "Napoli",
+      "role": "DIFENSORE",
+      "owner": "GenSim e 2 Monelli"
+    },
+    {
+      "name": "Busio",
+      "club": "Venezia",
+      "role": "CENTROCAMPISTA",
+      "owner": "MessiMale"
+    },
+    {
+      "name": "Butez",
+      "club": "Como",
+      "role": "PORTIERE",
+      "owner": "S.S. 30Lance"
+    },
+    {
+      "name": "Cabal",
+      "club": "Juventus",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Cacciamani",
+      "club": "Torino",
+      "role": "CENTROCAMPISTA",
+      "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "Caleta-Car",
+      "club": "Sassuolo",
+      "role": "DIFENSORE",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "Calhanoglu",
+      "club": "Inter",
+      "role": "CENTROCAMPISTA",
+      "owner": "34 e 1 Gazzosa"
+    },
+    {
+      "name": "Calo'",
+      "club": "Frosinone",
+      "role": "CENTROCAMPISTA",
+      "owner": "Ruverpool"
+    },
+    {
+      "name": "Calvani",
+      "club": "Frosinone",
+      "role": "DIFENSORE",
+      "owner": "KECAVOLI"
+    },
+    {
+      "name": "Camarda",
+      "club": "Milan",
+      "role": "ATTACCANTE",
+      "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "Cambiaghi",
+      "club": "Bologna",
+      "role": "ATTACCANTE",
+      "owner": "Em Fallet"
+    },
+    {
+      "name": "Cambiaso",
+      "club": "Juventus",
+      "role": "DIFENSORE",
+      "owner": "34 e 1 Gazzosa"
+    },
+    {
+      "name": "Cancellieri",
+      "club": "Lazio",
+      "role": "ATTACCANTE",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "Cande",
+      "club": "Sassuolo",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Caprile",
+      "club": "Cagliari",
+      "role": "PORTIERE",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "Caqueret",
+      "club": "Como",
+      "role": "CENTROCAMPISTA",
+      "owner": "ASTON BIRRA"
+    },
+    {
+      "name": "Carboni A",
+      "club": "Monza",
+      "role": "DIFENSORE",
+      "owner": "34 e 1 Gazzosa"
+    },
+    {
+      "name": "Carboni F",
+      "club": "Parma",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Carlos Augusto",
+      "club": "Inter",
+      "role": "DIFENSORE",
+      "owner": "ASTON BIRRA"
+    },
+    {
+      "name": "Carnesecchi",
+      "club": "Atalanta",
+      "role": "PORTIERE",
+      "owner": "DanPao Salisburgo FC"
+    },
+    {
+      "name": "Casadei",
+      "club": "Torino",
+      "role": "CENTROCAMPISTA",
+      "owner": "VIKING 84"
+    },
+    {
+      "name": "Casale",
+      "club": "Bologna",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Castro S",
+      "club": "Roma",
+      "role": "ATTACCANTE",
+      "owner": "DanPao Salisburgo FC"
+    },
+    {
+      "name": "Cataldi",
+      "club": "Lazio",
+      "role": "CENTROCAMPISTA",
+      "owner": "GenSim e 2 Monelli"
+    },
+    {
+      "name": "Caviglia",
+      "club": "Parma",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Celik",
+      "club": "Juventus",
+      "role": "DIFENSORE",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "Chakvetadze",
+      "club": "Udinese",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Chalobah",
+      "club": "Como",
+      "role": "DIFENSORE",
+      "owner": "S.S. 30Lance"
+    },
+    {
+      "name": "Christensen",
+      "club": "Fiorentina",
+      "role": "PORTIERE",
+      "owner": "SOLO LEVELING"
+    },
+    {
+      "name": "Chukwueze",
+      "club": "Milan",
+      "role": "CENTROCAMPISTA",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "Cichella",
+      "club": "Frosinone",
+      "role": "CENTROCAMPISTA",
+      "owner": "MessiMale"
+    },
+    {
+      "name": "Ciervo",
+      "club": "Cagliari",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Cinquegrano",
+      "club": "Sassuolo",
+      "role": "CENTROCAMPISTA",
+      "owner": "YOUNG BOYS UNITED"
+    },
+    {
+      "name": "Cisse A",
+      "club": "Milan",
+      "role": "CENTROCAMPISTA",
+      "owner": "johnsons oil"
+    },
+    {
+      "name": "Cittadini",
+      "club": "Frosinone",
+      "role": "DIFENSORE",
+      "owner": "34 e 1 Gazzosa"
+    },
+    {
+      "name": "Ciurria",
+      "club": "Monza",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Coco S",
+      "club": "Torino",
+      "role": "DIFENSORE",
+      "owner": "SOLO LEVELING"
+    },
+    {
+      "name": "Colombo",
+      "club": "Genoa",
+      "role": "ATTACCANTE",
+      "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Colombo L",
+      "club": "Monza",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Colpani",
+      "club": "Monza",
+      "role": "CENTROCAMPISTA",
+      "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Comert",
+      "club": "Torino",
+      "role": "DIFENSORE",
+      "owner": "S.S. 30Lance"
+    },
+    {
+      "name": "Comotto C",
+      "club": "Milan",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Comuzzo",
+      "club": "Torino",
+      "role": "DIFENSORE",
+      "owner": "DanPao Salisburgo FC"
+    },
+    {
+      "name": "Conceicao",
+      "club": "Juventus",
+      "role": "CENTROCAMPISTA",
+      "owner": "34 e 1 Gazzosa"
+    },
+    {
+      "name": "Contini",
+      "club": "Napoli",
+      "role": "PORTIERE",
+      "owner": "johnsons oil"
+    },
+    {
+      "name": "Correia T",
+      "club": "Venezia",
+      "role": "DIFENSORE",
+      "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "Corvi",
+      "club": "Parma",
+      "role": "PORTIERE",
+      "owner": null
+    },
+    {
+      "name": "Coulibaly L",
+      "club": "Lecce",
+      "role": "CENTROCAMPISTA",
+      "owner": "MessiMale"
+    },
+    {
+      "name": "Cremaschi",
+      "club": "Parma",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Cristante",
+      "club": "Roma",
+      "role": "CENTROCAMPISTA",
+      "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Croci",
+      "club": "Fiorentina",
+      "role": "ATTACCANTE",
+      "owner": null
+    },
+    {
+      "name": "Cutrone",
+      "club": "Monza",
+      "role": "ATTACCANTE",
+      "owner": "DanPao Salisburgo FC"
+    },
+    {
+      "name": "Da Cunha",
+      "club": "Como",
+      "role": "CENTROCAMPISTA",
+      "owner": "DanPao Salisburgo FC"
+    },
+    {
+      "name": "Daffara",
+      "club": "Parma",
+      "role": "PORTIERE",
+      "owner": null
+    },
+    {
+      "name": "Dagasso",
+      "club": "Venezia",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Danilo Veiga",
+      "club": "Lecce",
+      "role": "DIFENSORE",
+      "owner": "KECAVOLI"
+    },
+    {
+      "name": "Davis",
+      "club": "Udinese",
+      "role": "ATTACCANTE",
+      "owner": "KECAVOLI"
+    },
+    {
+      "name": "De Bruyne",
+      "club": "Napoli",
+      "role": "CENTROCAMPISTA",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "De Gea",
+      "club": "Fiorentina",
+      "role": "PORTIERE",
+      "owner": "SOLO LEVELING"
+    },
+    {
+      "name": "De Ketelaere",
+      "club": "Atalanta",
+      "role": "ATTACCANTE",
+      "owner": "KECAVOLI"
+    },
+    {
+      "name": "De Martis",
+      "club": "Parma",
+      "role": "ATTACCANTE",
+      "owner": null
+    },
+    {
+      "name": "De Roon",
+      "club": "Roma",
+      "role": "CENTROCAMPISTA",
+      "owner": "S.S. 30Lance"
+    },
+    {
+      "name": "De Silvestri",
+      "club": "Bologna",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "De Winter",
+      "club": "Milan",
+      "role": "DIFENSORE",
+      "owner": "MessiMale"
+    },
+    {
+      "name": "Deiola",
+      "club": "Cagliari",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Dele Bashiru",
+      "club": "Lazio",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Delprato",
+      "club": "Parma",
+      "role": "DIFENSORE",
+      "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "Dembele A",
+      "club": "Lecce",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Desplanches",
+      "club": "Frosinone",
+      "role": "PORTIERE",
+      "owner": "YOUNG BOYS UNITED"
+    },
+    {
+      "name": "Di Gennaro R",
+      "club": "Inter",
+      "role": "PORTIERE",
+      "owner": "Ruverpool"
+    },
+    {
+      "name": "Di Lorenzo",
+      "club": "Napoli",
+      "role": "DIFENSORE",
+      "owner": "KECAVOLI"
+    },
+    {
+      "name": "Diallo O",
+      "club": "Parma",
+      "role": "ATTACCANTE",
+      "owner": "Em Fallet"
+    },
+    {
+      "name": "Diawara S",
+      "club": "Milan",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Diego Carlos",
+      "club": "Parma",
+      "role": "DIFENSORE",
+      "owner": "Ruverpool"
+    },
+    {
+      "name": "Diego Moreira",
+      "club": "Milan",
+      "role": "CENTROCAMPISTA",
+      "owner": "SOLO LEVELING"
+    },
+    {
+      "name": "Dimarco",
+      "club": "Inter",
+      "role": "DIFENSORE",
+      "owner": "Ruverpool"
+    },
+    {
+      "name": "Diogo Leite",
+      "club": "Lazio",
+      "role": "DIFENSORE",
+      "owner": "SOLO LEVELING"
+    },
+    {
+      "name": "Diouf A",
+      "club": "Inter",
+      "role": "CENTROCAMPISTA",
+      "owner": "YOUNG BOYS UNITED"
+    },
+    {
+      "name": "Dodo D",
+      "club": "Fiorentina",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Doekhi",
+      "club": "Lazio",
+      "role": "DIFENSORE",
+      "owner": "DanPao Salisburgo FC"
+    },
+    {
+      "name": "Doig",
+      "club": "Sassuolo",
+      "role": "DIFENSORE",
+      "owner": "34 e 1 Gazzosa"
+    },
+    {
+      "name": "Dominguez B",
+      "club": "Sassuolo",
+      "role": "ATTACCANTE",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "Dossena A",
+      "club": "Como",
+      "role": "DIFENSORE",
+      "owner": "MessiMale"
+    },
+    {
+      "name": "Douglas Luiz",
+      "club": "Juventus",
+      "role": "CENTROCAMPISTA",
+      "owner": "KECAVOLI"
+    },
+    {
+      "name": "Douvikas",
+      "club": "Como",
+      "role": "ATTACCANTE",
+      "owner": "GenSim e 2 Monelli"
+    },
+    {
+      "name": "Dovbyk",
+      "club": "Bologna",
+      "role": "ATTACCANTE",
+      "owner": "SOLO LEVELING"
+    },
+    {
+      "name": "Dragusin",
+      "club": "Fiorentina",
+      "role": "DIFENSORE",
+      "owner": "Em Fallet"
+    },
+    {
+      "name": "Drameh",
+      "club": "Genoa",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Drobnic",
+      "club": "Parma",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Duncan",
+      "club": "Venezia",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Dybala",
+      "club": "Roma",
+      "role": "ATTACCANTE",
+      "owner": "S.S. 30Lance"
+    },
+    {
+      "name": "Ebosse",
+      "club": "Udinese",
+      "role": "DIFENSORE",
+      "owner": "MessiMale"
+    },
+    {
+      "name": "Ederson J",
+      "club": "Atalanta",
+      "role": "CENTROCAMPISTA",
+      "owner": "DanPao Salisburgo FC"
+    },
+    {
+      "name": "Ehizibue",
+      "club": "Genoa",
+      "role": "DIFENSORE",
+      "owner": "S.S. 30Lance"
+    },
+    {
+      "name": "Ekhator",
+      "club": "Juventus",
+      "role": "ATTACCANTE",
+      "owner": "DanPao Salisburgo FC"
+    },
+    {
+      "name": "Ekkelenkamp",
+      "club": "Udinese",
+      "role": "CENTROCAMPISTA",
+      "owner": "Em Fallet"
+    },
+    {
+      "name": "El Azzouzi",
+      "club": "Bologna",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "El Azzouzi A",
+      "club": "Frosinone",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "El Bilal Toure",
+      "club": "Parma",
+      "role": "ATTACCANTE",
+      "owner": "SOLO LEVELING"
+    },
+    {
+      "name": "El Shaarawy",
+      "club": "Genoa",
+      "role": "CENTROCAMPISTA",
+      "owner": "MessiMale"
+    },
+    {
+      "name": "Ellertsson",
+      "club": "Genoa",
+      "role": "CENTROCAMPISTA",
+      "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "Elmas",
+      "club": "Atalanta",
+      "role": "CENTROCAMPISTA",
+      "owner": "Em Fallet"
+    },
+    {
+      "name": "Elphege",
+      "club": "Parma",
+      "role": "ATTACCANTE",
+      "owner": "ASTON BIRRA"
+    },
+    {
+      "name": "Enem",
+      "club": "Bologna",
+      "role": "ATTACCANTE",
+      "owner": "SOLO LEVELING"
+    },
+    {
+      "name": "Esposito F",
+      "club": "Inter",
+      "role": "ATTACCANTE",
+      "owner": "KECAVOLI"
+    },
+    {
+      "name": "Esposito S",
+      "club": "Sassuolo",
+      "role": "ATTACCANTE",
+      "owner": "DanPao Salisburgo FC"
+    },
+    {
+      "name": "Esteban",
+      "club": "Lecce",
+      "role": "ATTACCANTE",
+      "owner": "johnsons oil"
+    },
+    {
+      "name": "Estupinan",
+      "club": "Milan",
+      "role": "DIFENSORE",
+      "owner": "YOUNG BOYS UNITED"
+    },
+    {
+      "name": "Fabbian",
+      "club": "Parma",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Fadera",
+      "club": "Cagliari",
+      "role": "CENTROCAMPISTA",
+      "owner": "johnsons oil"
+    },
+    {
+      "name": "Fagioli",
+      "club": "Fiorentina",
+      "role": "CENTROCAMPISTA",
+      "owner": "MessiMale"
+    },
+    {
+      "name": "Falcone",
+      "club": "Lecce",
+      "role": "PORTIERE",
+      "owner": "GenSim e 2 Monelli"
+    },
+    {
+      "name": "Fanne",
+      "club": "Venezia",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Farcomeni",
+      "club": "Lazio",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Fatah",
+      "club": "Lecce",
+      "role": "ATTACCANTE",
+      "owner": "ASTON BIRRA"
+    },
+    {
+      "name": "Favasuli",
+      "club": "Napoli",
+      "role": "DIFENSORE",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "Fayed",
+      "club": "Frosinone",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Fazzini",
+      "club": "Cagliari",
+      "role": "CENTROCAMPISTA",
+      "owner": "VIKING 84"
+    },
+    {
+      "name": "Felici",
+      "club": "Cagliari",
+      "role": "ATTACCANTE",
+      "owner": null
+    },
+    {
+      "name": "Ferguson",
+      "club": "Bologna",
+      "role": "CENTROCAMPISTA",
+      "owner": "KECAVOLI"
+    },
+    {
+      "name": "Fini",
+      "club": "Frosinone",
+      "role": "ATTACCANTE",
+      "owner": "ASTON BIRRA"
+    },
+    {
+      "name": "Fitz-Jim",
+      "club": "Torino",
+      "role": "CENTROCAMPISTA",
+      "owner": "VIKING 84"
+    },
+    {
+      "name": "Floriani M",
+      "club": "Lazio",
+      "role": "DIFENSORE",
+      "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Foe Ondoa",
+      "club": "Monza",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Fofana S",
+      "club": "Lecce",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Folorunsho",
+      "club": "Monza",
+      "role": "CENTROCAMPISTA",
+      "owner": "VIKING 84"
+    },
+    {
+      "name": "Forson",
+      "club": "Monza",
+      "role": "ATTACCANTE",
+      "owner": "Em Fallet"
+    },
+    {
+      "name": "Fortini",
+      "club": "Torino",
+      "role": "DIFENSORE",
+      "owner": "MessiMale"
+    },
+    {
+      "name": "Franjic",
+      "club": "Venezia",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Frattesi",
+      "club": "Lazio",
+      "role": "CENTROCAMPISTA",
+      "owner": "SOLO LEVELING"
+    },
+    {
+      "name": "Frendrup",
+      "club": "Genoa",
+      "role": "CENTROCAMPISTA",
+      "owner": "34 e 1 Gazzosa"
+    },
+    {
+      "name": "Frigan",
+      "club": "Parma",
+      "role": "ATTACCANTE",
+      "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Furlanetto",
+      "club": "Lazio",
+      "role": "PORTIERE",
+      "owner": "ASTON BIRRA"
+    },
+    {
+      "name": "Gabbia",
+      "club": "Milan",
+      "role": "DIFENSORE",
+      "owner": "S.S. 30Lance"
+    },
+    {
+      "name": "Gaetano",
+      "club": "Atalanta",
+      "role": "CENTROCAMPISTA",
+      "owner": "Ruverpool"
+    },
+    {
+      "name": "Gagliardini",
+      "club": "Cagliari",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Galassi",
+      "club": "Lazio",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Gallo",
+      "club": "Lecce",
+      "role": "DIFENSORE",
+      "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "Gandelman",
+      "club": "Lecce",
+      "role": "CENTROCAMPISTA",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "Gaspar K",
+      "club": "Lecce",
+      "role": "DIFENSORE",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "Gatti",
+      "club": "Juventus",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Gelli",
+      "club": "Frosinone",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Geubbels",
+      "club": "Lecce",
+      "role": "ATTACCANTE",
+      "owner": "johnsons oil"
+    },
+    {
+      "name": "Ghedjemis",
+      "club": "Frosinone",
+      "role": "ATTACCANTE",
+      "owner": "Ruverpool"
+    },
+    {
+      "name": "Ghidotti",
+      "club": "Parma",
+      "role": "PORTIERE",
+      "owner": null
+    },
+    {
+      "name": "Ghilardi",
+      "club": "Roma",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Ghion",
+      "club": "Sassuolo",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Gila",
+      "club": "Milan",
+      "role": "DIFENSORE",
+      "owner": "johnsons oil"
+    },
+    {
+      "name": "Gilmour",
+      "club": "Napoli",
+      "role": "CENTROCAMPISTA",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "Gineitis",
+      "club": "Torino",
+      "role": "CENTROCAMPISTA",
+      "owner": "ASTON BIRRA"
+    },
+    {
+      "name": "Giovane S",
+      "club": "Napoli",
+      "role": "ATTACCANTE",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "Gnonto",
+      "club": "Fiorentina",
+      "role": "ATTACCANTE",
+      "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "Goglichidze",
+      "club": "Monza",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Goldaniga",
+      "club": "Como",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Gollini",
+      "club": "Roma",
+      "role": "PORTIERE",
+      "owner": "34 e 1 Gazzosa"
+    },
+    {
+      "name": "Gonzalez N",
+      "club": "Juventus",
+      "role": "ATTACCANTE",
+      "owner": "S.S. 30Lance"
+    },
+    {
+      "name": "Gorter",
+      "club": "Lecce",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Grandi",
+      "club": "Venezia",
+      "role": "PORTIERE",
+      "owner": null
+    },
+    {
+      "name": "Grillitsch",
+      "club": "Frosinone",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Gudmundsson",
+      "club": "Lazio",
+      "role": "CENTROCAMPISTA",
+      "owner": "YOUNG BOYS UNITED"
+    },
+    {
+      "name": "Gueye",
+      "club": "Udinese",
+      "role": "ATTACCANTE",
+      "owner": "DanPao Salisburgo FC"
+    },
+    {
+      "name": "Hainaut",
+      "club": "Venezia",
+      "role": "CENTROCAMPISTA",
+      "owner": "Ruverpool"
+    },
+    {
+      "name": "Halhal",
+      "club": "Venezia",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Happonen",
+      "club": "Bologna",
+      "role": "PORTIERE",
+      "owner": "VIKING 84"
+    },
+    {
+      "name": "Haps",
+      "club": "Venezia",
+      "role": "DIFENSORE",
+      "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Hasa",
+      "club": "Frosinone",
+      "role": "CENTROCAMPISTA",
+      "owner": "34 e 1 Gazzosa"
+    },
+    {
+      "name": "Havel",
+      "club": "Genoa",
+      "role": "ATTACCANTE",
+      "owner": "34 e 1 Gazzosa"
+    },
+    {
+      "name": "Heggem",
+      "club": "Bologna",
+      "role": "DIFENSORE",
+      "owner": "Em Fallet"
+    },
+    {
+      "name": "Helgason",
+      "club": "Venezia",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Helland",
+      "club": "Bologna",
+      "role": "DIFENSORE",
+      "owner": "johnsons oil"
+    },
+    {
+      "name": "Hermoso",
+      "club": "Roma",
+      "role": "DIFENSORE",
+      "owner": "johnsons oil"
+    },
+    {
+      "name": "Hien",
+      "club": "Atalanta",
+      "role": "DIFENSORE",
+      "owner": "ASTON BIRRA"
+    },
+    {
+      "name": "Hojlund",
+      "club": "Napoli",
+      "role": "ATTACCANTE",
+      "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "Holm",
+      "club": "Bologna",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Hutchinson",
+      "club": "Milan",
+      "role": "CENTROCAMPISTA",
+      "owner": "johnsons oil"
+    },
+    {
+      "name": "Idrissi",
+      "club": "Cagliari",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Idzes",
+      "club": "Sassuolo",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Ilic",
+      "club": "Lecce",
+      "role": "CENTROCAMPISTA",
+      "owner": "DanPao Salisburgo FC"
+    },
+    {
+      "name": "Ilkhan",
+      "club": "Torino",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Isaksen",
+      "club": "Lazio",
+      "role": "ATTACCANTE",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "Ismajli",
+      "club": "Torino",
+      "role": "DIFENSORE",
+      "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Israel",
+      "club": "Torino",
+      "role": "PORTIERE",
+      "owner": null
+    },
+    {
+      "name": "Jashari",
+      "club": "Milan",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Jean",
+      "club": "Lecce",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Jimenez A",
+      "club": "Fiorentina",
+      "role": "DIFENSORE",
+      "owner": "johnsons oil"
+    },
+    {
+      "name": "Joao Mario N",
+      "club": "Fiorentina",
+      "role": "DIFENSORE",
+      "owner": "S.S. 30Lance"
+    },
+    {
+      "name": "Jones",
+      "club": "Inter",
+      "role": "CENTROCAMPISTA",
+      "owner": "DanPao Salisburgo FC"
+    },
+    {
+      "name": "Jovanovic",
+      "club": "Udinese",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Jovic M",
+      "club": "Lecce",
+      "role": "ATTACCANTE",
+      "owner": null
+    },
+    {
+      "name": "Juan Jesus",
+      "club": "Venezia",
+      "role": "DIFENSORE",
+      "owner": "ASTON BIRRA"
+    },
+    {
+      "name": "Kaba",
+      "club": "Lecce",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Kabasele",
+      "club": "Udinese",
+      "role": "DIFENSORE",
+      "owner": "Em Fallet"
+    },
+    {
+      "name": "Kaiki",
+      "club": "Como",
+      "role": "DIFENSORE",
+      "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "Kalulu",
+      "club": "Juventus",
+      "role": "DIFENSORE",
+      "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "Kamara",
+      "club": "Udinese",
+      "role": "DIFENSORE",
+      "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Kambwala",
+      "club": "Como",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Karlstrom",
+      "club": "Udinese",
+      "role": "CENTROCAMPISTA",
+      "owner": "34 e 1 Gazzosa"
+    },
+    {
+      "name": "Kean",
+      "club": "Como",
+      "role": "ATTACCANTE",
+      "owner": "SOLO LEVELING"
+    },
+    {
+      "name": "Keita B",
+      "club": "Monza",
+      "role": "ATTACCANTE",
+      "owner": null
+    },
+    {
+      "name": "Kelly",
+      "club": "Juventus",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Kempf",
+      "club": "Como",
+      "role": "DIFENSORE",
+      "owner": "KECAVOLI"
+    },
+    {
+      "name": "Kessie",
+      "club": "Atalanta",
+      "role": "CENTROCAMPISTA",
+      "owner": "S.S. 30Lance"
+    },
+    {
+      "name": "Kevin Carlos",
+      "club": "Cagliari",
+      "role": "ATTACCANTE",
+      "owner": "34 e 1 Gazzosa"
+    },
+    {
+      "name": "Kike Perez",
+      "club": "Venezia",
+      "role": "CENTROCAMPISTA",
+      "owner": "YOUNG BOYS UNITED"
+    },
+    {
+      "name": "Kofler",
+      "club": "Cagliari",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Kolasinac",
+      "club": "Atalanta",
+      "role": "DIFENSORE",
+      "owner": "GenSim e 2 Monelli"
+    },
+    {
+      "name": "Kolo Muani",
+      "club": "Juventus",
+      "role": "ATTACCANTE",
+      "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Konate A",
+      "club": "Parma",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Kone B",
+      "club": "Frosinone",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Kone I",
+      "club": "Sassuolo",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Koopmeiners",
+      "club": "Juventus",
+      "role": "CENTROCAMPISTA",
+      "owner": "S.S. 30Lance"
+    },
+    {
+      "name": "Kossounou",
+      "club": "Atalanta",
+      "role": "DIFENSORE",
+      "owner": "Em Fallet"
+    },
+    {
+      "name": "Kouadio",
+      "club": "Monza",
+      "role": "DIFENSORE",
+      "owner": "SOLO LEVELING"
+    },
+    {
+      "name": "Koulierakis",
+      "club": "Roma",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Kovac N",
+      "club": "Lecce",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Kristensen T",
+      "club": "Atalanta",
+      "role": "DIFENSORE",
+      "owner": "Ruverpool"
+    },
+    {
+      "name": "Krstovic",
+      "club": "Atalanta",
+      "role": "ATTACCANTE",
+      "owner": "ASTON BIRRA"
+    },
+    {
+      "name": "Kulenovic",
+      "club": "Torino",
+      "role": "ATTACCANTE",
+      "owner": "34 e 1 Gazzosa"
+    },
+    {
+      "name": "Kulla",
+      "club": "Sassuolo",
+      "role": "ATTACCANTE",
+      "owner": null
+    },
+    {
+      "name": "Kvernadze",
+      "club": "Frosinone",
+      "role": "ATTACCANTE",
+      "owner": "Ruverpool"
+    },
+    {
+      "name": "Laerke",
+      "club": "Lecce",
+      "role": "ATTACCANTE",
+      "owner": null
+    },
+    {
+      "name": "Lafont G",
+      "club": "Genoa",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Lahdo",
+      "club": "Como",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Lauberbach",
+      "club": "Venezia",
+      "role": "ATTACCANTE",
+      "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Lauriente'",
+      "club": "Sassuolo",
+      "role": "ATTACCANTE",
+      "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Lavelli",
+      "club": "Inter",
+      "role": "ATTACCANTE",
+      "owner": null
+    },
+    {
+      "name": "Lazzari M",
+      "club": "Lazio",
+      "role": "DIFENSORE",
+      "owner": "YOUNG BOYS UNITED"
+    },
+    {
+      "name": "Leysen",
+      "club": "Sassuolo",
+      "role": "DIFENSORE",
+      "owner": "KECAVOLI"
+    },
+    {
+      "name": "Lezzerini",
+      "club": "Fiorentina",
+      "role": "PORTIERE",
+      "owner": "SOLO LEVELING"
+    },
+    {
+      "name": "Liberali",
+      "club": "Como",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Libra",
+      "club": "Bologna",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Lipani",
+      "club": "Sassuolo",
+      "role": "CENTROCAMPISTA",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "Lisman",
+      "club": "Venezia",
+      "role": "ATTACCANTE",
+      "owner": null
+    },
+    {
+      "name": "Liteta",
+      "club": "Cagliari",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Lobotka",
+      "club": "Napoli",
+      "role": "CENTROCAMPISTA",
+      "owner": "GenSim e 2 Monelli"
+    },
+    {
+      "name": "Locatelli M",
+      "club": "Juventus",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Loftus-Cheek",
+      "club": "Milan",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Lolic",
+      "club": "Frosinone",
+      "role": "PORTIERE",
+      "owner": "YOUNG BOYS UNITED"
+    },
+    {
+      "name": "Lontani",
+      "club": "Parma",
+      "role": "ATTACCANTE",
+      "owner": "GenSim e 2 Monelli"
+    },
+    {
+      "name": "Lovric",
+      "club": "Udinese",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Lucca",
+      "club": "Napoli",
+      "role": "ATTACCANTE",
+      "owner": "Ruverpool"
+    },
+    {
+      "name": "Lucchesi",
+      "club": "Monza",
+      "role": "DIFENSORE",
+      "owner": "34 e 1 Gazzosa"
+    },
+    {
+      "name": "Lucumi",
+      "club": "Juventus",
+      "role": "DIFENSORE",
+      "owner": "YOUNG BOYS UNITED"
+    },
+    {
+      "name": "Luis Henrique",
+      "club": "Inter",
+      "role": "CENTROCAMPISTA",
+      "owner": "GenSim e 2 Monelli"
+    },
+    {
+      "name": "Lulli",
+      "club": "Roma",
+      "role": "DIFENSORE",
+      "owner": "DanPao Salisburgo FC"
+    },
+    {
+      "name": "Luongo",
+      "club": "Torino",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Maignan",
+      "club": "Milan",
+      "role": "PORTIERE",
+      "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "Maldini D",
+      "club": "Cagliari",
+      "role": "CENTROCAMPISTA",
+      "owner": "34 e 1 Gazzosa"
+    },
+    {
+      "name": "Maleh",
+      "club": "Lecce",
+      "role": "CENTROCAMPISTA",
+      "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Malen",
+      "club": "Roma",
+      "role": "ATTACCANTE",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "Mancini",
+      "club": "Roma",
+      "role": "DIFENSORE",
+      "owner": "DanPao Salisburgo FC"
+    },
+    {
+      "name": "Mandas",
+      "club": "Lazio",
+      "role": "PORTIERE",
+      "owner": "ASTON BIRRA"
+    },
+    {
+      "name": "Mandela Keita",
+      "club": "Parma",
+      "role": "CENTROCAMPISTA",
+      "owner": "KECAVOLI"
+    },
+    {
+      "name": "Mandragora",
+      "club": "Torino",
+      "role": "CENTROCAMPISTA",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "Mangas",
+      "club": "Monza",
+      "role": "DIFENSORE",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "Manu Kone",
+      "club": "Roma",
+      "role": "CENTROCAMPISTA",
+      "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "Marcandalli",
+      "club": "Genoa",
+      "role": "DIFENSORE",
+      "owner": "VIKING 84"
+    },
+    {
+      "name": "Marianucci",
+      "club": "Napoli",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Martinez J",
+      "club": "Inter",
+      "role": "PORTIERE",
+      "owner": "Ruverpool"
+    },
+    {
+      "name": "Martinez L",
+      "club": "Inter",
+      "role": "ATTACCANTE",
+      "owner": "YOUNG BOYS UNITED"
+    },
+    {
+      "name": "Martins K",
+      "club": "Monza",
+      "role": "ATTACCANTE",
+      "owner": null
+    },
+    {
+      "name": "Marusic",
+      "club": "Lazio",
+      "role": "DIFENSORE",
+      "owner": "34 e 1 Gazzosa"
+    },
+    {
+      "name": "Mascardi",
+      "club": "Torino",
+      "role": "PORTIERE",
+      "owner": null
+    },
+    {
+      "name": "Masini",
+      "club": "Frosinone",
+      "role": "CENTROCAMPISTA",
+      "owner": "Em Fallet"
+    },
+    {
+      "name": "Massolin",
+      "club": "Cagliari",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Mastantuono",
+      "club": "Fiorentina",
+      "role": "CENTROCAMPISTA",
+      "owner": "S.S. 30Lance"
+    },
+    {
+      "name": "Mathias Olivera",
+      "club": "Napoli",
+      "role": "DIFENSORE",
+      "owner": "GenSim e 2 Monelli"
+    },
+    {
+      "name": "Matic",
+      "club": "Sassuolo",
+      "role": "CENTROCAMPISTA",
+      "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Maye",
+      "club": "Monza",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Mazzocchi",
+      "club": "Venezia",
+      "role": "DIFENSORE",
+      "owner": "MessiMale"
+    },
+    {
+      "name": "Mbangula",
+      "club": "Bologna",
+      "role": "CENTROCAMPISTA",
+      "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "McKennie",
+      "club": "Juventus",
+      "role": "CENTROCAMPISTA",
+      "owner": "34 e 1 Gazzosa"
+    },
+    {
+      "name": "McTominay",
+      "club": "Napoli",
+      "role": "CENTROCAMPISTA",
+      "owner": "Ruverpool"
+    },
+    {
+      "name": "Meichtry",
+      "club": "Genoa",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Mendy P",
+      "club": "Cagliari",
+      "role": "ATTACCANTE",
+      "owner": "DanPao Salisburgo FC"
+    },
+    {
+      "name": "Meret",
+      "club": "Napoli",
+      "role": "PORTIERE",
+      "owner": "johnsons oil"
+    },
+    {
+      "name": "Messias",
+      "club": "Genoa",
+      "role": "CENTROCAMPISTA",
+      "owner": "SOLO LEVELING"
+    },
+    {
+      "name": "Milinkovic-Savic V",
+      "club": "Napoli",
+      "role": "PORTIERE",
+      "owner": "johnsons oil"
+    },
+    {
+      "name": "Milla",
+      "club": "Como",
+      "role": "CENTROCAMPISTA",
+      "owner": "johnsons oil"
+    },
+    {
+      "name": "Miller",
+      "club": "Udinese",
+      "role": "CENTROCAMPISTA",
+      "owner": "johnsons oil"
+    },
+    {
+      "name": "Mina",
+      "club": "Cagliari",
+      "role": "DIFENSORE",
+      "owner": "MessiMale"
+    },
+    {
+      "name": "Miranda J",
+      "club": "Bologna",
+      "role": "DIFENSORE",
+      "owner": "KECAVOLI"
+    },
+    {
+      "name": "Mitaj",
+      "club": "Genoa",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Mkhitaryan",
+      "club": "Inter",
+      "role": "CENTROCAMPISTA",
+      "owner": "KECAVOLI"
+    },
+    {
+      "name": "Modric",
+      "club": "Milan",
+      "role": "CENTROCAMPISTA",
+      "owner": "ASTON BIRRA"
+    },
+    {
+      "name": "Mohammed",
+      "club": "Venezia",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Molina N",
+      "club": "Roma",
+      "role": "DIFENSORE",
+      "owner": "DanPao Salisburgo FC"
+    },
+    {
+      "name": "Monteiro",
+      "club": "Lecce",
+      "role": "CENTROCAMPISTA",
+      "owner": "ASTON BIRRA"
+    },
+    {
+      "name": "Monterisi",
+      "club": "Frosinone",
+      "role": "DIFENSORE",
+      "owner": "Ruverpool"
+    },
+    {
+      "name": "Montipo'",
+      "club": "Venezia",
+      "role": "PORTIERE",
+      "owner": null
+    },
+    {
+      "name": "Moreno M",
+      "club": "Venezia",
+      "role": "DIFENSORE",
+      "owner": "S.S. 30Lance"
+    },
+    {
+      "name": "Moro N",
+      "club": "Bologna",
+      "role": "CENTROCAMPISTA",
+      "owner": "KECAVOLI"
+    },
+    {
+      "name": "Mosconi",
+      "club": "Inter",
+      "role": "ATTACCANTE",
+      "owner": null
+    },
+    {
+      "name": "Mota",
+      "club": "Monza",
+      "role": "ATTACCANTE",
+      "owner": "Ruverpool"
+    },
+    {
+      "name": "Motta E",
+      "club": "Lazio",
+      "role": "PORTIERE",
+      "owner": "ASTON BIRRA"
+    },
+    {
+      "name": "Mout",
+      "club": "Monza",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Mrozek",
+      "club": "Udinese",
+      "role": "PORTIERE",
+      "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Muric A",
+      "club": "Sassuolo",
+      "role": "PORTIERE",
+      "owner": "KECAVOLI"
+    },
+    {
+      "name": "Musah",
+      "club": "Milan",
+      "role": "CENTROCAMPISTA",
+      "owner": "GenSim e 2 Monelli"
+    },
+    {
+      "name": "N'Dri",
+      "club": "Lecce",
+      "role": "ATTACCANTE",
+      "owner": "GenSim e 2 Monelli"
+    },
+    {
+      "name": "Ndaba",
+      "club": "Lecce",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Ndiaye A",
+      "club": "Parma",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Ndicka",
+      "club": "Roma",
+      "role": "DIFENSORE",
+      "owner": "ASTON BIRRA"
+    },
+    {
+      "name": "Ndour",
+      "club": "Fiorentina",
+      "role": "CENTROCAMPISTA",
+      "owner": "ASTON BIRRA"
+    },
+    {
+      "name": "Neres",
+      "club": "Napoli",
+      "role": "ATTACCANTE",
+      "owner": "S.S. 30Lance"
+    },
+    {
+      "name": "Neto",
+      "club": "Juventus",
+      "role": "PORTIERE",
+      "owner": "Em Fallet"
+    },
+    {
+      "name": "Ngom",
+      "club": "Lecce",
+      "role": "CENTROCAMPISTA",
+      "owner": "MessiMale"
+    },
+    {
+      "name": "Ngonge",
+      "club": "Monza",
+      "role": "ATTACCANTE",
+      "owner": "S.S. 30Lance"
+    },
+    {
+      "name": "Nico Paz",
+      "club": "Como",
+      "role": "CENTROCAMPISTA",
+      "owner": "VIKING 84"
+    },
+    {
+      "name": "Njie",
+      "club": "Fiorentina",
+      "role": "ATTACCANTE",
+      "owner": "GenSim e 2 Monelli"
+    },
+    {
+      "name": "Noa Lang",
+      "club": "Napoli",
+      "role": "ATTACCANTE",
+      "owner": "Ruverpool"
+    },
+    {
+      "name": "Noslin",
+      "club": "Lazio",
+      "role": "ATTACCANTE",
+      "owner": "MessiMale"
+    },
+    {
+      "name": "Nuno Tavares",
+      "club": "Lazio",
+      "role": "DIFENSORE",
+      "owner": "ASTON BIRRA"
+    },
+    {
+      "name": "Nzola",
+      "club": "Cagliari",
+      "role": "ATTACCANTE",
+      "owner": "MessiMale"
+    },
+    {
+      "name": "Obert",
+      "club": "Cagliari",
+      "role": "DIFENSORE",
+      "owner": "Ruverpool"
+    },
+    {
+      "name": "Oboavwoduo",
+      "club": "Juventus",
+      "role": "ATTACCANTE",
+      "owner": null
+    },
+    {
+      "name": "Obrador",
+      "club": "Sassuolo",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Odenthal",
+      "club": "Sassuolo",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Odgaard",
+      "club": "Bologna",
+      "role": "CENTROCAMPISTA",
+      "owner": "johnsons oil"
+    },
+    {
+      "name": "Okoye",
+      "club": "Udinese",
+      "role": "PORTIERE",
+      "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Ordonez",
+      "club": "Parma",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Oristanio",
+      "club": "Torino",
+      "role": "CENTROCAMPISTA",
+      "owner": "SOLO LEVELING"
+    },
+    {
+      "name": "Orsolini",
+      "club": "Bologna",
+      "role": "CENTROCAMPISTA",
+      "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Osmajic",
+      "club": "Genoa",
+      "role": "ATTACCANTE",
+      "owner": "ASTON BIRRA"
+    },
+    {
+      "name": "Ostigard",
+      "club": "Genoa",
+      "role": "DIFENSORE",
+      "owner": "VIKING 84"
+    },
+    {
+      "name": "Otoa",
+      "club": "Genoa",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Oulai",
+      "club": "Fiorentina",
+      "role": "CENTROCAMPISTA",
+      "owner": "Ruverpool"
+    },
+    {
+      "name": "Oyono",
+      "club": "Frosinone",
+      "role": "DIFENSORE",
+      "owner": "SOLO LEVELING"
+    },
+    {
+      "name": "Padelli",
+      "club": "Udinese",
+      "role": "PORTIERE",
+      "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Palma M",
+      "club": "Udinese",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Palmisani",
+      "club": "Frosinone",
+      "role": "PORTIERE",
+      "owner": "YOUNG BOYS UNITED"
+    },
+    {
+      "name": "Panada",
+      "club": "Venezia",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Pardel",
+      "club": "Atalanta",
+      "role": "PORTIERE",
+      "owner": "DanPao Salisburgo FC"
+    },
+    {
+      "name": "Parisi F",
+      "club": "Fiorentina",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Pasalic",
+      "club": "Atalanta",
+      "role": "CENTROCAMPISTA",
+      "owner": "Em Fallet"
+    },
+    {
+      "name": "Patterson",
+      "club": "Torino",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Pavard",
+      "club": "Inter",
+      "role": "DIFENSORE",
+      "owner": "Em Fallet"
+    },
+    {
+      "name": "Pavlovic S",
+      "club": "Milan",
+      "role": "DIFENSORE",
+      "owner": "KECAVOLI"
+    },
+    {
+      "name": "Paz Y",
+      "club": "Sassuolo",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Pedraza",
+      "club": "Lazio",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Pedro Goncalves",
+      "club": "Fiorentina",
+      "role": "CENTROCAMPISTA",
+      "owner": "VIKING 84"
+    },
+    {
+      "name": "Pellegri",
+      "club": "Torino",
+      "role": "ATTACCANTE",
+      "owner": null
+    },
+    {
+      "name": "Pellegrini",
+      "club": "Roma",
+      "role": "CENTROCAMPISTA",
+      "owner": "YOUNG BOYS UNITED"
+    },
+    {
+      "name": "Pellegrini Lu",
+      "club": "Lazio",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Pellegrino Ma",
+      "club": "Fiorentina",
+      "role": "ATTACCANTE",
+      "owner": "VIKING 84"
+    },
+    {
+      "name": "Penev",
+      "club": "Lecce",
+      "role": "PORTIERE",
+      "owner": "GenSim e 2 Monelli"
+    },
+    {
+      "name": "Perri",
+      "club": "Torino",
+      "role": "PORTIERE",
+      "owner": null
+    },
+    {
+      "name": "Perrone",
+      "club": "Como",
+      "role": "CENTROCAMPISTA",
+      "owner": "SOLO LEVELING"
+    },
+    {
+      "name": "Pessina",
+      "club": "Monza",
+      "role": "CENTROCAMPISTA",
+      "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Pessina M",
+      "club": "Bologna",
+      "role": "PORTIERE",
+      "owner": "VIKING 84"
+    },
+    {
+      "name": "Piccoli",
+      "club": "Bologna",
+      "role": "ATTACCANTE",
+      "owner": "34 e 1 Gazzosa"
+    },
+    {
+      "name": "Pieragnolo",
+      "club": "Sassuolo",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Pierini",
+      "club": "Sassuolo",
+      "role": "ATTACCANTE",
+      "owner": null
+    },
+    {
+      "name": "Pierotti",
+      "club": "Lecce",
+      "role": "CENTROCAMPISTA",
+      "owner": "GenSim e 2 Monelli"
+    },
+    {
+      "name": "Pinamonti",
+      "club": "Lazio",
+      "role": "ATTACCANTE",
+      "owner": "Em Fallet"
+    },
+    {
+      "name": "Pinsoglio",
+      "club": "Juventus",
+      "role": "PORTIERE",
+      "owner": "Em Fallet"
+    },
+    {
+      "name": "Piotrowski",
+      "club": "Udinese",
+      "role": "CENTROCAMPISTA",
+      "owner": "MessiMale"
+    },
+    {
+      "name": "Pisilli",
+      "club": "Roma",
+      "role": "CENTROCAMPISTA",
+      "owner": "GenSim e 2 Monelli"
+    },
+    {
+      "name": "Pobega",
+      "club": "Bologna",
+      "role": "CENTROCAMPISTA",
+      "owner": "S.S. 30Lance"
+    },
+    {
+      "name": "Politano",
+      "club": "Napoli",
+      "role": "CENTROCAMPISTA",
+      "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "Pongracic",
+      "club": "Fiorentina",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Provedel",
+      "club": "Inter",
+      "role": "PORTIERE",
+      "owner": "Ruverpool"
+    },
+    {
+      "name": "Provstgaard",
+      "club": "Lazio",
+      "role": "DIFENSORE",
+      "owner": "ASTON BIRRA"
+    },
+    {
+      "name": "Przyborek",
+      "club": "Lazio",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Puczka",
+      "club": "Genoa",
+      "role": "DIFENSORE",
+      "owner": "SOLO LEVELING"
+    },
+    {
+      "name": "Pulisic",
+      "club": "Milan",
+      "role": "CENTROCAMPISTA",
+      "owner": "Em Fallet"
+    },
+    {
+      "name": "Rabiot",
+      "club": "Milan",
+      "role": "CENTROCAMPISTA",
+      "owner": "MessiMale"
+    },
+    {
+      "name": "Radunovic",
+      "club": "Cagliari",
+      "role": "PORTIERE",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "Rafa Marin",
+      "club": "Napoli",
+      "role": "DIFENSORE",
+      "owner": "KECAVOLI"
+    },
+    {
+      "name": "Raimondo",
+      "club": "Frosinone",
+      "role": "ATTACCANTE",
+      "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Ramon J",
+      "club": "Como",
+      "role": "DIFENSORE",
+      "owner": "MessiMale"
+    },
+    {
+      "name": "Ramos G",
+      "club": "Milan",
+      "role": "ATTACCANTE",
+      "owner": "MessiMale"
+    },
+    {
+      "name": "Ranieri",
+      "club": "Fiorentina",
+      "role": "DIFENSORE",
+      "owner": "Em Fallet"
+    },
+    {
+      "name": "Raspadori",
+      "club": "Atalanta",
+      "role": "ATTACCANTE",
+      "owner": "VIKING 84"
+    },
+    {
+      "name": "Rensch",
+      "club": "Roma",
+      "role": "DIFENSORE",
+      "owner": "34 e 1 Gazzosa"
+    },
+    {
+      "name": "Ricci S",
+      "club": "Como",
+      "role": "CENTROCAMPISTA",
+      "owner": "KECAVOLI"
+    },
+    {
+      "name": "Robinho J",
+      "club": "Genoa",
+      "role": "ATTACCANTE",
+      "owner": "GenSim e 2 Monelli"
+    },
+    {
+      "name": "Robinson J",
+      "club": "Monza",
+      "role": "ATTACCANTE",
+      "owner": "34 e 1 Gazzosa"
+    },
+    {
+      "name": "Rodrigo Mora",
+      "club": "Roma",
+      "role": "CENTROCAMPISTA",
+      "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "Rodriguez J",
+      "club": "Como",
+      "role": "ATTACCANTE",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "Rodriguez Ju",
+      "club": "Cagliari",
+      "role": "DIFENSORE",
+      "owner": "GenSim e 2 Monelli"
+    },
+    {
+      "name": "Rodriguez R",
+      "club": "Torino",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Romano",
+      "club": "Cagliari",
+      "role": "CENTROCAMPISTA",
+      "owner": "GenSim e 2 Monelli"
+    },
+    {
+      "name": "Romero D",
+      "club": "Parma",
+      "role": "ATTACCANTE",
+      "owner": "VIKING 84"
+    },
+    {
+      "name": "Rovella",
+      "club": "Lazio",
+      "role": "CENTROCAMPISTA",
+      "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "Rowe",
+      "club": "Atalanta",
+      "role": "ATTACCANTE",
+      "owner": "YOUNG BOYS UNITED"
+    },
+    {
+      "name": "Rrahmani",
+      "club": "Napoli",
+      "role": "DIFENSORE",
+      "owner": "YOUNG BOYS UNITED"
+    },
+    {
+      "name": "Rrahmani A",
+      "club": "Venezia",
+      "role": "ATTACCANTE",
+      "owner": "johnsons oil"
+    },
+    {
+      "name": "Rugani",
+      "club": "Juventus",
+      "role": "DIFENSORE",
+      "owner": "MessiMale"
+    },
+    {
+      "name": "Sabelli",
+      "club": "Genoa",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Saelemaekers",
+      "club": "Milan",
+      "role": "CENTROCAMPISTA",
+      "owner": "ASTON BIRRA"
+    },
+    {
+      "name": "Sagrado",
+      "club": "Venezia",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Samardzic",
+      "club": "Atalanta",
+      "role": "CENTROCAMPISTA",
+      "owner": "GenSim e 2 Monelli"
+    },
+    {
+      "name": "Sanchez R",
+      "club": "Como",
+      "role": "PORTIERE",
+      "owner": "S.S. 30Lance"
+    },
+    {
+      "name": "Sarr P",
+      "club": "Juventus",
+      "role": "CENTROCAMPISTA",
+      "owner": "SOLO LEVELING"
+    },
+    {
+      "name": "Satalino",
+      "club": "Sassuolo",
+      "role": "PORTIERE",
+      "owner": "KECAVOLI"
+    },
+    {
+      "name": "Scalvini",
+      "club": "Atalanta",
+      "role": "DIFENSORE",
+      "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "Scamacca",
+      "club": "Atalanta",
+      "role": "ATTACCANTE",
+      "owner": "VIKING 84"
+    },
+    {
+      "name": "Schingtienne",
+      "club": "Venezia",
+      "role": "DIFENSORE",
+      "owner": "Ruverpool"
+    },
+    {
+      "name": "Schmid",
+      "club": "Frosinone",
+      "role": "CENTROCAMPISTA",
+      "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Sherri",
+      "club": "Cagliari",
+      "role": "PORTIERE",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "Siebert",
+      "club": "Lecce",
+      "role": "DIFENSORE",
+      "owner": "GenSim e 2 Monelli"
+    },
+    {
+      "name": "Sierro",
+      "club": "Parma",
+      "role": "CENTROCAMPISTA",
+      "owner": "S.S. 30Lance"
+    },
+    {
+      "name": "Simeone",
+      "club": "Torino",
+      "role": "ATTACCANTE",
+      "owner": "KECAVOLI"
+    },
+    {
+      "name": "Skjellerup",
+      "club": "Sassuolo",
+      "role": "ATTACCANTE",
+      "owner": null
+    },
+    {
+      "name": "Skorupski",
+      "club": "Bologna",
+      "role": "PORTIERE",
+      "owner": "VIKING 84"
+    },
+    {
+      "name": "Smolcic",
+      "club": "Como",
+      "role": "DIFENSORE",
+      "owner": "S.S. 30Lance"
+    },
+    {
+      "name": "Sohm",
+      "club": "Venezia",
+      "role": "CENTROCAMPISTA",
+      "owner": "SOLO LEVELING"
+    },
+    {
+      "name": "Solet",
+      "club": "Udinese",
+      "role": "DIFENSORE",
+      "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Sommariva",
+      "club": "Genoa",
+      "role": "PORTIERE",
+      "owner": "MessiMale"
+    },
+    {
+      "name": "Sottil",
+      "club": "Fiorentina",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Soule",
+      "club": "Roma",
+      "role": "ATTACCANTE",
+      "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "Sow",
+      "club": "Genoa",
+      "role": "CENTROCAMPISTA",
+      "owner": "DanPao Salisburgo FC"
+    },
+    {
+      "name": "Spence",
+      "club": "Inter",
+      "role": "DIFENSORE",
+      "owner": "johnsons oil"
+    },
+    {
+      "name": "Spinazzola",
+      "club": "Napoli",
+      "role": "DIFENSORE",
+      "owner": "Ruverpool"
+    },
+    {
+      "name": "Sportiello",
+      "club": "Atalanta",
+      "role": "PORTIERE",
+      "owner": "DanPao Salisburgo FC"
+    },
+    {
+      "name": "Stankovic A",
+      "club": "Inter",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Stankovic F",
+      "club": "Venezia",
+      "role": "PORTIERE",
+      "owner": null
+    },
+    {
+      "name": "Stolz",
+      "club": "Genoa",
+      "role": "PORTIERE",
+      "owner": "MessiMale"
+    },
+    {
+      "name": "Stones",
+      "club": "Inter",
+      "role": "DIFENSORE",
+      "owner": "ASTON BIRRA"
+    },
+    {
+      "name": "Strajnar",
+      "club": "Monza",
+      "role": "PORTIERE",
+      "owner": null
+    },
+    {
+      "name": "Stulic",
+      "club": "Lecce",
+      "role": "ATTACCANTE",
+      "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "Sucic",
+      "club": "Inter",
+      "role": "CENTROCAMPISTA",
+      "owner": "YOUNG BOYS UNITED"
+    },
+    {
+      "name": "Sugamele",
+      "club": "Cagliari",
+      "role": "ATTACCANTE",
+      "owner": null
+    },
+    {
+      "name": "Sugawara",
+      "club": "Cagliari",
+      "role": "DIFENSORE",
+      "owner": "SOLO LEVELING"
+    },
+    {
+      "name": "Sulemana",
+      "club": "Sassuolo",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Sulemana K",
+      "club": "Atalanta",
+      "role": "ATTACCANTE",
+      "owner": "ASTON BIRRA"
+    },
+    {
+      "name": "Sutalo J",
+      "club": "Lazio",
+      "role": "DIFENSORE",
+      "owner": "SOLO LEVELING"
+    },
+    {
+      "name": "Sverko",
+      "club": "Venezia",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Svilar",
+      "club": "Roma",
+      "role": "PORTIERE",
+      "owner": "34 e 1 Gazzosa"
+    },
+    {
+      "name": "Taylor",
+      "club": "Lazio",
+      "role": "CENTROCAMPISTA",
+      "owner": "ASTON BIRRA"
+    },
+    {
+      "name": "Tchato",
+      "club": "Frosinone",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Terracciano",
+      "club": "Milan",
+      "role": "PORTIERE",
+      "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "Terracciano F",
+      "club": "Milan",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Terzic",
+      "club": "Frosinone",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Theate",
+      "club": "Bologna",
+      "role": "DIFENSORE",
+      "owner": "VIKING 84"
+    },
+    {
+      "name": "Thiam D",
+      "club": "Monza",
+      "role": "PORTIERE",
+      "owner": null
+    },
+    {
+      "name": "Thorstvedt",
+      "club": "Sassuolo",
+      "role": "CENTROCAMPISTA",
+      "owner": "DanPao Salisburgo FC"
+    },
+    {
+      "name": "Thuram",
+      "club": "Inter",
+      "role": "ATTACCANTE",
+      "owner": "GenSim e 2 Monelli"
+    },
+    {
+      "name": "Thuram K",
+      "club": "Juventus",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Tiago Gabriel",
+      "club": "Lecce",
+      "role": "DIFENSORE",
+      "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Tomori",
+      "club": "Milan",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Toni Fernandez",
+      "club": "Venezia",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Tornqvist",
+      "club": "Monza",
+      "role": "PORTIERE",
+      "owner": null
+    },
+    {
+      "name": "Torriani",
+      "club": "Milan",
+      "role": "PORTIERE",
+      "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "Toure Id",
+      "club": "Monza",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Traore",
+      "club": "Genoa",
+      "role": "CENTROCAMPISTA",
+      "owner": "Em Fallet"
+    },
+    {
+      "name": "Trepy",
+      "club": "Cagliari",
+      "role": "ATTACCANTE",
+      "owner": null
+    },
+    {
+      "name": "Troilo",
+      "club": "Parma",
+      "role": "DIFENSORE",
+      "owner": "DanPao Salisburgo FC"
+    },
+    {
+      "name": "Turati",
+      "club": "Sassuolo",
+      "role": "PORTIERE",
+      "owner": "KECAVOLI"
+    },
+    {
+      "name": "Ubani",
+      "club": "Lecce",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Unai Gomez",
+      "club": "Udinese",
+      "role": "CENTROCAMPISTA",
+      "owner": "Ruverpool"
+    },
+    {
+      "name": "Valdepenas",
+      "club": "Fiorentina",
+      "role": "DIFENSORE",
+      "owner": "Ruverpool"
+    },
+    {
+      "name": "Valenti",
+      "club": "Parma",
+      "role": "DIFENSORE",
+      "owner": "YOUNG BOYS UNITED"
+    },
+    {
+      "name": "Valeri",
+      "club": "Parma",
+      "role": "DIFENSORE",
+      "owner": "VIKING 84"
+    },
+    {
+      "name": "Van der Brempt",
+      "club": "Sassuolo",
+      "role": "DIFENSORE",
+      "owner": "YOUNG BOYS UNITED"
+    },
+    {
+      "name": "Varela G",
+      "club": "Monza",
+      "role": "ATTACCANTE",
+      "owner": "SOLO LEVELING"
+    },
+    {
+      "name": "Vasquez",
+      "club": "Genoa",
+      "role": "DIFENSORE",
+      "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Vasquez D",
+      "club": "Roma",
+      "role": "PORTIERE",
+      "owner": "34 e 1 Gazzosa"
+    },
+    {
+      "name": "Vaz M",
+      "club": "Genoa",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Venturino",
+      "club": "Genoa",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Vergara",
+      "club": "Napoli",
+      "role": "CENTROCAMPISTA",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "Vicario",
+      "club": "Juventus",
+      "role": "PORTIERE",
+      "owner": "Em Fallet"
+    },
+    {
+      "name": "Viery",
+      "club": "Fiorentina",
+      "role": "DIFENSORE",
+      "owner": "S.S. 30Lance"
+    },
+    {
+      "name": "Vigorito",
+      "club": "Como",
+      "role": "PORTIERE",
+      "owner": "S.S. 30Lance"
+    },
+    {
+      "name": "Vinciati",
+      "club": "Udinese",
+      "role": "ATTACCANTE",
+      "owner": null
+    },
+    {
+      "name": "Vitik",
+      "club": "Bologna",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Vitinha",
+      "club": "Genoa",
+      "role": "ATTACCANTE",
+      "owner": "Em Fallet"
+    },
+    {
+      "name": "Vlasic",
+      "club": "Torino",
+      "role": "CENTROCAMPISTA",
+      "owner": "johnsons oil"
+    },
+    {
+      "name": "Vojvoda",
+      "club": "Udinese",
+      "role": "DIFENSORE",
+      "owner": "Em Fallet"
+    },
+    {
+      "name": "Volpato C",
+      "club": "Sassuolo",
+      "role": "CENTROCAMPISTA",
+      "owner": "Ruverpool"
+    },
+    {
+      "name": "Walukiewicz",
+      "club": "Sassuolo",
+      "role": "DIFENSORE",
+      "owner": "Em Fallet"
+    },
+    {
+      "name": "Wesley F",
+      "club": "Roma",
+      "role": "DIFENSORE",
+      "owner": "VIKING 84"
+    },
+    {
+      "name": "Wiafe",
+      "club": "Genoa",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Winks",
+      "club": "Cagliari",
+      "role": "CENTROCAMPISTA",
+      "owner": "S.S. 30Lance"
+    },
+    {
+      "name": "Woltemade",
+      "club": "Juventus",
+      "role": "ATTACCANTE",
+      "owner": "MessiMale"
+    },
+    {
+      "name": "Yan Couto",
+      "club": "Como",
+      "role": "DIFENSORE",
+      "owner": "ASTON BIRRA"
+    },
+    {
+      "name": "Yeboah J",
+      "club": "Venezia",
+      "role": "ATTACCANTE",
+      "owner": "YOUNG BOYS UNITED"
+    },
+    {
+      "name": "Yildiz",
+      "club": "Juventus",
+      "role": "ATTACCANTE",
+      "owner": "VIKING 84"
+    },
+    {
+      "name": "Zaccagni",
+      "club": "Lazio",
+      "role": "CENTROCAMPISTA",
+      "owner": "Em Fallet"
+    },
+    {
+      "name": "Zalewski",
+      "club": "Atalanta",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Zaniolo",
+      "club": "Udinese",
+      "role": "CENTROCAMPISTA",
+      "owner": "Em Fallet"
+    },
+    {
+      "name": "Zanoli",
+      "club": "Udinese",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Zapata D",
+      "club": "Torino",
+      "role": "ATTACCANTE",
+      "owner": "KECAVOLI"
+    },
+    {
+      "name": "Zappacosta",
+      "club": "Atalanta",
+      "role": "DIFENSORE",
+      "owner": "VIKING 84"
+    },
+    {
+      "name": "Zarraga",
+      "club": "Udinese",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Ze Pedro",
+      "club": "Cagliari",
+      "role": "DIFENSORE",
+      "owner": "DanPao Salisburgo FC"
+    },
+    {
+      "name": "Zeballos",
+      "club": "Monza",
+      "role": "ATTACCANTE",
+      "owner": "johnsons oil"
+    },
+    {
+      "name": "Zerbin",
+      "club": "Frosinone",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
+      "name": "Zhegrova",
+      "club": "Juventus",
+      "role": "CENTROCAMPISTA",
+      "owner": "YOUNG BOYS UNITED"
+    },
+    {
+      "name": "Zielinski",
+      "club": "Inter",
+      "role": "CENTROCAMPISTA",
+      "owner": "DanPao Salisburgo FC"
+    },
+    {
+      "name": "Ziolkowski",
+      "club": "Monza",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Zortea",
+      "club": "Bologna",
+      "role": "DIFENSORE",
+      "owner": "GenSim e 2 Monelli"
+    }
+  ]
+}

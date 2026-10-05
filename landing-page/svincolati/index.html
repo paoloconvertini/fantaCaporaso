@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07120f">
+  <meta name="description" content="I calciatori svincolati FantaCaporaso, con ricerca per nome e filtro per ruolo.">
+  <title>Svincolati | FantaCaporaso</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/dashboard.css">
+  <script src="/players.js" defer></script>
+</head>
+<body>
+  <main class="page dashboard-page">
+    <div class="ambient ambient-one" aria-hidden="true"></div><div class="ambient ambient-two" aria-hidden="true"></div>
+    <section class="shell" aria-labelledby="page-title">
+      <header class="header"><a class="brand" href="/" aria-label="FantaCaporaso, pagina iniziale"><span class="brand-mark" aria-hidden="true">⚽</span><span><strong>Fanta</strong>Caporaso</span></a><span class="season">STAGIONE 2026/27</span></header>
+      <div class="dashboard-content">
+        <a class="back-link" href="/">← Torna alla home</a>
+        <p class="eyebrow">IL LISTONE DELLA LEGA</p>
+        <h1 id="page-title">Il prossimo nome.<br><em>Lo trovi qui.</em></h1>
+        <p class="intro">I calciatori attivi che non appartengono a una fantasquadra. Cerca per nome o scegli un ruolo.</p>
+        <section class="free-player-section" aria-label="Consulta gli svincolati">
+          <div class="free-filters"><div><label for="free-query">Cerca calciatore</label><input id="free-query" type="search" placeholder="Nome del calciatore…" autocomplete="off" spellcheck="false"></div><div><label for="free-role">Ruolo</label><select id="free-role"><option value="">Tutti i ruoli</option value="PORTIERE">Portieri</option><option value="DIFENSORE">Difensori</option><option value="CENTROCAMPISTA">Centrocampisti</option><option value="ATTACCANTE">Attaccanti</option></select></div></div>
+          <p id="free-message" class="search-message" role="status" aria-live="polite">Caricamento degli svincolati…</p>
+          <p class="snapshot-date" data-snapshot-date></p>
+          <div class="free-table-frame"><table id="free-player-table" hidden><caption class="sr-only">Calciatori svincolati</caption><thead><tr><th scope="col">Calciatore</th><th scope="col">Ruolo</th><th scope="col">Club</th></tr></thead><tbody></tbody></table></div>
+          <noscript><p class="search-message">Per consultare e filtrare il listone attiva JavaScript.</p></noscript>
+        </section>
+      </div>
+      <footer><span>Portale ufficiale FantaCaporaso</span><span class="footer-separator" aria-hidden="true"></span><span>Svincolati della lega</span></footer>
+    </section>
+  </main>
+</body>
+</html>

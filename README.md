@@ -472,3 +472,13 @@ L’overlay `docker-compose.closed.yml` monta `deploy/nginx/closed.conf` e la ca
 `./scripts/export-public-rosters.sh` legge soltanto il database PROD, in transazione read-only, e genera `landing-page/rose/index.html`. La pagina mostra squadra, ruolo, calciatore e club, senza crediti, costi, posti liberi o dati degli account; usa `landing-page/rose/rosters.css` e lo stile condiviso della home. Le squadre si aprono con pannelli HTML accessibili anche senza JavaScript. È una fotografia statica, da rigenerare e pubblicare dopo modifiche consolidate alle rose.
 
 La home collega `/rose/` con “Consulta le rose”; la pagina “Asta chiusa” non contiene quel link. `/riepilogo/` resta conservato per i mercati futuri ma senza collegamenti visibili. Pubblicare il sito completo, mantenendo anche storico e riepilogo: verificare che la cartella di pubblicazione contenga home, stili, storico e dati prima di avviare Wrangler. L’app prod può restare spenta durante generazione e pubblicazione.
+
+### Dashboard pubblica e svincolati
+
+La home pubblica offre ricerca del proprietario del calciatore e tile per rose, svincolati, storico, Gazzetta e FantaMaster. L’asta resta disabilitata a mercato chiuso; la pagina “Asta chiusa” rimane separata e senza link alle rose. /riepilogo/ viene conservato senza link visibili.
+
+Lo script scripts/export-public-players.sh esporta landing-page/players.json in sola lettura da PROD, in un’unica transazione. I proprietari provengono dalle righe di rosters, non dal flag player.assigned. Vengono inclusi tutti i calciatori nelle rose e gli altri calciatori attivi; un calciatore senza proprietario viene mostrato come svincolato. I calciatori inattivi senza rosa sono esclusi. Nessun account, costo d’acquisto o credito viene esportato. Il renderer rifiuta dati vuoti, duplicati e identità non valide prima di sostituire il file.
+
+Home e /svincolati/ leggono lo stesso catalogo statico tramite players.js: la ricerca ignora accenti e punteggiatura; gli svincolati si filtrano per ruolo e nome. Il catalogo riporta la data di aggiornamento e non cambia automaticamente durante un’asta. Rigenerarlo dopo modifiche consolidate e pubblicare il sito completo insieme a home, dashboard.css, players.js, rose, storico e riepilogo. Backend e frontend prod possono restare spenti. Per aggiornare anche la fotografia delle rose, eseguire scripts/export-public-rosters.sh.
+
+Verifiche senza dipendenze aggiuntive: node --check landing-page/players.js; node --test scripts/tests/public-players.test.cjs; python3 scripts/tests/test_public_players.py; bash -n scripts/export-public-players.sh. Completare con prova browser di ricerca, filtri, gestione degli errori e layout mobile. Non sono richiesti build Angular, migrazioni o nuove API.
