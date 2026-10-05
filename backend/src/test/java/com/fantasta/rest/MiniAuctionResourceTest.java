@@ -39,6 +39,35 @@ class MiniAuctionResourceTest {
     }
 
     @Test
+    void startingRoleWithoutMiniSlotsReturnsValidationMessageAndLeavesRoundEmpty() {
+        auction.reset();
+        Long[] ids = QuarkusTransaction.requiringNew().call(() -> {
+            MiniAuctionSessionEntity session = new MiniAuctionSessionEntity();
+            session.code = UUID.randomUUID().toString(); session.label = "Mini senza centrocampisti";
+            session.sourceSessionCode = "source"; session.sourceDate = LocalDate.of(2026,10,1);
+            session.status = MiniAuctionSessionEntity.Status.ACTIVE; session.persist();
+            PlayerEntity player = new PlayerEntity(); player.name = "Centrocampista " + UUID.randomUUID();
+            player.team = "HTTP Mini"; player.role = Role.CENTROCAMPISTA; player.active = true; player.valore = 5D; player.persist();
+            return new Long[]{session.id, player.id};
+        });
+        try {
+            PlayerEntity player = QuarkusTransaction.requiringNew().call(() -> PlayerEntity.findById(ids[1]));
+            String admin = login("test-admin", "test-password-strong");
+            given().cookie("FANTASTA_AUTH", admin).contentType(ContentType.JSON)
+                    .body(java.util.Map.of("player", player.name, "playerTeam", player.team,
+                            "playerRole", "CENTROCAMPISTA", "durationSeconds", 30))
+                    .post("/api/start").then().statusCode(400)
+                    .body("message", equalTo("Nessun partecipante con uno slot aperto di questo ruolo"));
+            given().cookie("FANTASTA_AUTH", admin).get("/api/round").then().statusCode(204);
+        } finally {
+            auction.reset();
+            QuarkusTransaction.requiringNew().run(() -> {
+                MiniAuctionSessionEntity.deleteById(ids[0]); PlayerEntity.deleteById(ids[1]);
+            });
+        }
+    }
+
+    @Test
     void userCannotPrepareAndCannotReadAnotherTeamsSlotsByQueryParameter() {
         auction.reset();
         String username="mini-http-"+UUID.randomUUID();

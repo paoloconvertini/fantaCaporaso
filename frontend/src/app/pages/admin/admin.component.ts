@@ -41,6 +41,61 @@ export class AdminComponent implements OnInit, OnDestroy {
     summaryOpen = true;
     winnerPayload: { user: string; amount: number; player: string } | null = null;
 
+    toccoOrder: { id: number; name: string }[] = [];
+    toccoFirst: number | null = null;
+    toccoPrice: number | null = null;
+    toccoBusy = false;
+    private toccoSetupRoundId: string | null = null;
+
+    prepareTocco(): void {
+        this.toccoSetupRoundId = this.round.roundId;
+        this.toccoOrder = this.round.tieUserIds.map((id: number, index: number) => ({ id, name: this.round.tieUsers[index] }));
+        this.toccoFirst = this.toccoOrder[0].id;
+        this.toccoPrice = null;
+    }
+
+    get toccoSetupVisible(): boolean {
+        return this.toccoSetupRoundId === this.round?.roundId && !this.round?.tocco;
+    }
+
+    moveTocco(index: number, direction: number): void {
+        const next = index + direction;
+        if (next < 0 || next >= this.toccoOrder.length) return;
+        [this.toccoOrder[index], this.toccoOrder[next]] = [this.toccoOrder[next], this.toccoOrder[index]];
+    }
+
+    startTocco(): void {
+        if (this.toccoBusy || this.toccoFirst == null) return;
+        this.toccoBusy = true;
+        this.adminApi.startTocco(this.round.roundId, this.toccoOrder.map(p => p.id), this.toccoFirst).subscribe({
+            next: round => { this.round = round; this.toccoBusy = false; },
+            error: error => { this.toccoBusy = false; this.showError('Errore avvio tocco', error); }
+        });
+    }
+
+    cancelTocco(): void {
+        if (this.toccoBusy || !confirm('Annullare il tocco e tornare allo spareggio? Le scelte saranno eliminate.')) return;
+        this.toccoBusy = true;
+        this.adminApi.cancelTocco(this.round.roundId, this.round.tocco.id).subscribe({
+            next: round => { this.round = round; this.toccoBusy = false; this.toccoSetupRoundId = null; },
+            error: error => { this.toccoBusy = false; this.showError('Errore annullamento tocco', error); }
+        });
+    }
+
+    assignTocco(): void {
+        if (this.toccoBusy || this.toccoPrice == null || !Number.isInteger(this.toccoPrice) || this.toccoPrice < 1) return;
+        this.toccoBusy = true;
+        this.adminApi.assignTocco(this.round.roundId, this.round.tocco.id, this.toccoPrice).subscribe({
+            next: round => {
+                this.round = round;
+                this.toccoBusy = false;
+                this.snackBar.open('Assegnazione al tocco confermata', 'Chiudi', { duration: 4000 });
+                this.refreshRemaining();
+            },
+            error: error => { this.toccoBusy = false; this.showError('Errore assegnazione al tocco', error); }
+        });
+    }
+
     constructor(
         private adminApi: AdminApiService,
         private dialog: MatDialog,
@@ -49,8 +104,12 @@ export class AdminComponent implements OnInit, OnDestroy {
 
     searchingPlayer = false;
 
+    get toccoPending(): boolean {
+        return !!this.round?.tocco && !this.round?.winner;
+    }
+
     get canSearchPlayer(): boolean {
-        return this.auctionReady && !this.drawingNextPlayer && !this.searchingPlayer
+        return !this.toccoPending && this.auctionReady && !this.drawingNextPlayer && !this.searchingPlayer
             && !(this.round && !this.round.closed);
     }
 
@@ -336,10 +395,11 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
 
     get skipDisabled(): boolean {
-        return this.skipping || (!!this.round && !this.round.closed && this.activeUsers.length > 0);
+        return this.toccoPending || this.skipping || (!!this.round && !this.round.closed && this.activeUsers.length > 0);
     }
 
     get skipTooltip(): string {
+        if (this.toccoPending) return 'Completa o annulla prima il tocco';
         if (this.skipping) return 'Skip in corso';
         return this.skipDisabled ? 'Skip non disponibile: sono presenti offerte' : 'Salta';
     }
@@ -359,6 +419,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
 
     start() {
+        if (this.toccoPending) return;
         if (!this.player || !this.prole) {
             alert('Scegli prima un giocatore');
             return;
@@ -436,6 +497,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
 
     openManualAssign() {
+        if (this.toccoPending) return;
         const dialogRef = this.dialog.open(ManualAssignDialogComponent, {
             width: '560px',
             maxWidth: 'calc(100vw - 24px)',

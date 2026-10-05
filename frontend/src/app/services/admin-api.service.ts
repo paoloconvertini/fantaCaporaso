@@ -36,6 +36,18 @@ export class AdminApiService {
     return this.http.post(`${this.base}/api/round/reset`, {});
   }
 
+  startTocco(roundId: string, order: number[], firstParticipantId: number): Observable<any> {
+    return this.http.post(`${this.base}/api/tocco/start`, { roundId, order, firstParticipantId });
+  }
+
+  cancelTocco(roundId: string, toccoId: string): Observable<any> {
+    return this.http.post(`${this.base}/api/tocco/cancel`, { roundId, toccoId });
+  }
+
+  assignTocco(roundId: string, toccoId: string, amount: number): Observable<any> {
+    return this.http.post(`${this.base}/api/tocco/assign`, { roundId, toccoId, amount });
+  }
+
   // 🔹 RANDOM CONTROL
   setRole(role: string): Observable<any> {
     return this.http.post(`${this.base}/api/random/set-role`, { role });

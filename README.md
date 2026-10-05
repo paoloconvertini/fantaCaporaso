@@ -450,3 +450,13 @@ individuale di acquisto non vengono presentate come assegnazioni annullabili.
 La rotta amministrativa `POST /api/admin/close-auction` è gestita da `AdminResource` e richiede il ruolo admin. La generazione dello storico pubblico parte dopo la conferma della transazione; ripetere la chiusura ritenta una pubblicazione in attesa o fallita senza creare un altro snapshot.
 
 Prima di concludere l'asta, completare e chiudere la mini asta eventualmente attiva. La chiusura salva una fotografia delle rose finali, archivia la sessione con il codice del mercato e disattiva il mercato impostandone la data di fine. Include i round delle mini aste collegate e riconcilia gli storici precedenti con codice separato tramite calciatore, assegnatario e giorno dell'acquisto verificato. Gli storici già archiviati non vengono riattribuiti. La chiusura ripetuta restituisce la sessione già conclusa; rose, costi, crediti e puntate restano conservati.
+
+### Spareggio digitale al tocco
+
+In un round chiuso in parità, l’admin può scegliere **Risolvi al tocco**, ordinare tutti i partecipanti allo spareggio e indicare da chi iniziare. Ogni partecipante sceglie e conferma un numero intero da 1 a 5 dalla pagina dell’asta: la conferma è definitiva e i numeri restano privati fino alla conferma di tutti. Gli osservatori possono seguire lo stato e il risultato ma non scegliere.
+
+Il conteggio parte da 1 sul partecipante iniziale, segue l’ordine mostrato e ricomincia circolarmente fino alla somma dei numeri. Il vincitore viene calcolato dal server. L’admin inserisce il prezzo finale e conferma l’assegnazione; valgono i controlli ordinari su crediti, posti per ruolo e pacchetto portieri, oppure quelli dello slot nelle mini aste. Le offerte monetarie originali restano nello storico; i numeri del tocco non sono offerte. Prima dell’assegnazione l’admin può annullare il tocco e tornare allo spareggio.
+
+Lo stato e le scelte sono salvati nel JSON del round esistente, senza migrazioni. Una riconnessione recupera lo stato; le richieste relative a un round o a un tentativo annullato vengono rifiutate. API: `POST /api/tocco/start`, `/choose`, `/cancel`, `/assign`. Solo `/choose` è disponibile ai partecipanti, con squadra ricavata dall’identità autenticata; gli altri endpoint richiedono il ruolo admin.
+
+L’avvio di un round restituisce HTTP 400 per dati o disponibilità non validi (ad esempio un ruolo senza slot aperti nella mini asta), oppure HTTP 409 per un conflitto di stato. Il messaggio viene mostrato dalla pagina admin senza alterare il round quando l’avvio è rifiutato.

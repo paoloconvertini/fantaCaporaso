@@ -17,6 +17,10 @@ export class UserApiService {
   private socket?: WebSocket;
   private reconnectTimer?: any;
 
+  chooseTocco(roundId: string, toccoId: string, number: number): Observable<any> {
+    return this.http.post(`${this.base}/api/tocco/choose`, { roundId, toccoId, number });
+  }
+
   constructor(private http: HttpClient) {
     this.base = (window as any).__API_BASE__ || '';
     this.connectWebSocket();
@@ -137,6 +141,11 @@ export class UserApiService {
 
               if (t === 'ROLE_CHANGED' && payload?.role) {
                   this.roleFilter$.next(payload.role as RoleKey);
+              }
+
+              if (t === 'ROUND_UPDATED') {
+                  if (payload?.roundId) this.applyRound(payload);
+                  else this.refreshRound();
               }
 
               if (t === 'ROUND_STARTED') {

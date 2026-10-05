@@ -8,6 +8,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class RoundDto {
+    public ToccoDto tocco;
     public Long miniSessionId;
     public String roundId;
     public String player;
@@ -32,6 +33,7 @@ public class RoundDto {
         if (s == null) return null;
 
         RoundDto dto = new RoundDto();
+        dto.tocco = ToccoDto.from(s.tocco);
         dto.miniSessionId = s.miniSessionId;
         dto.roundId = s.roundId;
         dto.player = s.player;

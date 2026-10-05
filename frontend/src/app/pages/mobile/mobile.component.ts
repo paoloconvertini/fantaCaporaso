@@ -81,6 +81,27 @@ export class MobileComponent implements OnInit, OnDestroy {
         });
     }
 
+    toccoNumber: number | null = null;
+    toccoSending = false;
+    toccoError = '';
+
+    get myToccoParticipant(): any {
+        return this.isObserver ? null : this.round?.tocco?.participants.find((p: any) => p.id === this.auth.user?.participantId);
+    }
+
+    confirmTocco(): void {
+        if (this.toccoSending || !this.toccoNumber || !this.myToccoParticipant || this.myToccoParticipant.confirmed) return;
+        this.toccoSending = true;
+        this.toccoError = '';
+        this.api.chooseTocco(this.round.roundId, this.round.tocco.id, this.toccoNumber).subscribe({
+            next: round => { this.round = round; this.toccoSending = false; this.toccoNumber = null; },
+            error: error => {
+                this.toccoSending = false;
+                this.toccoError = typeof error?.error === 'string' ? error.error : (error?.error?.message || 'Non è stato possibile confermare la scelta.');
+            }
+        });
+    }
+
     constructor(private route: ActivatedRoute, private api: UserApiService, private auth: AuthService) {}
 
     ngOnInit(): void {

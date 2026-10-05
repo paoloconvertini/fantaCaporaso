@@ -72,6 +72,21 @@ class MiniAuctionServiceTest {
   auction.bidDto(p.id,10D,slot(s,p,7).id);auction.bidDto(q.id,10D,slot(s,q,7).id);RoundState tied=auction.close();assertEquals(2,tied.tieUsers.size());assertFalse(slot(s,p,7).filled);
   RoundState tie=auction.start(t.name,t.team,t.role.name(),30,"NONE",4,new HashSet<>(tied.tieUsers));assertEquals(s.id,tie.miniSessionId);assertEquals(11,tie.minimumBid);auction.bidDto(p.id,12D,slot(s,p,7).id);auction.close();assertTrue(slot(s,p,7).filled);assertFalse(slot(s,q,7).filled);
  }
+ @Test @TestTransaction void toccoFillsOnlyWinningMiniSlotAndRevertRestoresIt(){
+  auction.reset();
+  ParticipantEntity p=full(50),q=full(50);MiniAuctionSessionEntity s=prepare(defender(p,7).id,defender(q,7).id);auction.activateMini(s.id);
+  PlayerEntity t=player(Role.DIFENSORE,"Tocco Mini Club");RoundState r=start(t);
+  auction.bidDto(p.id,10D,slot(s,p,7).id);auction.bidDto(q.id,10D,slot(s,q,7).id);auction.close();
+  auction.startTocco(r.roundId,List.of(p.id,q.id),p.id);String attempt=r.tocco.id;
+  auction.chooseTocco(r.roundId,attempt,p.id,1);auction.chooseTocco(r.roundId,attempt,q.id,1);
+  assertThrows(IllegalArgumentException.class,()->auction.assignTocco(r.roundId,attempt,7D));
+  auction.assignTocco(r.roundId,attempt,12D);
+  assertFalse(slot(s,p,7).filled);assertTrue(slot(s,q,7).filled);assertEquals(12D,r.winner.amount);
+  MarketMovementEntity m=MarketMovementEntity.find("player = ?1 and type = ?2",t,MarketMovementEntity.Type.MINI_PURCHASE).firstResult();
+  assertEquals(r.roundId,m.auctionRoundId);
+  movements.revert(m.id);
+  assertFalse(slot(s,q,7).filled);assertEquals(0,RosterEntity.count("player",t));
+ }
  @Test @TestTransaction void miniMovementsAreNotIndividuallyReversible(){
   ParticipantEntity p=full(10);MiniAuctionSessionEntity s=prepare(defender(p,7).id);auction.activateMini(s.id);MarketMovementEntity m=MarketMovementEntity.find("sessionCode",s.code).firstResult();
   assertFalse(movements.list(null,null,p.id,false).stream().filter(x->x.id.equals(m.id)).findFirst().orElseThrow().canRevert);assertThrows(jakarta.ws.rs.BadRequestException.class,()->movements.revert(m.id));

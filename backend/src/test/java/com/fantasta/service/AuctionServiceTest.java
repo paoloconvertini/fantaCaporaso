@@ -586,6 +586,101 @@ class AuctionServiceTest {
         assertEquals(0L, GiroPickEntity.count());
     }
 
+    @Test
+    @TestTransaction
+    void toccoHidesChoicesUntilAllConfirmAndCountsFromChosenParticipant() {
+        cleanAuctionData();
+        ParticipantEntity a = participant("Tocco A", 500), b = participant("Tocco B", 500), c = participant("Tocco C", 500);
+        PlayerEntity player = player("Tocco difensore", "Tocco Club", Role.DIFENSORE, 5);
+        RoundState round = auctionService.start(player.name, player.team, player.role.name(), null, "NONE", 5, null);
+        for (ParticipantEntity p : List.of(a, b, c)) auctionService.bid(p.id, 10D);
+        auctionService.close();
+        auctionService.startTocco(round.roundId, List.of(c.id, a.id, b.id), a.id);
+        String attempt = round.tocco.id;
+        auctionService.chooseTocco(round.roundId, attempt, a.id, 2);
+        var hidden = auctionService.toDto(round).tocco;
+        assertFalse(hidden.completed());
+        assertNull(hidden.sum());
+        assertNull(hidden.winnerParticipantId());
+        assertTrue(hidden.participants().stream().allMatch(p -> p.number() == null));
+        assertTrue(hidden.participants().stream().filter(p -> p.id().equals(a.id)).findFirst().orElseThrow().confirmed());
+        auctionService.chooseTocco(round.roundId, attempt, b.id, 5);
+        assertTrue(auctionService.toDto(round).tocco.participants().stream().allMatch(p -> p.number() == null));
+        auctionService.chooseTocco(round.roundId, attempt, c.id, 1);
+        var result = auctionService.toDto(round).tocco;
+        assertTrue(result.completed());
+        assertEquals(8, result.sum());
+        assertEquals(b.id, result.winnerParticipantId());
+        assertEquals(List.of(1, 2, 5), result.participants().stream().map(p -> p.number()).toList());
+        assertNull(round.winner);
+        assertEquals(0, RosterEntity.count("player", player));
+        auctionService.assignTocco(round.roundId, attempt, 13D);
+        assertEquals(b.id, round.winner.participantId);
+        assertEquals(13D, round.winner.amount);
+        assertEquals(3, round.historyBids.size());
+        assertTrue(round.historyBids.values().stream().allMatch(amount -> amount.equals(10D)));
+        assertEquals(b.id, RosterEntity.<RosterEntity>find("player", player).firstResult().participant.id);
+        assertThrows(IllegalStateException.class, () -> auctionService.assignTocco(round.roundId, attempt, 13D));
+    }
+
+    @Test
+    @TestTransaction
+    void toccoRejectsInvalidOrdersChoicesBypassesAndStaleRequests() {
+        cleanAuctionData();
+        ParticipantEntity a = participant("Tocco valido A", 500), b = participant("Tocco valido B", 500), outsider = participant("Tocco escluso", 500);
+        PlayerEntity player = player("Tocco validazioni", "Validazioni", Role.DIFENSORE, 5);
+        RoundState round = auctionService.start(player.name, player.team, player.role.name(), null, "NONE", 5, null);
+        auctionService.bid(a.id, 5D); auctionService.bid(b.id, 5D); auctionService.close();
+        assertThrows(IllegalArgumentException.class, () -> auctionService.startTocco(round.roundId, List.of(a.id, a.id), a.id));
+        assertThrows(IllegalArgumentException.class, () -> auctionService.startTocco(round.roundId, List.of(a.id, outsider.id), a.id));
+        assertThrows(IllegalArgumentException.class, () -> auctionService.startTocco(round.roundId, List.of(a.id, b.id), outsider.id));
+        auctionService.startTocco(round.roundId, List.of(a.id, b.id), a.id);
+        String attempt = round.tocco.id;
+        assertThrows(IllegalArgumentException.class, () -> auctionService.chooseTocco(round.roundId, attempt, outsider.id, 2));
+        for (Integer n : new Integer[]{null, 0, 6}) assertThrows(IllegalArgumentException.class, () -> auctionService.chooseTocco(round.roundId, attempt, a.id, n));
+        assertThrows(IllegalStateException.class, () -> auctionService.assignTocco(round.roundId, attempt, 5D));
+        assertThrows(IllegalStateException.class, () -> auctionService.start(player.name, player.team, player.role.name(), null, "NONE", 5, null));
+        assertThrows(IllegalStateException.class, () -> auctionService.adminAssign(player.id, a.id, 5D));
+        assertThrows(IllegalStateException.class, () -> auctionService.manualAssign(a.id, player.name, player.team, 5D));
+        assertThrows(IllegalStateException.class, auctionService::resetForSkip);
+        auctionService.chooseTocco(round.roundId, attempt, a.id, 1);
+        assertThrows(IllegalStateException.class, () -> auctionService.chooseTocco(round.roundId, attempt, a.id, 2));
+        auctionService.cancelTocco(round.roundId, attempt);
+        auctionService.startTocco(round.roundId, List.of(a.id, b.id), a.id);
+        assertThrows(IllegalStateException.class, () -> auctionService.chooseTocco(round.roundId, attempt, b.id, 2));
+        assertThrows(IllegalStateException.class, () -> auctionService.chooseTocco("stale", round.tocco.id, b.id, 2));
+        auctionService.chooseTocco(round.roundId, round.tocco.id, a.id, 1);
+        auctionService.chooseTocco(round.roundId, round.tocco.id, b.id, 1);
+        assertEquals(b.id, round.tocco.winnerParticipantId);
+        for (Double n : new Double[]{null, 0D, 1.5D, Double.NaN, Double.POSITIVE_INFINITY, 501D})
+            assertThrows(IllegalArgumentException.class, () -> auctionService.assignTocco(round.roundId, round.tocco.id, n));
+        assertNull(round.winner);
+        assertEquals(0, RosterEntity.count("player", player));
+    }
+
+    @Test
+    @TestTransaction
+    void toccoPersistsPrivateChoicesAndAssignsWholeGoalkeeperPackage() throws Exception {
+        cleanAuctionData();
+        ParticipantEntity a = participant("Tocco porta A", 500), b = participant("Tocco porta B", 500);
+        PlayerEntity player = goalkeeper("Tocco titolare", "Tocco porta", 20);
+        goalkeeper("Tocco riserva 1", "Tocco porta", 2); goalkeeper("Tocco riserva 2", "Tocco porta", 1);
+        RoundState round = auctionService.start(player.name, player.team, player.role.name(), null, "NONE", 20, null);
+        auctionService.bid(a.id, 5D); auctionService.bid(b.id, 5D); auctionService.close();
+        auctionService.startTocco(round.roundId, List.of(a.id, b.id), a.id);
+        String attempt = round.tocco.id;
+        auctionService.chooseTocco(round.roundId, attempt, a.id, 3);
+        RoundState restored = new com.fasterxml.jackson.databind.ObjectMapper().readValue(
+                AuctionRoundStateEntity.<AuctionRoundStateEntity>findById("current").stateJson, RoundState.class);
+        assertEquals(3, restored.tocco.choices.get(a.id.toString()));
+        assertNull(auctionService.toDto(restored).tocco.participants().get(0).number());
+        auctionService.chooseTocco(round.roundId, attempt, b.id, 1);
+        assertThrows(IllegalArgumentException.class, () -> auctionService.assignTocco(round.roundId, attempt, 2D));
+        auctionService.assignTocco(round.roundId, attempt, 6D);
+        assertEquals(3, RosterEntity.count("participant", b));
+        assertEquals(6D, participantService.spentCreditsById(b.id));
+    }
+
     private Long createGiroWithSkip(PlayerEntity player) {
         GiroEntity giro = new GiroEntity(); giro.persist();
         SkipEntity skip = new SkipEntity(); skip.giro = giro; skip.player = player; skip.persist();

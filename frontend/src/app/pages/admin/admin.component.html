@@ -72,7 +72,7 @@
         <span>da chiamare <b>{{ remainingCount }}</b></span>&nbsp;&nbsp;
         <span>buchi da riempire <b>{{ openSlotsCount }}</b></span>&nbsp;&nbsp;
         <span>saltati <b>{{ skippedCount }}</b></span>
-        <button mat-icon-button color="primary" (click)="start()" matTooltip="Avvia le offerte">
+        <button mat-icon-button color="primary" (click)="start()" [disabled]="toccoPending" matTooltip="Avvia le offerte">
           <mat-icon>play_arrow</mat-icon>
         </button>
         <button mat-icon-button color="warn" (click)="close()" matTooltip="Chiudi ora e assegna alla migliore offerta">
@@ -128,7 +128,7 @@
         <!-- Assegna in BASSO-DESTRA -->
         <button mat-fab color="primary"
                 class="fab-assign"
-                (click)="openManualAssign()"
+                (click)="openManualAssign()" [disabled]="toccoPending"
                 matTooltip="Cerca, assegna o correggi un calciatore">
           <mat-icon>person_add</mat-icon>
         </button>
@@ -172,9 +172,36 @@
           <div *ngIf="!round?.winner && round?.tieUsers?.length" class="tie-info">
             ⚖️ Spareggio tra:
             <ul><li *ngFor="let u of round.tieUsers">{{ u }}</li></ul>
+            <button mat-stroked-button color="primary" *ngIf="!round.tocco && !toccoSetupVisible" (click)="prepareTocco()">Risolvi al tocco</button>
+            <div class="tocco-panel" *ngIf="toccoSetupVisible">
+              <h3>Ordine di conteggio</h3>
+              <div class="tocco-row" *ngFor="let participant of toccoOrder; let i = index">
+                <span>{{ i + 1 }}. {{ participant.name }}</span>
+                <button mat-icon-button [disabled]="i === 0 || toccoBusy" (click)="moveTocco(i, -1)" aria-label="Sposta prima"><mat-icon>arrow_upward</mat-icon></button>
+                <button mat-icon-button [disabled]="i === toccoOrder.length - 1 || toccoBusy" (click)="moveTocco(i, 1)" aria-label="Sposta dopo"><mat-icon>arrow_downward</mat-icon></button>
+              </div>
+              <mat-form-field appearance="outline"><mat-label>Da chi si parte</mat-label><mat-select [(ngModel)]="toccoFirst" [disabled]="toccoBusy"><mat-option *ngFor="let participant of toccoOrder" [value]="participant.id">{{ participant.name }}</mat-option></mat-select></mat-form-field>
+              <p>Si conta 1 sul partecipante iniziale, seguendo questo ordine e ricominciando dall’inizio.</p>
+              <button mat-raised-button color="primary" [disabled]="toccoBusy" (click)="startTocco()">Avvia tocco</button>
+            </div>
           </div>
         </mat-card>
       </ng-template>
+
+      <mat-card class="list-card tocco-panel" *ngIf="round?.tocco as tocco">
+        <h2>Spareggio al tocco</h2>
+        <p *ngIf="!tocco.completed">Numeri privati fino alla conferma di tutti.</p>
+        <div class="tocco-row" *ngFor="let participant of tocco.participants; let i = index">
+          <span>{{ i + 1 }}. {{ participant.name }} <b *ngIf="participant.id === tocco.firstParticipantId">· Partenza</b></span>
+          <strong>{{ tocco.completed ? participant.number : (participant.confirmed ? 'Confermato' : 'In attesa') }}</strong>
+        </div>
+        <p *ngIf="tocco.completed">Somma: <b>{{ tocco.sum }}</b> · Vince <b>{{ tocco.winnerName }}</b></p>
+        <div *ngIf="tocco.completed && !round.winner">
+          <mat-form-field appearance="outline"><mat-label>Prezzo finale in crediti</mat-label><input matInput type="number" min="1" step="1" [(ngModel)]="toccoPrice" [disabled]="toccoBusy"></mat-form-field>
+          <button mat-raised-button color="primary" [disabled]="toccoBusy || !toccoPrice" (click)="assignTocco()">Conferma assegnazione</button>
+        </div>
+        <button mat-button *ngIf="!round.winner" [disabled]="toccoBusy" (click)="cancelTocco()">Annulla tocco</button>
+      </mat-card>
 
       <mat-card class="previous-assignment" *ngIf="latestAssignment as assignment">
         <small>Ultima assegnazione</small>

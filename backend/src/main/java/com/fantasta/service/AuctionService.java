@@ -81,12 +81,14 @@ public class AuctionService {
     }
 
     private void requireNoOpenRound() {
+        requireNoPendingTocco();
         RoundState current = get();
         if (current != null && !current.closed) throw new IllegalStateException("Concludi o annulla prima il round attivo");
     }
 
     @Transactional
     public synchronized PlayerEntity selectCalledPlayer(Long playerId) {
+        requireNoPendingTocco();
         RoundState current = get();
         if (current != null && !current.closed) {
             throw new IllegalStateException("Concludi il round attivo prima di cambiare chiamata");
@@ -115,6 +117,7 @@ public class AuctionService {
             mercatoService.requireUpdatedQuotes();
         }
         if (state == null) state = loadCurrentState();
+        requireNoPendingTocco();
         RoundState previous = state;
         RoundState s = new RoundState();
         s.roundId = UUID.randomUUID().toString();
@@ -429,6 +432,7 @@ public class AuctionService {
 
     @Transactional
     public synchronized void resetForSkip() {
+        requireNoPendingTocco();
         if (state == null) {
             state = loadCurrentState();
         }
@@ -441,6 +445,7 @@ public class AuctionService {
 
     @Transactional
     public synchronized RoundState manualAssign(Long participantId, String playerName, String team, Double amount) {
+        requireNoPendingTocco();
         if (miniAuctions.active() != null) throw new IllegalStateException("Usare il round della mini asta; completare prima tutti gli slot");
         if (participantId == null || playerName == null) {
             throw new IllegalArgumentException("Dati mancanti per assegnazione manuale");
@@ -505,6 +510,103 @@ public class AuctionService {
         return state;
     }
 
+    private RoundState requireToccoRound(String roundId) {
+        RoundState current = get();
+        if (current == null || !Objects.equals(current.roundId, roundId) || !current.closed || current.winner != null
+                || current.tieUsers == null || current.tieUsers.size() < 2)
+            throw new IllegalStateException("Spareggio non disponibile o round cambiato");
+        return current;
+    }
+
+    private ToccoState requireTocco(String roundId, String toccoId) {
+        ToccoState tocco = requireToccoRound(roundId).tocco;
+        if (tocco == null || !Objects.equals(tocco.id, toccoId))
+            throw new IllegalStateException("Tocco non disponibile o cambiato");
+        return tocco;
+    }
+
+    private void requireNoPendingTocco() {
+        RoundState current = get();
+        if (current != null && current.tocco != null && current.winner == null)
+            throw new IllegalStateException("Completare o annullare prima il tocco");
+    }
+
+    @Transactional
+    public synchronized RoundState startTocco(String roundId, List<Long> order, Long firstParticipantId) {
+        RoundState current = requireToccoRound(roundId);
+        if (current.tocco != null) throw new IllegalStateException("Tocco già avviato");
+        if (order == null || order.size() != current.tieUsers.size() || new HashSet<>(order).size() != order.size()
+                || !new HashSet<>(order).equals(new HashSet<>(current.tieUsers)) || !order.contains(firstParticipantId))
+            throw new IllegalArgumentException("Ordine e partenza devono comprendere soltanto tutti i partecipanti allo spareggio");
+        ToccoState tocco = new ToccoState();
+        tocco.id = UUID.randomUUID().toString();
+        tocco.order = new ArrayList<>(order);
+        tocco.firstParticipantId = firstParticipantId;
+        current.tocco = tocco;
+        persistCurrentState();
+        socket.broadcast("ROUND_UPDATED", RoundDto.toDto(current));
+        return current;
+    }
+
+    @Transactional
+    public synchronized RoundState chooseTocco(String roundId, String toccoId, Long participantId, Integer number) {
+        ToccoState tocco = requireTocco(roundId, toccoId);
+        if (participantId == null || !tocco.order.contains(participantId))
+            throw new IllegalArgumentException("Non partecipi a questo spareggio");
+        if (number == null || number < 1 || number > 5) throw new IllegalArgumentException("Scegli un numero da 1 a 5");
+        if (tocco.winnerParticipantId != null || tocco.choices.containsKey(participantId.toString()))
+            throw new IllegalStateException("Scelta già confermata");
+        tocco.choices.put(participantId.toString(), number);
+        if (tocco.choices.size() == tocco.order.size()) {
+            tocco.sum = tocco.choices.values().stream().mapToInt(Integer::intValue).sum();
+            int index = (tocco.order.indexOf(tocco.firstParticipantId) + tocco.sum - 1) % tocco.order.size();
+            tocco.winnerParticipantId = tocco.order.get(index);
+        }
+        persistCurrentState();
+        socket.broadcast("ROUND_UPDATED", RoundDto.toDto(state));
+        return state;
+    }
+
+    @Transactional
+    public synchronized RoundState cancelTocco(String roundId, String toccoId) {
+        requireTocco(roundId, toccoId);
+        state.tocco = null;
+        persistCurrentState();
+        socket.broadcast("ROUND_UPDATED", RoundDto.toDto(state));
+        return state;
+    }
+
+    @Transactional
+    public synchronized RoundState assignTocco(String roundId, String toccoId, Double amount) {
+        ToccoState tocco = requireTocco(roundId, toccoId);
+        if (tocco.winnerParticipantId == null) throw new IllegalStateException("Attendere la conferma di tutti");
+        if (amount == null || !Double.isFinite(amount) || amount <= 0 || amount != Math.floor(amount))
+            throw new IllegalArgumentException("Inserire un prezzo intero positivo");
+        ParticipantEntity participant = ParticipantEntity.findById(tocco.winnerParticipantId);
+        PlayerEntity player = dbService.findByNameTeam(state.player, state.playerTeam);
+        if (participant == null || player == null || !player.active) throw new IllegalStateException("Giocatore o partecipante non disponibile");
+        if (state.miniSessionId != null) {
+            miniAuctions.fill(state.miniSessionId, state.miniBidSlots.get(participant.id.toString()),
+                    participant.id, player, amount, state.roundId);
+        } else {
+            validateNewAssignment(participant, player, amount);
+            dbService.markAssigned(state.roundId, player, participant.id, amount);
+        }
+        MarketMovementEntity purchase = MarketMovementEntity.find(
+                "player = ?1 and type in ?2 and revertedAt is null order by createdAt desc, id desc",
+                player, List.of(MarketMovementEntity.Type.PURCHASE, MarketMovementEntity.Type.MINI_PURCHASE)).firstResult();
+        if (purchase != null) for (MarketMovementEntity movement : MarketMovementEntity.<MarketMovementEntity>list("operationCode", purchase.operationCode))
+            movement.auctionRoundId = state.roundId;
+        state.winner = new Winner(participant.id, participant.name, amount);
+        state.lastAssignment = assignmentSummary(player, participant, amount);
+        state.tieUsers = null;
+        state.allowedUsers = null;
+        persistCurrentState();
+        socket.broadcast("ROUND_CLOSED", RoundDto.toDto(state));
+        socket.broadcast("SUMMARY_UPDATED", Map.of("reason", "tocco_assignment"));
+        return state;
+    }
+
     private String auctionSessionCode(RoundState previous) {
         var market = mercatoService.getConfig();
         if (market != null && market.attiva && market.sessionCode != null) {
@@ -545,6 +647,7 @@ public class AuctionService {
      */
     @Transactional
     public synchronized RoundState adminAssign(Long playerId, Long participantId, Double amount) {
+        requireNoPendingTocco();
         if (miniAuctions.active() != null) throw new IllegalStateException("Usare il round della mini asta; completare prima tutti gli slot");
         if (playerId == null || participantId == null || amount == null || amount <= 0) {
             throw new IllegalArgumentException("Giocatore, partecipante e importo sono obbligatori");
@@ -683,6 +786,7 @@ public class AuctionService {
 
     @Transactional
     public synchronized AuctionSessionCloseDto closeAuction() {
+        requireNoPendingTocco();
         if (miniAuctions.active() != null) throw new IllegalStateException("Usare il round della mini asta; completare prima tutti gli slot");
         if (state == null) state = loadCurrentState();
         if (state != null && !state.closed) {

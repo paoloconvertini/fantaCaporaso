@@ -19,6 +19,21 @@ describe('MobileComponent', () => {
     return new MobileComponent(route, api, auth);
   }
 
+  it('keeps observers out of the tocco even when linked to a tied team', () => {
+    const page = component(true);
+    page.pid = 7;
+    page.round = { tocco: { participants: [{ id: 7, confirmed: false }] } };
+    expect(page.myToccoParticipant).toBeNull();
+  });
+
+  it('uses the authenticated team for tocco rather than the participant query parameter', () => {
+    const page = component();
+    page.pid = 9;
+    page.round = { tocco: { participants: [{ id: 7, confirmed: true }, { id: 9, confirmed: false }] } };
+    expect(page.myToccoParticipant.id).toBe(7);
+    expect(page.myToccoParticipant.confirmed).toBeTrue();
+  });
+
   it('keeps an associated observer read-only even with a participant id', () => {
     const page = component(true);
     page.pid = 7;

@@ -114,19 +114,25 @@ public class AuctionResource {
     @Path("/start")
     @RolesAllowed("admin")
     public RoundDto startRound(RoundState payload) {
-        RoundState s = service.start(
-                payload.player,
-                payload.playerTeam,
-                payload.playerRole,
-                payload.durationSeconds,
-                payload.tieBreak,
-                payload.value,
-                payload.allowedUsers
-        );
-        socket.broadcast("ROUND_STARTED", RoundDto.toDto(s));
-
-        scheduleAutoClose(s);
-        return RoundDto.toDto(s);
+        try {
+            if (payload == null) throw new IllegalArgumentException("Dati del round mancanti");
+            RoundState s = service.start(
+                    payload.player,
+                    payload.playerTeam,
+                    payload.playerRole,
+                    payload.durationSeconds,
+                    payload.tieBreak,
+                    payload.value,
+                    payload.allowedUsers
+            );
+            socket.broadcast("ROUND_STARTED", RoundDto.toDto(s));
+            scheduleAutoClose(s);
+            return RoundDto.toDto(s);
+        } catch (IllegalArgumentException e) {
+            throw new WebApplicationException(e.getMessage(), 400);
+        } catch (IllegalStateException e) {
+            throw new WebApplicationException(e.getMessage(), 409);
+        }
     }
 
     private synchronized void scheduleAutoClose(RoundState s) {

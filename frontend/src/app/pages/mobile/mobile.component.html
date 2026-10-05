@@ -131,6 +131,23 @@
     </div>
   </mat-card>
 
+  <mat-card class="list-card tocco-panel" *ngIf="round?.tocco as tocco">
+    <h2>Spareggio al tocco</h2>
+    <p *ngIf="!tocco.completed">Scegli da 1 a 5. I numeri saranno visibili solo dopo la conferma di tutti. La scelta è definitiva.</p>
+    <div class="tocco-row" *ngFor="let participant of tocco.participants; let i = index">
+      <span>{{ i + 1 }}. {{ participant.name }} <b *ngIf="participant.id === tocco.firstParticipantId">· Partenza</b></span>
+      <strong>{{ tocco.completed ? participant.number : (participant.confirmed ? 'Confermato' : 'In attesa') }}</strong>
+    </div>
+    <div *ngIf="!tocco.completed && myToccoParticipant && !myToccoParticipant.confirmed">
+      <div class="tocco-numbers"><button mat-stroked-button *ngFor="let number of [1,2,3,4,5]" [color]="toccoNumber === number ? 'primary' : ''" [class.selected]="toccoNumber === number" [disabled]="toccoSending" (click)="toccoNumber = number">{{ number }}</button></div>
+      <button mat-raised-button color="primary" [disabled]="!toccoNumber || toccoSending" (click)="confirmTocco()">Conferma {{ toccoNumber || '' }}</button>
+    </div>
+    <p *ngIf="!tocco.completed && myToccoParticipant?.confirmed">Scelta confermata. Attendi gli altri partecipanti.</p>
+    <p *ngIf="tocco.completed">Somma: <b>{{ tocco.sum }}</b> · Vince <b>{{ tocco.winnerName }}</b></p>
+    <p *ngIf="tocco.completed && !round.winner">In attesa dell’assegnazione e del prezzo finale da parte dell’admin.</p>
+    <p role="alert" *ngIf="toccoError">{{ toccoError }}</p>
+  </mat-card>
+
   <mat-card class="list-card" *ngIf="round && !round.closed">
     <h3>Chi sta puntando</h3>
     <div *ngFor="let user of activeUsers" class="list-row">
