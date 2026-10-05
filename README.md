@@ -466,3 +466,9 @@ L’avvio di un round restituisce HTTP 400 per dati o disponibilità non validi 
 Con mercato e round chiusi, `./scripts/close-auction-site.sh` spegne backend e frontend prod e serve una pagina statica “Asta chiusa” su `https://asta.fantacaporaso.it`, lasciando attivi soltanto il proxy e il tunnel pubblico. PostgreSQL non viene modificato. La pagina riusa la grafica della home, con link a home e storico; le API e i WebSocket restituiscono 503. Il pulsante asta della home resta disabilitato.
 
 L’overlay `docker-compose.closed.yml` monta `deploy/nginx/closed.conf` e la cartella statica `landing-page`. `./scripts/start-auction.sh` riavvia lo stack con la configurazione ordinaria, rimuovendo l’overlay della pagina chiusa. `./scripts/stop-auction.sh` spegne anche proxy e tunnel: usarlo solo quando non serve mantenere la pagina pubblica. Durante la modalità chiusa `status-auction.sh` segnala backend spento, come previsto.
+
+### Rose pubbliche consolidate
+
+`./scripts/export-public-rosters.sh` legge soltanto il database PROD, in transazione read-only, e genera `landing-page/rose/index.html`. La pagina mostra squadra, ruolo, calciatore e club, senza crediti, costi, posti liberi o dati degli account; usa `landing-page/rose/rosters.css` e lo stile condiviso della home. Le squadre si aprono con pannelli HTML accessibili anche senza JavaScript. È una fotografia statica, da rigenerare e pubblicare dopo modifiche consolidate alle rose.
+
+La home collega `/rose/` con “Consulta le rose”; la pagina “Asta chiusa” non contiene quel link. `/riepilogo/` resta conservato per i mercati futuri ma senza collegamenti visibili. Pubblicare il sito completo, mantenendo anche storico e riepilogo: verificare che la cartella di pubblicazione contenga home, stili, storico e dati prima di avviare Wrangler. L’app prod può restare spenta durante generazione e pubblicazione.
