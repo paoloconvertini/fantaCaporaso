@@ -460,3 +460,9 @@ Il conteggio parte da 1 sul partecipante iniziale, segue l’ordine mostrato e r
 Lo stato e le scelte sono salvati nel JSON del round esistente, senza migrazioni. Una riconnessione recupera lo stato; le richieste relative a un round o a un tentativo annullato vengono rifiutate. API: `POST /api/tocco/start`, `/choose`, `/cancel`, `/assign`. Solo `/choose` è disponibile ai partecipanti, con squadra ricavata dall’identità autenticata; gli altri endpoint richiedono il ruolo admin.
 
 L’avvio di un round restituisce HTTP 400 per dati o disponibilità non validi (ad esempio un ruolo senza slot aperti nella mini asta), oppure HTTP 409 per un conflitto di stato. Il messaggio viene mostrato dalla pagina admin senza alterare il round quando l’avvio è rifiutato.
+
+### Pagina pubblica con asta chiusa
+
+Con mercato e round chiusi, `./scripts/close-auction-site.sh` spegne backend e frontend prod e serve una pagina statica “Asta chiusa” su `https://asta.fantacaporaso.it`, lasciando attivi soltanto il proxy e il tunnel pubblico. PostgreSQL non viene modificato. La pagina riusa la grafica della home, con link a home, storico e riepilogo; le API e i WebSocket restituiscono 503. Il pulsante asta della home resta disabilitato.
+
+L’overlay `docker-compose.closed.yml` monta `deploy/nginx/closed.conf` e la cartella statica `landing-page`. `./scripts/start-auction.sh` riavvia lo stack con la configurazione ordinaria, rimuovendo l’overlay della pagina chiusa. `./scripts/stop-auction.sh` spegne anche proxy e tunnel: usarlo solo quando non serve mantenere la pagina pubblica. Durante la modalità chiusa `status-auction.sh` segnala backend spento, come previsto.

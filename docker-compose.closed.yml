@@ -1,0 +1,6 @@
+# Pagina statica quando l'asta è chiusa. Usare dopo gli overlay prod e cloud.
+services:
+  reverse-proxy:
+    volumes:
+      - ./deploy/nginx/closed.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./landing-page:/usr/share/nginx/html:ro
