@@ -486,3 +486,5 @@ Verifiche senza dipendenze aggiuntive: node --check landing-page/players.js; nod
 ### Regolamento pubblico
 
 La pagina `/regolamento/` trascrive il documento “FantaCAPORASO 2026-2027 Regolamento.docx” fornito dal gestore, senza pubblicare il Word. La home offre una tile dedicata. Il testo mantiene le regole originali; il riepilogo dei premi è una tabella HTML con quote percentuali sul totale originale di 3.050 euro, arrotondate a due decimali (somma 100%), e l’intestazione è aggiornata a 2026-2027 su indicazione del gestore. Gli importi nella tabella non vengono pubblicati; il testo delle altre sezioni resta invariato. Per aggiornamenti futuri confrontare integralmente il testo con il documento, verificare importi, indice e layout mobile, quindi pubblicare il sito completo preservando rose, catalogo, storico e riepilogo. Non sono coinvolti database, API o l’app asta.
+
+La tile Gazzetta della dashboard è temporaneamente nascosta con `hidden`, mantenendo markup e collegamento per riattivarla. Per renderla nuovamente visibile rimuovere `hidden` dal link `tile-newspaper` in `landing-page/index.html`; la Gazzetta resta disponibile al proprio indirizzo.
