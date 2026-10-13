@@ -2505,5 +2505,1462 @@
         ]
       ]
     }
-  ]
+  ],
+  "statistics": {
+    "day": 6,
+    "season": "2026-2027",
+    "source": "FantaCAPORASO 2026-2027 Formazioni 06ª Giornata.xlsx",
+    "sections": [
+      {
+        "key": "inferiorita",
+        "title": "Partite in inferiorità",
+        "description": "Conteggi cumulativi. Il totale delle partite conta ogni gara una volta; i giocatori mancanti pesano una gara in 10 come 1 e una gara in 9 come 2.",
+        "heads": [
+          "Squadra",
+          "Giocatori a voto · giornata",
+          "In 10",
+          "In 9",
+          "In 8",
+          "In 7",
+          "In 6",
+          "In 5",
+          "Partite in inferiorità",
+          "Giocatori mancanti"
+        ],
+        "rows": [
+          [
+            "3/4 e 1 Gazzosa",
+            11,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1
+          ],
+          [
+            "MessiMale",
+            11,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "Kecavoli",
+            11,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "Johnson Oil",
+            11,
+            2,
+            1,
+            0,
+            0,
+            0,
+            0,
+            3,
+            4
+          ],
+          [
+            "DanPao Salisburgo FC",
+            11,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "Havana Amigos",
+            10,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1
+          ],
+          [
+            "Em Fallét",
+            11,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "Solo Leveling",
+            11,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "GenSim e 2 Monelli",
+            11,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1
+          ],
+          [
+            "Corto Muso",
+            11,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "Atletico ma non Troppo",
+            11,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "Aston Birra",
+            11,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1
+          ],
+          [
+            "Viking 84",
+            11,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1
+          ],
+          [
+            "Ruverpool",
+            11,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1
+          ],
+          [
+            "Young Boys United",
+            11,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            2,
+            3
+          ],
+          [
+            "S.S. 30lance",
+            11,
+            2,
+            1,
+            0,
+            0,
+            0,
+            0,
+            3,
+            4
+          ]
+        ]
+      },
+      {
+        "key": "difesa",
+        "title": "Modificatore difesa",
+        "description": "Occorrenze cumulative per fascia e punti complessivi di bonus.",
+        "heads": [
+          "Squadra",
+          "Bonus giornata",
+          "+1",
+          "+2",
+          "+3",
+          "+4",
+          "+5",
+          "+6",
+          "Bonus totale"
+        ],
+        "rows": [
+          [
+            "3/4 e 1 Gazzosa",
+            0,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            4
+          ],
+          [
+            "MessiMale",
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            "Kecavoli",
+            2,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            6
+          ],
+          [
+            "Johnson Oil",
+            3,
+            0,
+            2,
+            2,
+            0,
+            1,
+            0,
+            15
+          ],
+          [
+            "DanPao Salisburgo FC",
+            2,
+            1,
+            1,
+            2,
+            2,
+            0,
+            0,
+            17
+          ],
+          [
+            "Havana Amigos",
+            1,
+            2,
+            2,
+            0,
+            0,
+            0,
+            0,
+            6
+          ],
+          [
+            "Em Fallét",
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            5
+          ],
+          [
+            "Solo Leveling",
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            5
+          ],
+          [
+            "GenSim e 2 Monelli",
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            3
+          ],
+          [
+            "Corto Muso",
+            3,
+            2,
+            1,
+            1,
+            0,
+            0,
+            0,
+            7
+          ],
+          [
+            "Atletico ma non Troppo",
+            0,
+            0,
+            2,
+            1,
+            1,
+            0,
+            0,
+            11
+          ],
+          [
+            "Aston Birra",
+            4,
+            0,
+            0,
+            1,
+            2,
+            0,
+            1,
+            17
+          ],
+          [
+            "Viking 84",
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            2
+          ],
+          [
+            "Ruverpool",
+            2,
+            1,
+            3,
+            0,
+            1,
+            0,
+            0,
+            11
+          ],
+          [
+            "Young Boys United",
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "S.S. 30lance",
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      {
+        "key": "capitano",
+        "title": "Bonus capitano",
+        "description": "Bonus e malus di giornata; occorrenze cumulative per valore e saldo totale.",
+        "heads": [
+          "Squadra",
+          "Bonus giornata",
+          "-2,5",
+          "-2,0",
+          "-1,5",
+          "-1,0",
+          "-0,5",
+          "0,0",
+          "0,5",
+          "1,0",
+          "1,5",
+          "2,0",
+          "2,5",
+          "3,0",
+          "Saldo totale"
+        ],
+        "rows": [
+          [
+            "3/4 e 1 Gazzosa",
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            2,
+            1,
+            1,
+            0,
+            0,
+            0,
+            3.5
+          ],
+          [
+            "MessiMale",
+            1,
+            0,
+            0,
+            0,
+            2,
+            0,
+            1,
+            1,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0.5
+          ],
+          [
+            "Kecavoli",
+            0.5,
+            0,
+            0,
+            0,
+            1,
+            1,
+            2,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            -0.5
+          ],
+          [
+            "Johnson Oil",
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            5,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            "DanPao Salisburgo FC",
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            2,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "Havana Amigos",
+            0.5,
+            0,
+            0,
+            0,
+            2,
+            0,
+            2,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            -0.5
+          ],
+          [
+            "Em Fallét",
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            3,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            1.5
+          ],
+          [
+            "Solo Leveling",
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            3,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            "GenSim e 2 Monelli",
+            0.5,
+            0,
+            0,
+            0,
+            0,
+            1,
+            2,
+            1,
+            2,
+            0,
+            0,
+            0,
+            0,
+            2
+          ],
+          [
+            "Corto Muso",
+            -1.5,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            4
+          ],
+          [
+            "Atletico ma non Troppo",
+            -0.5,
+            0,
+            0,
+            0,
+            2,
+            1,
+            2,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            -2
+          ],
+          [
+            "Aston Birra",
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            2,
+            1,
+            1,
+            0,
+            0,
+            0,
+            3.5
+          ],
+          [
+            "Viking 84",
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            2,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0.5
+          ],
+          [
+            "Ruverpool",
+            0.5,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            -1.5
+          ],
+          [
+            "Young Boys United",
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            2,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            "S.S. 30lance",
+            0.5,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            2,
+            1,
+            1,
+            0,
+            0,
+            0,
+            2.5
+          ]
+        ]
+      },
+      {
+        "key": "gol",
+        "title": "Gol dei calciatori",
+        "description": "Valori dei riepiloghi “Titolari” e “Squadra” del file. La differenza mostra i bonus non utilizzati; i gol dei calciatori sono distinti dai gol degli incontri.",
+        "heads": [
+          "Squadra",
+          "Titolari · giornata",
+          "Titolari · totale",
+          "Squadra · giornata",
+          "Squadra · totale",
+          "Non utilizzati · totale"
+        ],
+        "rows": [
+          [
+            "3/4 e 1 Gazzosa",
+            3,
+            12,
+            4,
+            15,
+            3
+          ],
+          [
+            "MessiMale",
+            1,
+            7,
+            1,
+            9,
+            2
+          ],
+          [
+            "Kecavoli",
+            0,
+            1,
+            0,
+            2,
+            1
+          ],
+          [
+            "Johnson Oil",
+            0,
+            5,
+            0,
+            5,
+            0
+          ],
+          [
+            "DanPao Salisburgo FC",
+            0,
+            5,
+            0,
+            7,
+            2
+          ],
+          [
+            "Havana Amigos",
+            0,
+            9,
+            0,
+            9,
+            0
+          ],
+          [
+            "Em Fallét",
+            2,
+            6,
+            2,
+            6,
+            0
+          ],
+          [
+            "Solo Leveling",
+            1,
+            6,
+            2,
+            10,
+            4
+          ],
+          [
+            "GenSim e 2 Monelli",
+            1,
+            9,
+            1,
+            10,
+            1
+          ],
+          [
+            "Corto Muso",
+            3,
+            13,
+            3,
+            13,
+            0
+          ],
+          [
+            "Atletico ma non Troppo",
+            2,
+            9,
+            2,
+            13,
+            4
+          ],
+          [
+            "Aston Birra",
+            4,
+            7,
+            5,
+            8,
+            1
+          ],
+          [
+            "Viking 84",
+            0,
+            10,
+            0,
+            14,
+            4
+          ],
+          [
+            "Ruverpool",
+            2,
+            7,
+            2,
+            7,
+            0
+          ],
+          [
+            "Young Boys United",
+            1,
+            12,
+            1,
+            14,
+            2
+          ],
+          [
+            "S.S. 30lance",
+            1,
+            6,
+            1,
+            8,
+            2
+          ]
+        ]
+      },
+      {
+        "key": "assist",
+        "title": "Assist",
+        "description": "Valori dei riepiloghi “Titolari” e “Squadra” del file. La differenza mostra i bonus non utilizzati; i gol dei calciatori sono distinti dai gol degli incontri.",
+        "heads": [
+          "Squadra",
+          "Titolari · giornata",
+          "Titolari · totale",
+          "Squadra · giornata",
+          "Squadra · totale",
+          "Non utilizzati · totale"
+        ],
+        "rows": [
+          [
+            "3/4 e 1 Gazzosa",
+            0,
+            1,
+            0,
+            2,
+            1
+          ],
+          [
+            "MessiMale",
+            2,
+            8,
+            2,
+            9,
+            1
+          ],
+          [
+            "Kecavoli",
+            1,
+            9,
+            2,
+            10,
+            1
+          ],
+          [
+            "Johnson Oil",
+            0,
+            1,
+            0,
+            1,
+            0
+          ],
+          [
+            "DanPao Salisburgo FC",
+            1,
+            5,
+            1,
+            7,
+            2
+          ],
+          [
+            "Havana Amigos",
+            1,
+            4,
+            1,
+            4,
+            0
+          ],
+          [
+            "Em Fallét",
+            3,
+            9,
+            3,
+            9,
+            0
+          ],
+          [
+            "Solo Leveling",
+            1,
+            6,
+            1,
+            6,
+            0
+          ],
+          [
+            "GenSim e 2 Monelli",
+            0,
+            2,
+            0,
+            2,
+            0
+          ],
+          [
+            "Corto Muso",
+            0,
+            8,
+            1,
+            10,
+            2
+          ],
+          [
+            "Atletico ma non Troppo",
+            0,
+            4,
+            0,
+            12,
+            8
+          ],
+          [
+            "Aston Birra",
+            2,
+            7,
+            3,
+            12,
+            5
+          ],
+          [
+            "Viking 84",
+            0,
+            5,
+            0,
+            6,
+            1
+          ],
+          [
+            "Ruverpool",
+            0,
+            4,
+            1,
+            6,
+            2
+          ],
+          [
+            "Young Boys United",
+            0,
+            6,
+            0,
+            7,
+            1
+          ],
+          [
+            "S.S. 30lance",
+            0,
+            7,
+            0,
+            8,
+            1
+          ]
+        ]
+      },
+      {
+        "key": "gialli",
+        "title": "Ammonizioni",
+        "description": "Conteggi riportati nel riepilogo del file Formazioni.",
+        "heads": [
+          "Squadra",
+          "Giornata",
+          "Precedenti",
+          "Totale"
+        ],
+        "rows": [
+          [
+            "3/4 e 1 Gazzosa",
+            2,
+            10,
+            12
+          ],
+          [
+            "MessiMale",
+            2,
+            4,
+            6
+          ],
+          [
+            "Kecavoli",
+            1,
+            8,
+            9
+          ],
+          [
+            "Johnson Oil",
+            1,
+            9,
+            10
+          ],
+          [
+            "DanPao Salisburgo FC",
+            3,
+            6,
+            9
+          ],
+          [
+            "Havana Amigos",
+            2,
+            8,
+            10
+          ],
+          [
+            "Em Fallét",
+            4,
+            8,
+            12
+          ],
+          [
+            "Solo Leveling",
+            1,
+            10,
+            11
+          ],
+          [
+            "GenSim e 2 Monelli",
+            2,
+            6,
+            8
+          ],
+          [
+            "Corto Muso",
+            0,
+            9,
+            9
+          ],
+          [
+            "Atletico ma non Troppo",
+            2,
+            11,
+            13
+          ],
+          [
+            "Aston Birra",
+            2,
+            7,
+            9
+          ],
+          [
+            "Viking 84",
+            1,
+            12,
+            13
+          ],
+          [
+            "Ruverpool",
+            1,
+            7,
+            8
+          ],
+          [
+            "Young Boys United",
+            3,
+            9,
+            12
+          ],
+          [
+            "S.S. 30lance",
+            4,
+            2,
+            6
+          ]
+        ]
+      },
+      {
+        "key": "rossi",
+        "title": "Espulsioni",
+        "description": "Conteggi riportati nel riepilogo del file Formazioni.",
+        "heads": [
+          "Squadra",
+          "Giornata",
+          "Precedenti",
+          "Totale"
+        ],
+        "rows": [
+          [
+            "3/4 e 1 Gazzosa",
+            1,
+            0,
+            1
+          ],
+          [
+            "MessiMale",
+            0,
+            0,
+            0
+          ],
+          [
+            "Kecavoli",
+            0,
+            0,
+            0
+          ],
+          [
+            "Johnson Oil",
+            0,
+            0,
+            0
+          ],
+          [
+            "DanPao Salisburgo FC",
+            0,
+            0,
+            0
+          ],
+          [
+            "Havana Amigos",
+            0,
+            0,
+            0
+          ],
+          [
+            "Em Fallét",
+            1,
+            0,
+            1
+          ],
+          [
+            "Solo Leveling",
+            0,
+            0,
+            0
+          ],
+          [
+            "GenSim e 2 Monelli",
+            0,
+            0,
+            0
+          ],
+          [
+            "Corto Muso",
+            1,
+            0,
+            1
+          ],
+          [
+            "Atletico ma non Troppo",
+            0,
+            1,
+            1
+          ],
+          [
+            "Aston Birra",
+            0,
+            0,
+            0
+          ],
+          [
+            "Viking 84",
+            0,
+            0,
+            0
+          ],
+          [
+            "Ruverpool",
+            0,
+            1,
+            1
+          ],
+          [
+            "Young Boys United",
+            0,
+            0,
+            0
+          ],
+          [
+            "S.S. 30lance",
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      {
+        "key": "ufficio",
+        "title": "Voti d’ufficio",
+        "description": "Conteggi del riepilogo originale; le colonne ordinali mantengono le etichette del file.",
+        "heads": [
+          "Squadra",
+          "1°",
+          "2°",
+          "3°",
+          "4°",
+          "5°",
+          "6°",
+          "7°",
+          "8°",
+          "9°",
+          "10°",
+          "Totale"
+        ],
+        "rows": [
+          [
+            "3/4 e 1 Gazzosa",
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "MessiMale",
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "Kecavoli",
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "Johnson Oil",
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "DanPao Salisburgo FC",
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "Havana Amigos",
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "Em Fallét",
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "Solo Leveling",
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "GenSim e 2 Monelli",
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "Corto Muso",
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "Atletico ma non Troppo",
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "Aston Birra",
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "Viking 84",
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "Ruverpool",
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "Young Boys United",
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "S.S. 30lance",
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    ]
+  }
 }
