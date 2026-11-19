@@ -501,8 +501,7 @@ export class AdminComponent implements OnInit, OnDestroy {
         const dialogRef = this.dialog.open(ManualAssignDialogComponent, {
             width: '560px',
             maxWidth: 'calc(100vw - 24px)',
-            panelClass: 'manual-assign-dialog-panel',
-            data: { player: this.player, team: this.team, role: this.prole, value: this.value }
+            panelClass: 'manual-assign-dialog-panel'
         });
 
         dialogRef.afterClosed().subscribe(result => {

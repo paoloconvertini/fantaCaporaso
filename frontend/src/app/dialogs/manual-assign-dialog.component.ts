@@ -1,5 +1,6 @@
-import { Component, Inject } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { Component, OnDestroy } from '@angular/core';
+import { MatDialogRef } from '@angular/material/dialog';
+import { Subscription, switchMap, timer } from 'rxjs';
 import {AdminApiService} from "../services/admin-api.service";
 
 @Component({
@@ -7,7 +8,7 @@ import {AdminApiService} from "../services/admin-api.service";
     templateUrl: './manual-assign-dialog.component.html',
     styleUrls: ['./manual-assign-dialog.component.css']
 })
-export class ManualAssignDialogComponent {
+export class ManualAssignDialogComponent implements OnDestroy {
     participants: any[] = [];
     players: any[] = [];
     selectedPlayer: any | null = null;
@@ -15,51 +16,48 @@ export class ManualAssignDialogComponent {
     searching = false;
     loadingParticipants = false;
     selectedParticipantId: number | null = null;
-    amount: number;
+    amount = 1;
+    private playerSearch?: Subscription;
+    private participantSearch?: Subscription;
 
     constructor(
         private adminApi: AdminApiService,
-        private dialogRef: MatDialogRef<ManualAssignDialogComponent>,
-        @Inject(MAT_DIALOG_DATA) public data: any
-    ) {
-        this.amount = data?.role === 'PORTIERE' ? 3 : 1;
-        if (data?.player) {
-            this.query = data.player;
-            this.search(this.query, true);
-        }
-    }
+        private dialogRef: MatDialogRef<ManualAssignDialogComponent>
+    ) {}
 
     get minimumAmount(): number {
         return this.selectedPlayer?.role === 'PORTIERE' ? 3 : 1;
     }
 
-    search(value: string, selectExact = false) {
+    search(value: string) {
+        this.playerSearch?.unsubscribe();
+        this.participantSearch?.unsubscribe();
         this.query = value || '';
+        this.players = [];
+        this.participants = [];
         this.selectedPlayer = null;
         this.selectedParticipantId = null;
-        if (this.query.trim().length < 2) {
-            this.players = [];
-            return;
-        }
-        this.searching = true;
-        this.adminApi.searchPlayers(this.query.trim()).subscribe({
+        this.loadingParticipants = false;
+        const query = this.query.trim();
+        this.searching = query.length >= 2;
+        if (!this.searching) return;
+
+        this.playerSearch = timer(300).pipe(
+            switchMap(() => this.adminApi.searchPlayers(query))
+        ).subscribe({
             next: players => {
                 this.players = players;
                 this.searching = false;
-                if (selectExact) {
-                    const exact = players.find(player =>
-                        player.name === this.data.player && player.team === this.data.team);
-                    if (exact) this.selectPlayer(exact.id);
-                }
             },
             error: () => {
-                this.players = [];
                 this.searching = false;
             }
         });
     }
 
     selectPlayer(playerId: number) {
+        this.participantSearch?.unsubscribe();
+        this.loadingParticipants = false;
         this.selectedPlayer = this.players.find(player => player.id === playerId) || null;
         this.participants = [];
         this.selectedParticipantId = null;
@@ -67,7 +65,7 @@ export class ManualAssignDialogComponent {
         this.amount = this.selectedPlayer.amount ?? (this.selectedPlayer.role === 'PORTIERE' ? 3 : 1);
         this.loadingParticipants = true;
         const selectedPlayerId = this.selectedPlayer.id;
-        this.adminApi.getEligibleParticipants(selectedPlayerId).subscribe({
+        this.participantSearch = this.adminApi.getEligibleParticipants(selectedPlayerId).subscribe({
             next: participants => {
                 if (this.selectedPlayer?.id !== selectedPlayerId) return;
                 this.participants = participants;
@@ -91,6 +89,11 @@ export class ManualAssignDialogComponent {
             participantId: this.selectedParticipantId,
             amount: this.amount
         });
+    }
+
+    ngOnDestroy() {
+        this.playerSearch?.unsubscribe();
+        this.participantSearch?.unsubscribe();
     }
 
     cancel() {

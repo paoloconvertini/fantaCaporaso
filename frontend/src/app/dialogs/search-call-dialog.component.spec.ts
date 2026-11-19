@@ -1,22 +1,29 @@
+import { fakeAsync, tick } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import { SearchCallDialogComponent } from './search-call-dialog.component';
 
 describe('SearchCallDialogComponent', () => {
-  it('ignores stale searches and clears results for short queries', () => {
+  it('ignores stale searches and clears results for short queries', fakeAsync(() => {
     const old = new Subject<any[]>();
     const current = new Subject<any[]>();
     const api = { searchCallPlayers: jasmine.createSpy().and.returnValues(old, current) };
     const component = new SearchCallDialogComponent(api as any, {} as any);
+    expect(api.searchCallPlayers).not.toHaveBeenCalled();
+    component.query = 'a'; component.searchPlayers();
     component.query = 'ab'; component.searchPlayers();
+    tick(299);
+    expect(api.searchCallPlayers).not.toHaveBeenCalled();
+    tick(1);
     component.query = 'abc'; component.searchPlayers();
     old.next([{ id: 1 }]);
     expect(component.players).toEqual([]);
+    tick(300);
     current.next([{ id: 2 }]);
     expect(component.players).toEqual([{ id: 2 }]);
     component.query = 'a'; component.searchPlayers();
     expect(component.players).toEqual([]);
     component.ngOnDestroy();
-  });
+  }));
 
   it('closes only after successful selection', () => {
     const ref = jasmine.createSpyObj('DialogRef', ['close']);

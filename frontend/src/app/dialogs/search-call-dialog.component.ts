@@ -1,6 +1,6 @@
 import { Component, OnDestroy } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
-import { Subscription } from 'rxjs';
+import { Subscription, switchMap, timer } from 'rxjs';
 import { AdminApiService } from '../services/admin-api.service';
 
 @Component({
@@ -24,9 +24,13 @@ export class SearchCallDialogComponent implements OnDestroy {
     this.players = [];
     this.error = '';
     this.loading = false;
-    if (this.query.trim().length < 2) return;
+    const query = this.query.trim();
+    const role = this.role;
+    if (query.length < 2) return;
     this.loading = true;
-    this.search = this.api.searchCallPlayers(this.query, this.role).subscribe({
+    this.search = timer(300).pipe(
+      switchMap(() => this.api.searchCallPlayers(query, role))
+    ).subscribe({
       next: players => { this.players = players; this.loading = false; },
       error: () => { this.error = 'Ricerca non riuscita. Riprova.'; this.loading = false; }
     });
