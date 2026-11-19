@@ -33,6 +33,7 @@ public class MercatoService {
         applyOfficialLimits(cfg);
         if (newSession) {
             cfg.sessionCode = UUID.randomUUID().toString();
+            cfg.presenzeRichieste = true;
             cfg.quotazioniAggiornate = false;
             cfg.partitiImportati = false;
             cfg.quotazioniAggiornateAt = null;

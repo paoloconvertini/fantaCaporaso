@@ -11,15 +11,36 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotAuthorizedException;
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.WebApplicationException;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 @ApplicationScoped
 public class AppUserService {
 
     @Inject
     PasswordService passwordService;
+
+    @ConfigProperty(name = "app.auction.invite-password")
+    Optional<String> auctionInvitePassword;
+
+    @Transactional
+    public String auctionInvite(Long participantId) {
+        String password = auctionInvitePassword.filter(value -> !value.isBlank())
+                .orElseThrow(() -> new WebApplicationException("Password per gli inviti non configurata", 409));
+        AppUserEntity user = AppUserEntity.find("participant.id = ?1 and role = 'user' and enabled = true", participantId)
+                .firstResult();
+        if (user == null) throw new NotFoundException("Nessun account attivo associato alla squadra");
+        if (!passwordService.verify(password, user.passwordHash)) {
+            throw new WebApplicationException("La password degli inviti non è valida per questa squadra", 409);
+        }
+        return "Ciao! Qui trovi l’asta FantaCaporaso\nhttps://asta.fantacaporaso.it/\n\n"
+                + "Squadra: " + user.participant.name + "\nUtente: " + user.username + "\nPassword: " + password;
+    }
 
     @Transactional
     public AppUserEntity createUser(CreateUserRequest request) {

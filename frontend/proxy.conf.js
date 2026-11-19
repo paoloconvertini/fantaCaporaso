@@ -25,6 +25,7 @@ module.exports = {
   '/ws': {
     router: backendTarget,
     secure: false,
+    changeOrigin: false,
     ws: true
   }
 };

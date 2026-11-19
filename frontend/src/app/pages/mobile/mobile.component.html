@@ -104,6 +104,8 @@
     </div>
   </mat-card>
 
+  <app-auction-chat></app-auction-chat>
+
   <mat-card class="list-card" *ngIf="miniSlots.length && (!round || round.closed)">
     <h3>I tuoi slot della mini asta</h3>
     <p *ngFor="let slot of miniSlots">{{ slot.role }} · {{ slot.releasedNames }} · {{ slot.filled ? 'Coperto' : 'Da coprire: minimo ' + slot.minimumBid }}</p>

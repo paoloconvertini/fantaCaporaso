@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 public class MercatoConfigEntity extends PanacheEntity {
 
     public boolean attiva;
+    public Boolean presenzeRichieste;
     public LocalDateTime fineSessione;
 
     public int maxPortieri;

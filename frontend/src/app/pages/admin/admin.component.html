@@ -209,6 +209,8 @@
         <span>{{ assignment.winner }} — <b>{{ assignment.amount }} {{ assignment.amount === 1 ? 'credito' : 'crediti' }}</b></span>
       </mat-card>
 
+      <app-auction-chat [admin]="true"></app-auction-chat>
+
       <!-- Overlay vincitore -->
       <div *ngIf="showWinnerOverlay && winnerPayload" class="winner-overlay">
         <div class="winner-card">

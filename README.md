@@ -307,6 +307,16 @@ Gli osservatori associati trovano i pulsanti “Aggiungi agli obiettivi” e “
 
 L'analisi è distinta per ruolo e ordinata per quotazione decrescente (somma del pacchetto per i portieri). La massima offerta personale viene dal servizio dell'asta, riservando un credito per ogni posto da finanziare oltre l'acquisto corrente. Per ciascun avversario si calcola il massimo numero `k` di acquisti nel medesimo ruolo con costo unitario `massimaPersonale + 1`, entro i suoi posti del ruolo e conservando `max(0, postiTotali - k * dimensioneAcquisto)` crediti. Il primo obiettivo dello scenario è alla posizione `somma(k) + 1`, se presente e acquistabile con il minimo personale. I vincoli di riacquisto personali sono inclusi; quelli avversari sono ignorati per mantenere la stima pessimistica. Il risultato è una simulazione, non una garanzia su prezzi, parità o ordine delle chiamate. L'analisi si aggiorna con gli eventi dell'asta e ogni 15 secondi; non scrive movimenti, offerte o crediti.
 
+### Presenze e chat dell’asta
+
+Nella cabina di regia, il riquadro presenze elenca le fantasquadre con posti ancora da coprire nel mercato ordinario. Una squadra risulta collegata se almeno uno dei suoi browser autenticati è sulla schermata delle puntate e invia il segnale di presenza. Le squadre con la rosa completa possono seguire l’asta senza essere richieste per l’avvio.
+
+Per le nuove sessioni di mercato il server blocca la prima estrazione e la prima chiamata dalla ricerca se manca una squadra richiesta. Dopo la prima chiamata riuscita, l’elenco resta consultabile e le disconnessioni non bloccano le chiamate successive. Gli annullamenti delle assegnazioni non riattivano il controllo. Prima del rilascio applicare `database/migrations/20261119_auction_presence.sql` secondo la procedura delle migrazioni. Le sessioni già configurate alla migrazione mantengono il comportamento precedente.
+
+Nel riquadro Presenze il pulsante WhatsApp sul chip di una squadra mancante apre la scelta del destinatario con il link pubblico, lo username e la password verificata per quell’account. Se l’apertura è bloccata, il testo resta disponibile per la copia. Impostare `AUCTION_INVITE_PASSWORD` nel file privato `config/application-dev.env` per DEV o `config/application-cloud.env` per PROD. Se la password non corrisponde o manca un account attivo, l’invito non viene generato.
+
+La chat usa il WebSocket autenticato `/ws/chat` per messaggi e presenze. Mantiene gli ultimi 50 messaggi in memoria fino al riavvio del backend, accetta solo testo fino a 300 caratteri e limita la frequenza per account. Il canale dei round continua a usare `/ws/round`.
+
 ## Checklist pre-asta
 
 L'app mostra un avviso globale per l'asta del 1 ottobre 2026: il 30 settembre indica “domani”, il 1 ottobre “oggi” e dal 2 ottobre scompare. La data segue il fuso Europe/Rome e viene ricontrollata ogni minuto, anche nelle pagine già aperte. Il testo è definito in `frontend/src/app/app.component.ts`.

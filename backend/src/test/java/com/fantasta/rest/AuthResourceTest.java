@@ -1,6 +1,12 @@
 package com.fantasta.rest;
 
+import com.fantasta.model.AppUserEntity;
+import com.fantasta.model.ParticipantEntity;
+import com.fantasta.security.AppJwtService;
+import com.fantasta.service.PasswordService;
+import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
 
@@ -9,6 +15,58 @@ import static org.hamcrest.Matchers.*;
 
 @QuarkusTest
 class AuthResourceTest {
+
+    @Inject AppJwtService jwt;
+    @Inject PasswordService passwords;
+
+    @Test
+    void copiesOnlyVerifiedParticipantCredentialsForAdmin() {
+        Long[] teams = QuarkusTransaction.requiringNew().call(() -> new Long[]{
+                inviteTeam("Invite valid", "invite-user", "test-invite-password"),
+                inviteTeam("Invite changed", "invite-changed", "different-password"),
+                inviteTeam("Invite no account", null, null)
+        });
+        String admin = jwt.createToken("test-admin", "admin", null);
+        String user = jwt.createToken("invite-user", "user", teams[0]);
+        try {
+            invite(teams[0], null).then().statusCode(401);
+            invite(teams[0], user).then().statusCode(403);
+            invite(teams[0], admin).then().statusCode(200).header("Cache-Control", "no-store")
+                    .body("message", allOf(containsString("https://asta.fantacaporaso.it/"),
+                            containsString("Squadra: Invite valid"), containsString("Utente: invite-user"),
+                            containsString("Password: test-invite-password")));
+            invite(teams[1], admin).then().statusCode(409);
+            invite(teams[2], admin).then().statusCode(404);
+        } finally {
+            QuarkusTransaction.requiringNew().run(() -> {
+                for (Long team : teams) {
+                    AppUserEntity.delete("participant.id", team);
+                    ParticipantEntity.deleteById(team);
+                }
+            });
+        }
+    }
+
+    private io.restassured.response.Response invite(Long team, String token) {
+        var request = given().contentType(ContentType.JSON).body("{}");
+        if (token != null) request.cookie("FANTASTA_AUTH", token);
+        return request.post("/api/admin/participants/{team}/auction-invite", team);
+    }
+
+    private Long inviteTeam(String name, String username, String password) {
+        ParticipantEntity team = new ParticipantEntity();
+        team.name = name;
+        team.persist();
+        if (username != null) {
+            AppUserEntity account = new AppUserEntity();
+            account.username = username;
+            account.role = "user";
+            account.participant = team;
+            account.passwordHash = passwords.hash(password);
+            account.persist();
+        }
+        return team.id;
+    }
 
     @Test
     void rejectsAnonymousAccessToProtectedEndpoint() {

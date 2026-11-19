@@ -30,6 +30,16 @@ public class RandomResource {
     @Inject
     RoundSocket socket;
 
+    @Inject
+    AuctionPresenceService presence;
+
+    @GET
+    @Path("/presence")
+    @RolesAllowed("admin")
+    public AuctionPresenceService.Presence presence() {
+        return presence.status();
+    }
+
     @GET
     @Path("/search")
     @RolesAllowed("admin")
@@ -45,7 +55,7 @@ public class RandomResource {
     @RolesAllowed("admin")
     public Response select(Map<String, Long> body) {
         try {
-            PlayerEntity player = auctionService.selectCalledPlayer(body == null ? null : body.get("playerId"));
+            PlayerEntity player = presence.select(body == null ? null : body.get("playerId"));
             selector.setRole(player.role);
             return Response.ok(calledPlayer(player)).build();
         } catch (IllegalArgumentException e) {
@@ -108,13 +118,16 @@ public class RandomResource {
     @Path("/next")
     @RolesAllowed("admin")
     public Response next() {
-        var giro = db.ensureCurrentGiro();
-        var m = selector.getMode();
+        var mode = selector.getMode();
+        if (mode != RandomSelectorService.Mode.ALL && mode != RandomSelectorService.Mode.ROLE) {
+            return Response.status(400).entity(Map.of("error", "Random OFF")).build();
+        }
         PlayerEntity p;
-        if (m == RandomSelectorService.Mode.ALL) p = db.drawRandom(giro.id, null);
-        else if (m == RandomSelectorService.Mode.ROLE) p = db.drawRandom(giro.id, selector.getRole());
-        else return Response.status(400).entity(Map.of("error", "Random OFF")).build();
-
+        try {
+            p = presence.draw(mode == RandomSelectorService.Mode.ROLE ? selector.getRole() : null);
+        } catch (IllegalStateException e) {
+            return Response.status(409).entity(Map.of("error", e.getMessage())).build();
+        }
         if (p == null) return Response.status(204).build();
 
         return Response.ok(Map.of(

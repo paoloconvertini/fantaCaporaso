@@ -1,3 +1,4 @@
+import { AuctionChatComponent } from './components/auction-chat/auction-chat.component';
 import { NgModule, APP_INITIALIZER } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -69,6 +70,7 @@ export function initializeAuth(auth: AuthService) {
         TargetButtonComponent,
         TargetsComponent,
         AdminComponent,
+        AuctionChatComponent,
         MobileComponent,
         SummaryComponent,
         RostersComponent,

@@ -1,4 +1,5 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { AuctionChatComponent } from '../../components/auction-chat/auction-chat.component';
+import { ViewChild, Component, OnInit, OnDestroy } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { AdminApiService } from '../../services/admin-api.service';
 import { SearchCallDialogComponent } from '../../dialogs/search-call-dialog.component';
@@ -29,6 +30,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     remainingCount = 0;
     value = 0;
     loadingAssign = false;
+    @ViewChild(AuctionChatComponent) private auctionChat?: AuctionChatComponent;
     private drawingNextPlayer = false;
     skipping = false;
     participantCount = 0;
@@ -120,6 +122,7 @@ export class AdminComponent implements OnInit, OnDestroy {
             .afterClosed().subscribe(selected => {
                 this.searchingPlayer = false;
                 if (!selected) return;
+                this.auctionChat?.refreshPresence();
                 this.player = selected.name;
                 this.team = selected.team;
                 this.prole = selected.role;
@@ -573,10 +576,12 @@ export class AdminComponent implements OnInit, OnDestroy {
                     this.value = d.value || 0;
                 }
                 this.drawingNextPlayer = false;
+                this.auctionChat?.refreshPresence();
                 this.refreshRemaining();
             },
             error: (err) => {
                 this.drawingNextPlayer = false;
+                this.auctionChat?.refreshPresence();
                 this.showError('Errore estrazione giocatore', err);
             }
         });

@@ -94,6 +94,15 @@ public class AdminResource {
     public Response users() {
         return Response.ok(appUserService.listUsers()).build();
     }
+    @POST
+    @Path("/participants/{participantId}/auction-invite")
+    @RolesAllowed("admin")
+    public Response auctionInvite(@PathParam("participantId") Long participantId) {
+        return Response.ok(java.util.Map.of("message", appUserService.auctionInvite(participantId)))
+                .header("Cache-Control", "no-store")
+                .build();
+    }
+
     @PUT
     @Path("/assignments/{playerId}")
     @RolesAllowed("admin")

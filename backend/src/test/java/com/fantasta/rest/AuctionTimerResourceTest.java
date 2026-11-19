@@ -1,19 +1,28 @@
 package com.fantasta.rest;
 
 import com.fantasta.model.ParticipantEntity;
+import com.fantasta.model.GiroPickEntity;
+import com.fantasta.model.MercatoConfigEntity;
 import com.fantasta.model.AppUserEntity;
 import com.fantasta.model.PlayerEntity;
 import com.fantasta.model.Role;
 import com.fantasta.model.RosterEntity;
 import com.fantasta.service.AuctionService;
+import com.fantasta.service.RandomSelectorService;
 import com.fantasta.security.AppJwtService;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.common.http.TestHTTPResource;
 import io.restassured.http.ContentType;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.WebSocket;
 import java.util.Map;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -34,6 +43,86 @@ class AuctionTimerResourceTest {
     @Inject
     AppJwtService jwtService;
 
+    @TestHTTPResource
+    URI testUrl;
+
+    @Inject RandomSelectorService selector;
+
+    @Test
+    void firstCallRequiresPresenceAndLaterCallsAllowDisconnections() throws Exception {
+        Long[] ids = QuarkusTransaction.requiringNew().call(() -> {
+            MercatoConfigEntity market = new MercatoConfigEntity();
+            market.attiva = true;
+            market.numeroMercato = 2;
+            market.sessionCode = "presence-test";
+            market.presenzeRichieste = true;
+            market.persist();
+            ParticipantEntity team = participant("Squadra presenza");
+            PlayerEntity player = new PlayerEntity();
+            player.name = "Calciatore presenza";
+            player.team = "Club presenza";
+            player.role = Role.DIFENSORE;
+            player.persist();
+            return new Long[]{market.id, team.id, player.id};
+        });
+        String admin = jwtService.createToken("test-admin", "admin", null);
+        String user = participantToken("presence-user", ids[1]);
+        LinkedBlockingQueue<String> received = new LinkedBlockingQueue<>();
+        WebSocket chat = null;
+        var oldMode = selector.getMode();
+        Role oldRole = selector.getRole();
+        try {
+            selector.setRole(Role.DIFENSORE);
+            given().cookie("FANTASTA_AUTH", admin).contentType(ContentType.JSON).body("{}").post("/api/random/next").then().statusCode(409)
+                    .body("error", org.hamcrest.Matchers.containsString("Squadra presenza"));
+            given().cookie("FANTASTA_AUTH", admin).contentType(ContentType.JSON)
+                    .body(Map.of("playerId", ids[2])).post("/api/random/select").then().statusCode(409);
+            assertEquals(0L, QuarkusTransaction.requiringNew().call(() -> GiroPickEntity.count("player.id", ids[2])));
+            chat = connectSocket("/ws/chat", user, received);
+            assertNotNull(received.poll(5, TimeUnit.SECONDS));
+            given().cookie("FANTASTA_AUTH", admin).contentType(ContentType.JSON)
+                    .body(Map.of("playerId", ids[2])).post("/api/random/select").then().statusCode(200);
+            chat.sendClose(WebSocket.NORMAL_CLOSURE, "").get(5, TimeUnit.SECONDS);
+            given().cookie("FANTASTA_AUTH", admin).get("/api/random/presence").then().statusCode(200)
+                    .body("blocking", org.hamcrest.Matchers.is(false));
+            given().cookie("FANTASTA_AUTH", admin).contentType(ContentType.JSON).body("{}").post("/api/random/next").then().statusCode(200);
+        } finally {
+            if (chat != null) chat.abort();
+            switch (oldMode) {
+                case ALL -> selector.setAll();
+                case OFF -> selector.setOff();
+                case ROLE -> selector.setRole(oldRole);
+            }
+            QuarkusTransaction.requiringNew().run(() -> {
+                GiroPickEntity.delete("player.id", ids[2]);
+                PlayerEntity.deleteById(ids[2]);
+                AppUserEntity.delete("participant.id", ids[1]);
+                ParticipantEntity.deleteById(ids[1]);
+                MercatoConfigEntity.deleteById(ids[0]);
+            });
+        }
+    }
+
+    private WebSocket connectSocket(String path, String token, LinkedBlockingQueue<String> messages) throws Exception {
+        return HttpClient.newHttpClient().newWebSocketBuilder()
+                .header("Origin", "http://" + testUrl.getRawAuthority())
+                .header("Cookie", "FANTASTA_AUTH=" + token)
+                .buildAsync(URI.create("ws://" + testUrl.getRawAuthority() + path), new WebSocket.Listener() {
+                    private final StringBuilder frame = new StringBuilder();
+
+                    @Override
+                    public java.util.concurrent.CompletionStage<?> onText(WebSocket socket, CharSequence data, boolean last) {
+                        frame.append(data);
+                        if (last) {
+                            messages.add(frame.toString());
+                            frame.setLength(0);
+                        }
+                        socket.request(1);
+                        return null;
+                    }
+                }).get(5, TimeUnit.SECONDS);
+    }
+
     @Test
     void acceptsSixteenSimultaneousHttpBidsAndKeepsLatestBid() throws Exception {
         auctionService.reset();
@@ -51,27 +140,30 @@ class AuctionTimerResourceTest {
         });
 
         ExecutorService executor = Executors.newFixedThreadPool(16);
-        CountDownLatch ready = new CountDownLatch(16);
-        CountDownLatch start = new CountDownLatch(1);
+        List<WebSocket> sockets = new ArrayList<>();
         try {
             auctionService.start("Difensore carico HTTP", "Team carico HTTP", "DIFENSORE", 60, "NONE", 5, null);
-            List<Future<Integer>> requests = new ArrayList<>();
-            for (int i = 0; i < ids.size(); i++) {
-                Long participantId = ids.get(i);
-                double amount = i + 1D;
-                String cookie = participantToken("http-user-" + i, participantId);
-                requests.add(executor.submit(() -> {
-                    ready.countDown();
-                    start.await();
-                    return given().cookie("FANTASTA_AUTH", cookie)
-                            .contentType(ContentType.JSON)
-                            .body(Map.of("participantId", -1, "amount", amount))
-                            .when().post("/api/bids").statusCode();
-                }));
+            List<String> tokens = new ArrayList<>();
+            for (int i = 0; i < ids.size(); i++) tokens.add(participantToken("http-user-" + i, ids.get(i)));
+            LinkedBlockingQueue<String> roundEvents = new LinkedBlockingQueue<>();
+            sockets.add(connectSocket("/ws/round", tokens.getFirst(), roundEvents));
+            offerBatch(executor, tokens, 0, roundEvents);
+            long baseline = offerBatch(executor, tokens, 1, roundEvents);
+            List<WebSocket> chats = new ArrayList<>();
+            List<LinkedBlockingQueue<String>> chatEvents = new ArrayList<>();
+            for (String token : tokens) {
+                LinkedBlockingQueue<String> events = new LinkedBlockingQueue<>();
+                WebSocket chat = connectSocket("/ws/chat", token, events);
+                sockets.add(chat);
+                chats.add(chat);
+                chatEvents.add(events);
+                assertNotNull(events.poll(5, TimeUnit.SECONDS));
             }
-            ready.await();
-            start.countDown();
-            for (Future<Integer> request : requests) assertEquals(200, request.get());
+            Future<?> traffic = executor.submit(() -> chats.forEach(chat -> chat.sendText(":Messaggio di prova", true).join()));
+            long withChat = offerBatch(executor, tokens, 2, roundEvents);
+            traffic.get(5, TimeUnit.SECONDS);
+            for (int i = 0; i < 16; i++) assertNotNull(chatEvents.getFirst().poll(5, TimeUnit.SECONDS));
+            System.out.printf("16 offerte e notifiche round, senza chat: %d ms, con chat: %d ms%n", baseline, withChat);
 
             assertEquals(16, auctionService.get().bids.size());
             String firstCookie = participantToken("http-user-0", ids.get(0));
@@ -81,6 +173,7 @@ class AuctionTimerResourceTest {
             assertEquals(16, auctionService.get().bids.size());
             assertEquals(22D, auctionService.get().bids.get(String.valueOf(ids.get(0))));
         } finally {
+            sockets.forEach(WebSocket::abort);
             executor.shutdownNow();
             auctionService.reset();
             QuarkusTransaction.requiringNew().run(() -> {
@@ -88,6 +181,31 @@ class AuctionTimerResourceTest {
                 for (Long id : ids) { AppUserEntity.delete("participant.id", id); ParticipantEntity.deleteById(id); }
             });
         }
+    }
+
+    private long offerBatch(ExecutorService executor, List<String> tokens, int increment,
+                            LinkedBlockingQueue<String> roundEvents) throws Exception {
+        CountDownLatch start = new CountDownLatch(1);
+        List<Future<Integer>> requests = new ArrayList<>();
+        for (int i = 0; i < tokens.size(); i++) {
+            String cookie = tokens.get(i);
+            double amount = i + 1D + increment;
+            requests.add(executor.submit(() -> {
+                start.await();
+                return given().cookie("FANTASTA_AUTH", cookie).contentType(ContentType.JSON)
+                        .body(Map.of("participantId", -1, "amount", amount))
+                        .post("/api/bids").statusCode();
+            }));
+        }
+        long begin = System.nanoTime();
+        start.countDown();
+        for (int i = 0; i < tokens.size(); i++) {
+            String event = roundEvents.poll(5, TimeUnit.SECONDS);
+            assertNotNull(event);
+            org.junit.jupiter.api.Assertions.assertTrue(event.contains("BID_ADDED"));
+        }
+        for (Future<Integer> request : requests) assertEquals(200, request.get(5, TimeUnit.SECONDS));
+        return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - begin);
     }
 
     @Test
