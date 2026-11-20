@@ -59,6 +59,24 @@ public class MercatoService {
         return dto;
     }
 
+    @Transactional
+    public MercatoConfigDto confirmNoDepartures(String sessionCode) {
+        MercatoConfigEntity cfg = MercatoConfigEntity.findAll().firstResult();
+        if (cfg == null || cfg.sessionCode == null || cfg.numeroMercato < 1 || cfg.numeroMercato > 3) {
+            throw new jakarta.ws.rs.BadRequestException("Configura prima la sessione di mercato");
+        }
+        if (sessionCode == null || !cfg.sessionCode.equals(sessionCode)) {
+            throw new jakarta.ws.rs.WebApplicationException("La sessione è cambiata: ricarica la configurazione", 409);
+        }
+        if (cfg.partitiImportati) {
+            throw new jakarta.ws.rs.WebApplicationException("Partiti già confermati per questa sessione", 409);
+        }
+        cfg.partitiImportati = true;
+        cfg.quotazioniAggiornate = false;
+        cfg.quotazioniAggiornateAt = null;
+        return toDto(cfg);
+    }
+
     public int getMaxByRole(String role) {
         MercatoConfigEntity cfg = MercatoConfigEntity.findAll().firstResult();
         if (cfg == null) return 0;

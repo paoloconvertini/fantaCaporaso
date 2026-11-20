@@ -132,6 +132,22 @@ export class MercatoComponent implements OnInit {
         });
     }
 
+    confirmNoDepartures(): void {
+        if (!this.sessionCode || this.departuresLoading || this.form.get('partitiImportati')?.value) return;
+        if (!window.confirm('Confermi che dal confronto delle rose con il listino aggiornato non risultano giocatori partiti?')) return;
+        this.departuresLoading = true;
+        this.service.confirmNoDepartures(this.sessionCode).subscribe({
+            next: () => {
+                this.departuresResult = null;
+                this.departuresFile = null;
+                this.departuresLoading = false;
+                this.snackBar.open('Nessun partito confermato: ora aggiorna le quotazioni', 'Chiudi', { duration: 3500 });
+                this.loadConfig();
+            },
+            error: error => { this.showError(error); this.departuresLoading = false; }
+        });
+    }
+
     previewQuotes(): void {
         if (!this.quotesFile || !this.form.get('partitiImportati')?.value) return;
         this.quotesLoading = true;

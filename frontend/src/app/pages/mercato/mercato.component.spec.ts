@@ -101,4 +101,29 @@ describe('MercatoComponent', () => {
     component.importDepartures(true);
     expect(api.importMarketDepartures).not.toHaveBeenCalled();
   });
+  it('confirms no departures and reloads server configuration', () => {
+    const service = TestBed.inject(MercatoService);
+    service.confirmNoDepartures = jasmine.createSpy('confirmNoDepartures').and.returnValue(of({ partitiImportati: true }));
+    const reload = spyOn(component, 'loadConfig');
+    spyOn(window, 'confirm').and.returnValue(true);
+    component.sessionCode = 'current-session';
+    component.form.patchValue({ partitiImportati: false });
+    component.confirmNoDepartures();
+    expect(service.confirmNoDepartures).toHaveBeenCalledWith('current-session');
+    expect(reload).toHaveBeenCalled();
+    expect(component.departuresLoading).toBeFalse();
+  });
+
+  it('does not confirm no departures when cancelled or already confirmed', () => {
+    const service = TestBed.inject(MercatoService);
+    service.confirmNoDepartures = jasmine.createSpy('confirmNoDepartures');
+    spyOn(window, 'confirm').and.returnValue(false);
+    component.sessionCode = 'current-session';
+    component.confirmNoDepartures();
+    expect(service.confirmNoDepartures).not.toHaveBeenCalled();
+    component.form.patchValue({ partitiImportati: true });
+    component.confirmNoDepartures();
+    expect(service.confirmNoDepartures).not.toHaveBeenCalled();
+  });
+
 });

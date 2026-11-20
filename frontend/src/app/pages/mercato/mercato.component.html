@@ -54,13 +54,16 @@
     <mat-card class="workflow-card">
         <div class="step-number">1</div>
         <div>
-            <h3>Importa giocatori partiti</h3>
+            <h3>Conferma giocatori partiti</h3>
             <p>Carica il file Giocatori Partiti. La quotazione del file sarà usata per il rimborso; le rose restano intatte.</p>
             <p *ngIf="form?.get('partitiImportati')?.value">Partiti già confermati per questa sessione.</p>
             <input type="file" accept=".xlsx,.xls" (change)="selectDeparturesFile($event)"
                    [disabled]="form?.get('partitiImportati')?.value || departuresLoading">
             <button mat-raised-button color="primary" (click)="importDepartures()"
                     [disabled]="!departuresFile || departuresLoading || form?.get('partitiImportati')?.value">Verifica partiti</button>
+            <p>Se dal confronto delle rose con il listino aggiornato non risultano partiti, conferma senza caricare un file.</p>
+            <button mat-stroked-button (click)="confirmNoDepartures()"
+                    [disabled]="!sessionCode || departuresLoading || form?.get('partitiImportati')?.value">Nessun giocatore partito</button>
             <mat-spinner *ngIf="departuresLoading" diameter="28"></mat-spinner>
         </div>
     </mat-card>

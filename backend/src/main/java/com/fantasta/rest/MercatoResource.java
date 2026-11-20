@@ -16,6 +16,18 @@ public class MercatoResource {
     @Inject
     MercatoService service;
 
+    public record NoDeparturesRequest(String sessionCode) {}
+
+    @POST
+    @Path("/departures/none")
+    @RolesAllowed("admin")
+    public Response confirmNoDepartures(NoDeparturesRequest request) {
+        if (request == null || request.sessionCode() == null || request.sessionCode().isBlank()) {
+            throw new BadRequestException("Indica la sessione di mercato");
+        }
+        return Response.ok(service.confirmNoDepartures(request.sessionCode())).build();
+    }
+
     @GET
     @Path("/config")
     @RolesAllowed({"user", "admin", "observer"})

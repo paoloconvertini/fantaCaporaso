@@ -33,6 +33,47 @@ class MarketRepairServiceTest {
 
     @Test
     @TestTransaction
+    void confirmsNoDeparturesWithoutChangingRostersPlayersOrCredits() {
+        configureMarket(2, false);
+        MercatoConfigEntity config = MercatoConfigEntity.findAll().firstResult();
+        config.partitiImportati = false;
+        ParticipantEntity owner = participant("Nessun partito test");
+        PlayerEntity existing = player("Resta in rosa test", 12, true);
+        roster(owner, existing, 7);
+        long rosterCount = RosterEntity.count();
+        int credits = owner.totalCredits;
+        String code = config.sessionCode;
+        var result = mercatoService.confirmNoDepartures(code);
+        assertTrue(result.partitiImportati);
+        assertFalse(result.quotazioniAggiornate);
+        assertNull(result.quotazioniAggiornateAt);
+        assertEquals(code, result.sessionCode);
+        assertDoesNotThrow(() -> mercatoService.requireImportedDepartures());
+        assertThrows(IllegalStateException.class, () -> mercatoService.requireUpdatedQuotes());
+        assertEquals(rosterCount, RosterEntity.count());
+        assertEquals(credits, owner.totalCredits);
+        assertTrue(existing.active);
+        assertEquals(12D, existing.valore);
+        assertNull(existing.departureSessionCode);
+        assertEquals(409, assertThrows(jakarta.ws.rs.WebApplicationException.class,
+                () -> mercatoService.confirmNoDepartures(code)).getResponse().getStatus());
+    }
+
+    @Test
+    @TestTransaction
+    void rejectsNoDeparturesForStaleOrMissingSessions() {
+        configureMarket(2, false);
+        MercatoConfigEntity config = MercatoConfigEntity.findAll().firstResult();
+        config.partitiImportati = false;
+        assertEquals(409, assertThrows(jakarta.ws.rs.WebApplicationException.class,
+                () -> mercatoService.confirmNoDepartures("old-session")).getResponse().getStatus());
+        assertFalse(config.partitiImportati);
+        config.sessionCode = null;
+        assertThrows(BadRequestException.class, () -> mercatoService.confirmNoDepartures("old-session"));
+    }
+
+    @Test
+    @TestTransaction
     void importsExplicitDeparturesBeforeQuotesAndPreservesRefund() throws Exception {
         configureMarket(1, false);
         MercatoConfigEntity config = MercatoConfigEntity.findAll().firstResult();

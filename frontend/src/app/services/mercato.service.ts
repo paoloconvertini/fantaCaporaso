@@ -13,6 +13,10 @@ export class MercatoService {
         return this.http.get<MercatoConfigDto>(this.BASE_URL);
     }
 
+    confirmNoDepartures(sessionCode: string): Observable<MercatoConfigDto> {
+        return this.http.post<MercatoConfigDto>('/api/mercato/departures/none', { sessionCode });
+    }
+
     updateConfig(dto: MercatoConfigDto): Observable<MercatoConfigDto> {
         return this.http.post<MercatoConfigDto>(this.BASE_URL, dto);
     }

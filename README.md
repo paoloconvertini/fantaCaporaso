@@ -194,11 +194,13 @@ Ripristino distruttivo:
 Il mercato di riparazione si prepara dalla pagina admin `Mercato` e segue un ordine obbligatorio:
 
 1. selezionare il 1°, 2° o 3° mercato e salvare la configurazione;
-2. caricare e confermare il file `Giocatori Partiti`, verificando gli abbinamenti con le rose;
+2. confrontare rose e listino: se non risultano partiti, usare `Nessun giocatore partito`; altrimenti caricare e confermare il file `Giocatori Partiti`, verificando gli abbinamenti con le rose;
 3. caricare il listino aggiornato dei restanti calciatori e controllare l'anteprima;
 4. correggere eventuali quotazioni mancanti e confermare l'aggiornamento;
 5. effettuare gli svincoli manualmente dalla pagina Rose oppure importare le rose post-scambi;
 6. aprire l'asta dei calciatori disponibili.
+
+La conferma `Nessun giocatore partito` richiede una sessione già configurata e una conferma esplicita dell’admin dopo il confronto delle rose con il listino. Sblocca soltanto l’aggiornamento quotazioni, senza modificare giocatori, rose o crediti. L’API admin `POST /api/mercato/departures/none` riceve `{ "sessionCode": "..." }`, restituisce la configurazione aggiornata e rifiuta con 409 sessioni cambiate o già confermate; richieste senza codice valido restituiscono 400. Nessuna migrazione richiesta.
 
 L'import dei partiti legge il foglio `Giocatori Partiti`: partecipante in B, ruolo in C, nome in D (rimuovendo il prefisso `ZZZ - Partito -`), squadra in E, quotazione in F e stato `Partito` in G. Ignora il riepilogo laterale. Nomi duplicati, dati invalidi o abbinamenti non riconosciuti impediscono la conferma senza modifiche parziali. La conferma è unica per sessione, mantiene le rose e usa la quotazione F per il successivo rimborso.
 

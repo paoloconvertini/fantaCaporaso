@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2026-10-05T17:00:20+02:00",
+  "updatedAt": "2026-11-20T14:04:41+01:00",
   "teamCount": 16,
   "rosteredCount": 400,
-  "freeCount": 167,
+  "freeCount": 185,
   "players": [
     {
       "name": "Abankwah",
@@ -14,7 +14,7 @@
       "name": "Aboukhlal",
       "club": "Torino",
       "role": "ATTACCANTE",
-      "owner": "YOUNG BOYS UNITED"
+      "owner": "MessiMale"
     },
     {
       "name": "Adams",
@@ -32,7 +32,7 @@
       "name": "Addai",
       "club": "Como",
       "role": "ATTACCANTE",
-      "owner": "MessiMale"
+      "owner": "ASTON BIRRA"
     },
     {
       "name": "Adopo",
@@ -182,7 +182,7 @@
       "name": "Badiashile",
       "club": "Napoli",
       "role": "DIFENSORE",
-      "owner": null
+      "owner": "GenSim e 2 Monelli"
     },
     {
       "name": "Bakola",
@@ -272,7 +272,7 @@
       "name": "Bella-Kotchap",
       "club": "Venezia",
       "role": "DIFENSORE",
-      "owner": "Corto Muso"
+      "owner": null
     },
     {
       "name": "Bellanova",
@@ -320,7 +320,7 @@
       "name": "Bertola",
       "club": "Udinese",
       "role": "DIFENSORE",
-      "owner": "GenSim e 2 Monelli"
+      "owner": null
     },
     {
       "name": "Beto",
@@ -440,7 +440,7 @@
       "name": "Brescianini",
       "club": "Fiorentina",
       "role": "CENTROCAMPISTA",
-      "owner": null
+      "owner": "Ruverpool"
     },
     {
       "name": "Britschgi",
@@ -470,7 +470,7 @@
       "name": "Cabal",
       "club": "Juventus",
       "role": "DIFENSORE",
-      "owner": null
+      "owner": "HAVANA AMIGOS"
     },
     {
       "name": "Cacciamani",
@@ -578,6 +578,12 @@
       "name": "Casale",
       "club": "Bologna",
       "role": "DIFENSORE",
+      "owner": "Corto Muso"
+    },
+    {
+      "name": "Cassano R",
+      "club": "Como",
+      "role": "CENTROCAMPISTA",
       "owner": null
     },
     {
@@ -626,7 +632,7 @@
       "name": "Chukwueze",
       "club": "Milan",
       "role": "CENTROCAMPISTA",
-      "owner": "Corto Muso"
+      "owner": "ASTON BIRRA"
     },
     {
       "name": "Cichella",
@@ -686,7 +692,7 @@
       "name": "Colpani",
       "club": "Monza",
       "role": "CENTROCAMPISTA",
-      "owner": "Atletico ma non troppo"
+      "owner": null
     },
     {
       "name": "Comert",
@@ -722,7 +728,7 @@
       "name": "Correia T",
       "club": "Venezia",
       "role": "DIFENSORE",
-      "owner": "HAVANA AMIGOS"
+      "owner": null
     },
     {
       "name": "Corvi",
@@ -785,6 +791,12 @@
       "owner": "KECAVOLI"
     },
     {
+      "name": "Darmian",
+      "club": "Bologna",
+      "role": "DIFENSORE",
+      "owner": "MessiMale"
+    },
+    {
       "name": "Davis",
       "club": "Udinese",
       "role": "ATTACCANTE",
@@ -815,6 +827,18 @@
       "owner": null
     },
     {
+      "name": "De Marzi",
+      "club": "Roma",
+      "role": "PORTIERE",
+      "owner": null
+    },
+    {
+      "name": "De Paoli",
+      "club": "Como",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
       "name": "De Roon",
       "club": "Roma",
       "role": "CENTROCAMPISTA",
@@ -836,13 +860,13 @@
       "name": "Deiola",
       "club": "Cagliari",
       "role": "CENTROCAMPISTA",
-      "owner": null
+      "owner": "GenSim e 2 Monelli"
     },
     {
       "name": "Dele Bashiru",
       "club": "Lazio",
       "role": "CENTROCAMPISTA",
-      "owner": null
+      "owner": "Corto Muso"
     },
     {
       "name": "Delprato",
@@ -875,10 +899,16 @@
       "owner": "KECAVOLI"
     },
     {
+      "name": "Di Nunzio",
+      "club": "Roma",
+      "role": "CENTROCAMPISTA",
+      "owner": null
+    },
+    {
       "name": "Diallo O",
       "club": "Parma",
       "role": "ATTACCANTE",
-      "owner": "Em Fallet"
+      "owner": null
     },
     {
       "name": "Diawara S",
@@ -926,7 +956,7 @@
       "name": "Doekhi",
       "club": "Lazio",
       "role": "DIFENSORE",
-      "owner": "DanPao Salisburgo FC"
+      "owner": null
     },
     {
       "name": "Doig",
@@ -944,7 +974,7 @@
       "name": "Dossena A",
       "club": "Como",
       "role": "DIFENSORE",
-      "owner": "MessiMale"
+      "owner": null
     },
     {
       "name": "Douglas Luiz",
@@ -1100,7 +1130,7 @@
       "name": "Fabbian",
       "club": "Parma",
       "role": "CENTROCAMPISTA",
-      "owner": null
+      "owner": "YOUNG BOYS UNITED"
     },
     {
       "name": "Fadera",
@@ -1250,7 +1280,7 @@
       "name": "Gabbia",
       "club": "Milan",
       "role": "DIFENSORE",
-      "owner": "S.S. 30Lance"
+      "owner": null
     },
     {
       "name": "Gaetano",
@@ -1292,7 +1322,7 @@
       "name": "Gatti",
       "club": "Juventus",
       "role": "DIFENSORE",
-      "owner": null
+      "owner": "Ruverpool"
     },
     {
       "name": "Gelli",
@@ -1322,7 +1352,7 @@
       "name": "Ghilardi",
       "club": "Roma",
       "role": "DIFENSORE",
-      "owner": null
+      "owner": "DanPao Salisburgo FC"
     },
     {
       "name": "Ghion",
@@ -1391,9 +1421,21 @@
       "owner": null
     },
     {
+      "name": "Grabara",
+      "club": "Juventus",
+      "role": "PORTIERE",
+      "owner": null
+    },
+    {
       "name": "Grandi",
       "club": "Venezia",
       "role": "PORTIERE",
+      "owner": null
+    },
+    {
+      "name": "Grandu",
+      "club": "Cagliari",
+      "role": "CENTROCAMPISTA",
       "owner": null
     },
     {
@@ -1424,7 +1466,7 @@
       "name": "Halhal",
       "club": "Venezia",
       "role": "DIFENSORE",
-      "owner": null
+      "owner": "Em Fallet"
     },
     {
       "name": "Happonen",
@@ -1454,7 +1496,7 @@
       "name": "Heggem",
       "club": "Bologna",
       "role": "DIFENSORE",
-      "owner": "Em Fallet"
+      "owner": null
     },
     {
       "name": "Helgason",
@@ -1499,6 +1541,12 @@
       "owner": "johnsons oil"
     },
     {
+      "name": "Idele",
+      "club": "Atalanta",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
       "name": "Idrissi",
       "club": "Cagliari",
       "role": "DIFENSORE",
@@ -1514,7 +1562,7 @@
       "name": "Ilic",
       "club": "Lecce",
       "role": "CENTROCAMPISTA",
-      "owner": "DanPao Salisburgo FC"
+      "owner": null
     },
     {
       "name": "Ilkhan",
@@ -1574,12 +1622,6 @@
       "name": "Jovanovic",
       "club": "Udinese",
       "role": "CENTROCAMPISTA",
-      "owner": null
-    },
-    {
-      "name": "Jovic M",
-      "club": "Lecce",
-      "role": "ATTACCANTE",
       "owner": null
     },
     {
@@ -1826,7 +1868,7 @@
       "name": "Liberali",
       "club": "Como",
       "role": "CENTROCAMPISTA",
-      "owner": null
+      "owner": "DanPao Salisburgo FC"
     },
     {
       "name": "Libra",
@@ -1983,6 +2025,12 @@
       "club": "Roma",
       "role": "CENTROCAMPISTA",
       "owner": "HAVANA AMIGOS"
+    },
+    {
+      "name": "Manzoni A",
+      "club": "Atalanta",
+      "role": "CENTROCAMPISTA",
+      "owner": null
     },
     {
       "name": "Marcandalli",
@@ -2327,6 +2375,12 @@
       "owner": "ASTON BIRRA"
     },
     {
+      "name": "Nuredini",
+      "club": "Genoa",
+      "role": "ATTACCANTE",
+      "owner": null
+    },
+    {
       "name": "Nzola",
       "club": "Cagliari",
       "role": "ATTACCANTE",
@@ -2347,6 +2401,12 @@
     {
       "name": "Obrador",
       "club": "Sassuolo",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Obric",
+      "club": "Atalanta",
       "role": "DIFENSORE",
       "owner": null
     },
@@ -2378,7 +2438,7 @@
       "name": "Oristanio",
       "club": "Torino",
       "role": "CENTROCAMPISTA",
-      "owner": "SOLO LEVELING"
+      "owner": null
     },
     {
       "name": "Orsolini",
@@ -2426,7 +2486,7 @@
       "name": "Palma M",
       "club": "Udinese",
       "role": "DIFENSORE",
-      "owner": null
+      "owner": "SOLO LEVELING"
     },
     {
       "name": "Palmisani",
@@ -2456,7 +2516,7 @@
       "name": "Pasalic",
       "club": "Atalanta",
       "role": "CENTROCAMPISTA",
-      "owner": "Em Fallet"
+      "owner": "SOLO LEVELING"
     },
     {
       "name": "Patterson",
@@ -2486,7 +2546,7 @@
       "name": "Pedraza",
       "club": "Lazio",
       "role": "DIFENSORE",
-      "owner": null
+      "owner": "YOUNG BOYS UNITED"
     },
     {
       "name": "Pedro Goncalves",
@@ -2504,7 +2564,7 @@
       "name": "Pellegrini",
       "club": "Roma",
       "role": "CENTROCAMPISTA",
-      "owner": "YOUNG BOYS UNITED"
+      "owner": "HAVANA AMIGOS"
     },
     {
       "name": "Pellegrini Lu",
@@ -2570,7 +2630,7 @@
       "name": "Pierotti",
       "club": "Lecce",
       "role": "CENTROCAMPISTA",
-      "owner": "GenSim e 2 Monelli"
+      "owner": null
     },
     {
       "name": "Pinamonti",
@@ -2597,6 +2657,12 @@
       "owner": "GenSim e 2 Monelli"
     },
     {
+      "name": "Pittarella",
+      "club": "Milan",
+      "role": "PORTIERE",
+      "owner": null
+    },
+    {
       "name": "Pobega",
       "club": "Bologna",
       "role": "CENTROCAMPISTA",
@@ -2609,9 +2675,21 @@
       "owner": "HAVANA AMIGOS"
     },
     {
+      "name": "Pompei",
+      "club": "Atalanta",
+      "role": "PORTIERE",
+      "owner": null
+    },
+    {
       "name": "Pongracic",
       "club": "Fiorentina",
       "role": "DIFENSORE",
+      "owner": null
+    },
+    {
+      "name": "Pozzi A",
+      "club": "Venezia",
+      "role": "PORTIERE",
       "owner": null
     },
     {
@@ -2636,7 +2714,7 @@
       "name": "Puczka",
       "club": "Genoa",
       "role": "DIFENSORE",
-      "owner": "SOLO LEVELING"
+      "owner": null
     },
     {
       "name": "Pulisic",
@@ -2699,6 +2777,12 @@
       "owner": "34 e 1 Gazzosa"
     },
     {
+      "name": "Renzetti D",
+      "club": "Lazio",
+      "role": "PORTIERE",
+      "owner": null
+    },
+    {
       "name": "Ricci S",
       "club": "Como",
       "role": "CENTROCAMPISTA",
@@ -2753,10 +2837,16 @@
       "owner": "VIKING 84"
     },
     {
+      "name": "Rossi F",
+      "club": "Atalanta",
+      "role": "PORTIERE",
+      "owner": null
+    },
+    {
       "name": "Rovella",
       "club": "Lazio",
       "role": "CENTROCAMPISTA",
-      "owner": "HAVANA AMIGOS"
+      "owner": "Em Fallet"
     },
     {
       "name": "Rowe",
@@ -2792,7 +2882,7 @@
       "name": "Saelemaekers",
       "club": "Milan",
       "role": "CENTROCAMPISTA",
-      "owner": "ASTON BIRRA"
+      "owner": null
     },
     {
       "name": "Sagrado",
@@ -2840,13 +2930,19 @@
       "name": "Schingtienne",
       "club": "Venezia",
       "role": "DIFENSORE",
-      "owner": "Ruverpool"
+      "owner": null
     },
     {
       "name": "Schmid",
       "club": "Frosinone",
       "role": "CENTROCAMPISTA",
       "owner": "Atletico ma non troppo"
+    },
+    {
+      "name": "Serra F",
+      "club": "Lazio",
+      "role": "ATTACCANTE",
+      "owner": null
     },
     {
       "name": "Sherri",
@@ -2871,6 +2967,12 @@
       "club": "Torino",
       "role": "ATTACCANTE",
       "owner": "KECAVOLI"
+    },
+    {
+      "name": "Siviero",
+      "club": "Torino",
+      "role": "PORTIERE",
+      "owner": null
     },
     {
       "name": "Skjellerup",
@@ -3008,7 +3110,7 @@
       "name": "Sulemana K",
       "club": "Atalanta",
       "role": "ATTACCANTE",
-      "owner": "ASTON BIRRA"
+      "owner": "YOUNG BOYS UNITED"
     },
     {
       "name": "Sutalo J",
@@ -3056,7 +3158,7 @@
       "name": "Terzic",
       "club": "Frosinone",
       "role": "DIFENSORE",
-      "owner": null
+      "owner": "S.S. 30Lance"
     },
     {
       "name": "Theate",
@@ -3134,7 +3236,7 @@
       "name": "Trepy",
       "club": "Cagliari",
       "role": "ATTACCANTE",
-      "owner": null
+      "owner": "Em Fallet"
     },
     {
       "name": "Troilo",
@@ -3158,7 +3260,7 @@
       "name": "Unai Gomez",
       "club": "Udinese",
       "role": "CENTROCAMPISTA",
-      "owner": "Ruverpool"
+      "owner": null
     },
     {
       "name": "Valdepenas",
@@ -3170,7 +3272,7 @@
       "name": "Valenti",
       "club": "Parma",
       "role": "DIFENSORE",
-      "owner": "YOUNG BOYS UNITED"
+      "owner": null
     },
     {
       "name": "Valeri",
@@ -3257,6 +3359,12 @@
       "owner": "Em Fallet"
     },
     {
+      "name": "Vladimirov",
+      "club": "Milan",
+      "role": "DIFENSORE",
+      "owner": null
+    },
+    {
       "name": "Vlasic",
       "club": "Torino",
       "role": "CENTROCAMPISTA",
@@ -3332,7 +3440,7 @@
       "name": "Zalewski",
       "club": "Atalanta",
       "role": "CENTROCAMPISTA",
-      "owner": null
+      "owner": "Atletico ma non troppo"
     },
     {
       "name": "Zaniolo",
